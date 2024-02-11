@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package convergedcomputing.org.grpc.v1;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/converged-computing/rainbow/pkg/api/v1";
+
+// Service provides API endpoints for interacting with the central scheduler
+// service
+service Service {
+
+  // Register cluster - request to register a new cluster
+  rpc Register(Request) returns (RegisterResponse);
+
+  // Job Submission - request for submitting a job to a named cluster
+  rpc SubmitJob(Request) returns (SubmitJobResponse);
+
+  // TESTING ENDPOINTS
+  // Serial checks the connectivity and response time of the service.
+  rpc Serial(Request) returns (Response);
+
+  // Stream continuously sends and receives response messages.
+  // It is useful for scenarios where constant data flow is required.
+  rpc Stream(stream Request) returns (stream Response);
+}
+
+// Content represents the message content with metadata.
+message Content {
+  // Unique identifier for the message (e.g., uuid).
+  string id = 1;
+
+  // Actual content of the message in binary format.
+  google.protobuf.Any data = 2;
+
+  // Additional information about the message in key-value pairs.
+  map<string, string> metadata = 3;
+}
+
+// Request represents the request for a method invocation.
+// It includes the content to be sent and a timestamp.
+message Request {
+  // The content to be sent in the request.
+  Content content = 1;
+
+  // Timestamp when the message was sent, represented in Unix epoch format.
+  google.protobuf.Timestamp sent = 2;
+}
+
+// Testing response - the server's response to a request.
+message Response {
+
+  // Enum to represent the result types of the operation.
+  enum ResultType {
+    RESULT_TYPE_UNSPECIFIED = 0; // Default value, unspecified result type.
+    RESULT_TYPE_SUCCESS = 1;     // Indicates successful processing.
+    RESULT_TYPE_ERROR = 2;       // Indicates an error occurred.
+  }
+
+  // Unique identifier correlating to the request.
+  string request_id = 1;
+
+  // Total number of messages received in the request.
+  int64 message_count = 2;
+
+  // Number of messages successfully processed.
+  int64 messages_processed = 3;
+
+  // Detailed information or description of the processing result.
+  string processing_details = 4;
+}
+
+// Register Response
+message RegisterResponse {
+
+  // Enum to represent the result types of the operation.
+  enum ResultType {
+    REGISTER_UNSPECIFIED = 0;
+    REGISTER_SUCCESS = 1;
+    REGISTER_ERROR = 2;
+    REGISTER_DENIED = 3;
+  }
+  string request_id = 1;
+}
+
+// Submit Job Response
+message SubmitJobResponse {
+
+  // Enum to represent the result types of the operation.
+  enum ResultType {
+    SUBMIT_UNSPECIFIED = 0;
+    SUBMIT_SUCCESS = 1;
+    SUBMIT_ERROR = 2;
+    SUBMIT_DENIED = 3;
+  }
+  string request_id = 1;
+  string job_id = 2;
+}
