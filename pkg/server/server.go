@@ -18,22 +18,43 @@ const (
 	success  = "processed successfully"
 )
 
+var (
+	defaultEnv  = "development"
+	defaultName = "rainbow"
+)
+
 // NewServer creates a new "scheduler" server
 // The scheduler server registers clusters and then accepts jobs
-func NewServer(name, version, environment string) (*Server, error) {
-	if name == "" {
-		return nil, errors.New("name is required")
+func NewServer(
+	name, version, environment, sqliteFile string,
+	cleanup bool,
+	secret string,
+) (*Server, error) {
+
+	if secret == "" {
+		return nil, errors.New("secret is required")
 	}
 	if version == "" {
 		return nil, errors.New("version is required")
 	}
+	if name == "" {
+		name = defaultName
+	}
 	if environment == "" {
-		return nil, errors.New("environment is required")
+		environment = defaultEnv
+	}
+
+	// init the database, creating jobs and clusters tables
+	db, err := initDatabase(sqliteFile, cleanup)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	return &Server{
+		db:          db,
 		name:        name,
 		version:     version,
+		secret:      secret,
 		environment: environment,
 	}, nil
 }
@@ -41,16 +62,20 @@ func NewServer(name, version, environment string) (*Server, error) {
 // Server is used to implement your Service.
 type Server struct {
 	pb.UnimplementedServiceServer
-	server      *grpc.Server
-	listener    net.Listener
-	counter     atomic.Uint64 // counter for messages
-	name        string        // server name
-	version     string        // server version
-	environment string        // server environment
+	server   *grpc.Server
+	listener net.Listener
+
+	// counter will be for job ids
+	counter     atomic.Uint64
+	name        string
+	version     string
+	environment string
+	secret      string
+	db          *Database
 }
 
 func (s *Server) String() string {
-	return fmt.Sprintf("%s (%s) v%s", s.name, s.environment, s.version)
+	return fmt.Sprintf("%s v%s", s.name, s.version)
 }
 
 func (s *Server) GetCounter() int64 {
@@ -63,10 +88,6 @@ func (s *Server) GetName() string {
 
 func (s *Server) GetVersion() string {
 	return s.version
-}
-
-func (s *Server) GetEnvironment() string {
-	return s.environment
 }
 
 func (s *Server) Stop() {

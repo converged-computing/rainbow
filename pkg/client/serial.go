@@ -13,7 +13,7 @@ import (
 )
 
 // Scalar sends a message to the server and returns the response.
-func (c *SimpleClient) Serial(ctx context.Context, message string) (string, error) {
+func (c *RainbowClient) Serial(ctx context.Context, message string) (string, error) {
 	if message == "" {
 		return "", errors.New("message is required")
 	}

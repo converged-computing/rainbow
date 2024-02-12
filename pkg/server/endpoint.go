@@ -10,16 +10,25 @@ import (
 )
 
 // Register a new cluster with the server
-func (s *Server) Register(_ context.Context, in *pb.Request) (*pb.RegisterResponse, error) {
+func (s *Server) Register(_ context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	if in == nil {
 		return nil, errors.New("request is required")
 	}
 
-	c := in.GetContent()
-	log.Printf("received register: %v", c.GetData())
+	// Validate the secret
+	if in.Secret == "" || (in.Secret != s.secret) {
+		return nil, errors.New("request denied")
+	}
+
+	// Convert data to string, should be the cluster name
+	// TODO make this better, I'm sure there is a better way
+	log.Printf("📝️ received register: %s", in.Name)
+
+	status, token, err := s.db.RegisterCluster(in.Name)
 	return &pb.RegisterResponse{
-		RequestId: c.GetId(),
-	}, nil
+		Status: status,
+		Token:  token,
+	}, err
 }
 
 // TEST ENDPOINTS ------------------------------------------------

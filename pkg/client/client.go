@@ -12,30 +12,36 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-var _ Client = (*SimpleClient)(nil)
+// RainbowClient is our instantiation of Client
+type RainbowClient struct {
+	host       string
+	connection *grpc.ClientConn
+	service    pb.ServiceClient
+}
 
+var _ Client = (*RainbowClient)(nil)
+
+// Client interface defines functions required for a valid client
 type Client interface {
 	Serial(ctx context.Context, message string) (string, error)
 	Stream(ctx context.Context, it provider.MessageIterator) error
-	Register(ctx context.Context, clusterName, secret string) (string, error)
+	Register(ctx context.Context, clusterName, secret string) (*pb.RegisterResponse, error)
 }
 
-func NewClient(target string) (Client, error) {
-	if target == "" {
-		return nil, errors.New("target is required")
+// NewClient creates a new RainbowClient
+func NewClient(host string) (Client, error) {
+	if host == "" {
+		return nil, errors.New("host is required")
 	}
 
-	log.Printf("starting client (%s)...", target)
-
-	c := &SimpleClient{
-		target: target,
-	}
+	log.Printf("🌈️ starting client (%s)...", host)
+	c := &RainbowClient{host: host}
 
 	// Set up a connection to the server.
 	creds := grpc.WithTransportCredentials(insecure.NewCredentials())
-	conn, err := grpc.Dial(c.GetTarget(), creds, grpc.WithBlock())
+	conn, err := grpc.Dial(c.GetHost(), creds, grpc.WithBlock())
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to connect to %s", target)
+		return nil, errors.Wrapf(err, "unable to connect to %s", host)
 	}
 
 	c.connection = conn
@@ -44,24 +50,20 @@ func NewClient(target string) (Client, error) {
 	return c, nil
 }
 
-type SimpleClient struct {
-	target     string
-	connection *grpc.ClientConn
-	service    pb.ServiceClient
-}
-
 // Close closes the created resources (e.g. connection).
-func (c *SimpleClient) Close() error {
+func (c *RainbowClient) Close() error {
 	if c.connection != nil {
 		return c.connection.Close()
 	}
 	return nil
 }
 
-func (c *SimpleClient) Connected() bool {
+// Connected returns  true if we are connected and the connection is ready
+func (c *RainbowClient) Connected() bool {
 	return c.service != nil && c.connection != nil && c.connection.GetState() == connectivity.Ready
 }
 
-func (c *SimpleClient) GetTarget() string {
-	return c.target
+// GetHost returns the private hostn name
+func (c *RainbowClient) GetHost() string {
+	return c.host
 }

@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ServiceClient interface {
 	// Register cluster - request to register a new cluster
-	Register(ctx context.Context, in *Request, opts ...grpc.CallOption) (*RegisterResponse, error)
+	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	// Job Submission - request for submitting a job to a named cluster
 	SubmitJob(ctx context.Context, in *Request, opts ...grpc.CallOption) (*SubmitJobResponse, error)
 	// TESTING ENDPOINTS
@@ -42,7 +42,7 @@ func NewServiceClient(cc grpc.ClientConnInterface) ServiceClient {
 	return &serviceClient{cc}
 }
 
-func (c *serviceClient) Register(ctx context.Context, in *Request, opts ...grpc.CallOption) (*RegisterResponse, error) {
+func (c *serviceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
 	out := new(RegisterResponse)
 	err := c.cc.Invoke(ctx, "/convergedcomputing.org.grpc.v1.Service/Register", in, out, opts...)
 	if err != nil {
@@ -105,7 +105,7 @@ func (x *serviceStreamClient) Recv() (*Response, error) {
 // for forward compatibility
 type ServiceServer interface {
 	// Register cluster - request to register a new cluster
-	Register(context.Context, *Request) (*RegisterResponse, error)
+	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	// Job Submission - request for submitting a job to a named cluster
 	SubmitJob(context.Context, *Request) (*SubmitJobResponse, error)
 	// TESTING ENDPOINTS
@@ -121,7 +121,7 @@ type ServiceServer interface {
 type UnimplementedServiceServer struct {
 }
 
-func (UnimplementedServiceServer) Register(context.Context, *Request) (*RegisterResponse, error) {
+func (UnimplementedServiceServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
 func (UnimplementedServiceServer) SubmitJob(context.Context, *Request) (*SubmitJobResponse, error) {
@@ -147,7 +147,7 @@ func RegisterServiceServer(s grpc.ServiceRegistrar, srv ServiceServer) {
 }
 
 func _Service_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(RegisterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ func _Service_Register_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: "/convergedcomputing.org.grpc.v1.Service/Register",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceServer).Register(ctx, req.(*Request))
+		return srv.(ServiceServer).Register(ctx, req.(*RegisterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -11,14 +11,14 @@ import (
 var (
 	host        string
 	clusterName string
-
-	// set at build time
-	version = "v0.0.1-default"
+	secret      string
+	version     = "v0.0.1-default"
 )
 
 func main() {
 	flag.StringVar(&host, "host", "localhost:50051", "Scheduler server address (host:port)")
 	flag.StringVar(&clusterName, "cluster", "keebler", "Name of cluster to register")
+	flag.StringVar(&secret, "secret", "chocolate-cookies", "Registration 'secret'")
 	flag.Parse()
 
 	log.Printf("creating client (%s)...", version)
@@ -31,9 +31,12 @@ func main() {
 	log.Printf("registering cluster: %s", clusterName)
 
 	// Last argument is secret, empty for now
-	m, err := c.Register(context.Background(), clusterName, "")
+	response, err := c.Register(context.Background(), clusterName, secret)
 	if err != nil {
 		log.Fatalf("error while running client: %v", err)
 	}
-	log.Printf("received response: %s", m)
+
+	// If we get here, success! Dump all the stuff.
+	log.Printf("status: %s", response.Status)
+	log.Printf(" token: %s", response.Token)
 }

@@ -3,6 +3,7 @@
 
 # Go
 vendor
+rainbow.db
 
 # Test binaries
 *.test

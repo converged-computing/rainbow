@@ -14,7 +14,7 @@ import (
 )
 
 // Stream sends a message to the server and receives the response.
-func (c *SimpleClient) Stream(ctx context.Context, it provider.MessageIterator) error {
+func (c *RainbowClient) Stream(ctx context.Context, it provider.MessageIterator) error {
 	if it == nil {
 		return errors.New("message provider is required")
 	}

@@ -12,7 +12,7 @@ option go_package = "github.com/converged-computing/rainbow/pkg/api/v1";
 service Service {
 
   // Register cluster - request to register a new cluster
-  rpc Register(Request) returns (RegisterResponse);
+  rpc Register(RegisterRequest) returns (RegisterResponse);
 
   // Job Submission - request for submitting a job to a named cluster
   rpc SubmitJob(Request) returns (SubmitJobResponse);
@@ -48,14 +48,21 @@ message Request {
   google.protobuf.Timestamp sent = 2;
 }
 
+message RegisterRequest {
+  string name = 1;
+  string secret = 2;
+  google.protobuf.Timestamp sent = 3;
+}
+
+
 // Testing response - the server's response to a request.
 message Response {
 
   // Enum to represent the result types of the operation.
   enum ResultType {
-    RESULT_TYPE_UNSPECIFIED = 0; // Default value, unspecified result type.
-    RESULT_TYPE_SUCCESS = 1;     // Indicates successful processing.
-    RESULT_TYPE_ERROR = 2;       // Indicates an error occurred.
+    RESULT_TYPE_UNSPECIFIED = 0;
+    RESULT_TYPE_SUCCESS = 1;
+    RESULT_TYPE_ERROR = 2;
   }
 
   // Unique identifier correlating to the request.
@@ -74,14 +81,17 @@ message Response {
 // Register Response
 message RegisterResponse {
 
-  // Enum to represent the result types of the operation.
+  // Registration statuses
   enum ResultType {
     REGISTER_UNSPECIFIED = 0;
     REGISTER_SUCCESS = 1;
     REGISTER_ERROR = 2;
     REGISTER_DENIED = 3;
+    REGISTER_EXISTS = 4;
   }
   string request_id = 1;
+  string token = 2;
+  ResultType status = 3;
 }
 
 // Submit Job Response

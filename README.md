@@ -42,10 +42,19 @@ make server
 ```
 ```console
 go run cmd/server/server.go
-2024/02/11 15:36:19 creating server...
-2024/02/11 15:36:19 starting server: server (development) vv0.0.1-default
-2024/02/11 15:36:19 server listening: [::]:50051
-2024/02/11 15:39:08 received register: type_url:"type.googleapis.com/google.protobuf.StringValue" value:"\n\x07keebler"
+2024/02/11 18:06:57 creating 🌈️ server...
+2024/02/11 18:06:57 🧹️ cleaning up rainbow.db...
+2024/02/11 18:06:57 ✨️ creating rainbow.db...
+2024/02/11 18:06:57    rainbow.db file created
+2024/02/11 18:06:57    create jobs table...
+2024/02/11 18:06:57    jobs table created
+2024/02/11 18:06:57    create cluster table...
+2024/02/11 18:06:57    cluster table created
+2024/02/11 18:06:57 starting scheduler server: rainbow vv0.0.1-default
+2024/02/11 18:06:57 server listening: [::]:50051
+2024/02/11 18:06:59 📝️ received register: keebler
+SELECT count(*) from clusters WHERE name LIKE "keebler": (0)
+INSERT into clusters VALUES ("keebler", "2804a013-89df-433d-a904-4666a6415ad0"): (1)
 ```
 
 And then mock a registration:
@@ -55,14 +64,15 @@ make register
 ```
 ```console
 go run cmd/register/register.go
-2024/02/11 15:46:53 creating client (v0.0.1-default)...
-2024/02/11 15:46:53 starting client (localhost:50051)...
-2024/02/11 15:46:53 registering cluster: keebler
-request_id:"0f7a0e7d-c2ed-4a46-9eaa-3d554349244e"
-2024/02/11 15:46:53 received response: register success
+2024/02/11 18:06:59 creating client (v0.0.1-default)...
+2024/02/11 18:06:59 🌈️ starting client (localhost:50051)...
+2024/02/11 18:06:59 registering cluster: keebler
+2024/02/11 18:06:59 status: REGISTER_SUCCESS
+2024/02/11 18:06:59  token: 2804a013-89df-433d-a904-4666a6415ad0
 ```
 
-Nothing meaningful is happening yet - I'm just creating a skeleton (and learning about servers / services in Go with grpc more) and am going to add meat to this. My plan is below in [TODO](#TODO).
+In the above, we are providing a cluster name (keebler) and it is being registered to the database, and a token and status returned.
+We would then use this token for subsequent requests to interact with the cluster.
 
 ## Container Images
 
@@ -70,10 +80,8 @@ Nothing meaningful is happening yet - I'm just creating a skeleton (and learning
 
 ## TODO
 
-- Add an actual database (sqlite) to the server, which should init, create tables for clusters, jobs (ids and cluster assignment)
-- When a registration is done, it should check against this database (and add a new cluster or determine already registered)
-- Add a secret to validate that, and generation of a cluster-specific token to validate further responses.
 - Write the job submission endpoint, which should take a cluster name and command, and return status (success, denied, etc.)
+- Make a nicer (single UI entrypoint) for client with different functions
 
 At this point we will have a dumb little database with jobs assigned to clusters. We can then modify the client to add a polling command (intended to be run on a flux instance) that will use the cluster-specific token to say "Do you have any jobs for me?" at some interval. This can run anywhere there is a Flux instance. It can receive the job, and run it. When it receives the job, the job will be deleted from the database, because we don't care anymore.
 
