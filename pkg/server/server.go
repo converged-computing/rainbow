@@ -102,6 +102,7 @@ func (s *Server) Stop() {
 	}
 }
 
+// Start the server
 func (s *Server) Start(ctx context.Context, address string) error {
 	// Create a listener on the specified address.
 	lis, err := net.Listen(protocol, address)
@@ -111,6 +112,7 @@ func (s *Server) Start(ctx context.Context, address string) error {
 	return s.serve(ctx, lis)
 }
 
+// serve is the main function to ensure the server is listening, etc.
 func (s *Server) serve(_ context.Context, lis net.Listener) error {
 	if lis == nil {
 		return errors.New("listener is required")

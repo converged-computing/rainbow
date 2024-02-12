@@ -2,9 +2,11 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
+	"github.com/converged-computing/rainbow/pkg/types"
 	"github.com/pkg/errors"
 	ts "google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -14,18 +16,57 @@ type RegisterRequest struct {
 	Secret string
 }
 
+// SubmitJob submits a job to a named cluster.
+// The token specific to the cluster is required
+func (c *RainbowClient) SubmitJob(
+	ctx context.Context,
+	job types.JobSpec,
+	cluster string,
+	token string,
+) (*pb.SubmitJobResponse, error) {
+
+	response := &pb.SubmitJobResponse{}
+
+	// First validate the job
+	if job.Nodes < 1 {
+		return response, fmt.Errorf("nodes must be greater than 1")
+	}
+	if !c.Connected() {
+		return response, errors.New("client is not connected")
+	}
+	if cluster == "" {
+		return response, errors.New("cluster name is required")
+	}
+
+	// Contact the server...
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	// Validate that the cluster exists, and we have the right token.
+	// The response is the same either way - not found does not reveal
+	// additional information to the client trying to find it
+	response, err := c.service.SubmitJob(ctx, &pb.SubmitJobRequest{
+		Name:    job.Name,
+		Token:   token,
+		Nodes:   job.Nodes,
+		Tasks:   job.Tasks,
+		Cluster: cluster,
+		Command: job.Command,
+		Sent:    ts.Now(),
+	})
+	return response, err
+}
+
 // Register makes a request to register a new cluster
 func (c *RainbowClient) Register(
 	ctx context.Context,
-	clusterName string,
+	cluster string,
 	secret string,
 ) (*pb.RegisterResponse, error) {
 
 	response := &pb.RegisterResponse{}
-
-	// TODO add secret requirement when server has database
-	if clusterName == "" {
-		return response, errors.New("message is required")
+	if cluster == "" {
+		return response, errors.New("cluster is required")
 	}
 	if !c.Connected() {
 		return response, errors.New("client is not connected")
@@ -37,7 +78,7 @@ func (c *RainbowClient) Register(
 
 	// Hit the register endpoint
 	response, err := c.service.Register(ctx, &pb.RegisterRequest{
-		Name:   clusterName,
+		Name:   cluster,
 		Secret: secret,
 		Sent:   ts.Now(),
 	})

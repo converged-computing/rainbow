@@ -25,7 +25,7 @@ type ServiceClient interface {
 	// Register cluster - request to register a new cluster
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	// Job Submission - request for submitting a job to a named cluster
-	SubmitJob(ctx context.Context, in *Request, opts ...grpc.CallOption) (*SubmitJobResponse, error)
+	SubmitJob(ctx context.Context, in *SubmitJobRequest, opts ...grpc.CallOption) (*SubmitJobResponse, error)
 	// TESTING ENDPOINTS
 	// Serial checks the connectivity and response time of the service.
 	Serial(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
@@ -51,7 +51,7 @@ func (c *serviceClient) Register(ctx context.Context, in *RegisterRequest, opts 
 	return out, nil
 }
 
-func (c *serviceClient) SubmitJob(ctx context.Context, in *Request, opts ...grpc.CallOption) (*SubmitJobResponse, error) {
+func (c *serviceClient) SubmitJob(ctx context.Context, in *SubmitJobRequest, opts ...grpc.CallOption) (*SubmitJobResponse, error) {
 	out := new(SubmitJobResponse)
 	err := c.cc.Invoke(ctx, "/convergedcomputing.org.grpc.v1.Service/SubmitJob", in, out, opts...)
 	if err != nil {
@@ -107,7 +107,7 @@ type ServiceServer interface {
 	// Register cluster - request to register a new cluster
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	// Job Submission - request for submitting a job to a named cluster
-	SubmitJob(context.Context, *Request) (*SubmitJobResponse, error)
+	SubmitJob(context.Context, *SubmitJobRequest) (*SubmitJobResponse, error)
 	// TESTING ENDPOINTS
 	// Serial checks the connectivity and response time of the service.
 	Serial(context.Context, *Request) (*Response, error)
@@ -124,7 +124,7 @@ type UnimplementedServiceServer struct {
 func (UnimplementedServiceServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedServiceServer) SubmitJob(context.Context, *Request) (*SubmitJobResponse, error) {
+func (UnimplementedServiceServer) SubmitJob(context.Context, *SubmitJobRequest) (*SubmitJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitJob not implemented")
 }
 func (UnimplementedServiceServer) Serial(context.Context, *Request) (*Response, error) {
@@ -165,7 +165,7 @@ func _Service_Register_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _Service_SubmitJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(SubmitJobRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -177,7 +177,7 @@ func _Service_SubmitJob_Handler(srv interface{}, ctx context.Context, dec func(i
 		FullMethod: "/convergedcomputing.org.grpc.v1.Service/SubmitJob",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceServer).SubmitJob(ctx, req.(*Request))
+		return srv.(ServiceServer).SubmitJob(ctx, req.(*SubmitJobRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

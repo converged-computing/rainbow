@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
+	"github.com/converged-computing/rainbow/pkg/utils"
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 
@@ -14,6 +15,21 @@ import (
 
 type Database struct {
 	filepath string
+}
+
+// Database types to serialize back into
+type Cluster struct {
+	Name   string
+	Secret string
+}
+
+type Job struct {
+	Id      int32
+	Cluster string
+	Name    string
+	Nodes   int32
+	Tasks   int32
+	Command string
 }
 
 // cleanup removes the filepath
@@ -72,7 +88,7 @@ func (db *Database) RegisterCluster(name string) (pb.RegisterResponse_ResultType
 	count, err := result.RowsAffected()
 
 	// Debugging extra for now
-	fmt.Printf("%s: (%d)\n", query, count)
+	log.Printf("%s: (%d)\n", query, count)
 
 	// Case 1: already exists
 	if count > 0 {
@@ -81,13 +97,13 @@ func (db *Database) RegisterCluster(name string) (pb.RegisterResponse_ResultType
 
 	// Generate a "secret" token, lol
 	token := uuid.New().String()
-	query = fmt.Sprintf("INSERT into clusters VALUES (\"%s\", \"%s\")", name, token)
+	query = fmt.Sprintf("INSERT into clusters (name, secret) VALUES (\"%s\", \"%s\")", name, token)
 	result, err = conn.Exec(query)
 	if err != nil {
 		return 2, "", err
 	}
 	count, err = result.RowsAffected()
-	fmt.Printf("%s: (%d)\n", query, count)
+	log.Printf("%s: (%d)\n", query, count)
 
 	// REGISTER_SUCCESS
 	if count > 0 {
@@ -96,6 +112,92 @@ func (db *Database) RegisterCluster(name string) (pb.RegisterResponse_ResultType
 
 	// REGISTER_ERROR
 	return 2, "", err
+}
+
+// SubmitJob adds the job to the database
+// SUBMIT_UNSPECIFIED = 0;
+// SUBMIT_SUCCESS = 1;
+// SUBMIT_ERROR = 2;
+// SUBMIT_DENIED = 3;
+func (db *Database) SubmitJob(job *pb.SubmitJobRequest, cluster *Cluster) (pb.SubmitJobResponse_ResultType, int32, error) {
+	var jobid int32
+	conn, err := db.connect()
+	if err != nil {
+		return 0, jobid, err
+	}
+	defer conn.Close()
+
+	// Generate a "secret" token, lol
+	fields := "(cluster, name, nodes, tasks, command)"
+	values := fmt.Sprintf("(\"%s\", \"%s\",\"%d\",\"%d\",\"%s\")", cluster.Name, job.Name, job.Nodes, job.Tasks, job.Command)
+
+	// Submit the query to get the global id (jobid, not submit yet)
+	query := fmt.Sprintf("INSERT into jobs %s VALUES %s", fields, values)
+
+	// Since we want to get a result back, we use query
+	statement, err := conn.Prepare(query)
+	if err != nil {
+		return 2, jobid, err
+	}
+
+	// We expect only one job
+	rows, err := statement.Query()
+	if err != nil {
+		return 2, jobid, err
+	}
+
+	// Unwrap into job
+	j := Job{}
+	for rows.Next() {
+		err := rows.Scan(&j.Id, &j.Cluster, &j.Name, &j.Nodes, &j.Tasks, &j.Command)
+		if err != nil {
+			return 2, jobid, err
+		}
+	}
+	// Success
+	return 1, j.Id, nil
+}
+
+// GetCluster gets a cluster if it exists AND the token for it is valid
+func (db *Database) GetCluster(name, token string) (*Cluster, error) {
+
+	// Connect!
+	conn, err := db.connect()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	// First determine if it exists
+	query := fmt.Sprintf("SELECT * from clusters WHERE name LIKE \"%s\" LIMIT 1", name)
+	// Since we want to get a result back, we use query
+	statement, err := conn.Prepare(query)
+	if err != nil {
+		return nil, err
+	}
+
+	// Only allow one result, one cluster
+	rows, err := statement.Query()
+	if err != nil {
+		return nil, err
+	}
+
+	// Unwrap result into cluster
+	cluster := Cluster{}
+	for rows.Next() {
+		err := rows.Scan(&cluster.Name, &cluster.Secret)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Validate the name and token
+	if cluster.Name == "" || cluster.Secret != token {
+		return nil, fmt.Errorf("request denied")
+	}
+	// Debugging extra for now
+	log.Printf("%s: %s\n", query, cluster.Name)
+	return &cluster, nil
 }
 
 // create the database
@@ -113,13 +215,17 @@ func (db *Database) createTables() error {
 	CREATE TABLE clusters (
 		name TEXT NOT NULL PRIMARY KEY,		
 		secret TEXT
-	  );`
+	  );
+	`
 
 	createJobsTableSQL := `
 	  CREATE TABLE jobs (
 		  idJob integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
-		  jobspec TEXT,
 		  cluster TEXT,
+		  name TEXT,
+		  nodes integer,
+		  tasks integer,
+		  command TEXT,
 		  FOREIGN KEY(cluster) REFERENCES clusters(name)
 		);`
 
@@ -148,15 +254,18 @@ func initDatabase(filepath string, cleanup bool) (*Database, error) {
 		db.cleanup()
 	}
 
-	// Create the database
-	err := db.create()
+	// If we haven't created yet or cleaned up
+	exists, err := utils.PathExists(db.filepath)
 	if err != nil {
 		return nil, err
 	}
-
-	if err != nil {
-		return nil, err
+	if !exists {
+		// Create the database
+		err := db.create()
+		if err != nil {
+			return nil, err
+		}
+		err = db.createTables()
 	}
-	err = db.createTables()
 	return &db, err
 }

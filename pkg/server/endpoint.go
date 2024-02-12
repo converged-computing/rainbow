@@ -31,6 +31,34 @@ func (s *Server) Register(_ context.Context, in *pb.RegisterRequest) (*pb.Regist
 	}, err
 }
 
+// SubmitJob submits a job to a specific cluster, or adds an entry to the database
+func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.SubmitJobResponse, error) {
+	if in == nil {
+		return nil, errors.New("request is required")
+	}
+
+	// Nogo without a token
+	if in.Token == "" {
+		return nil, errors.New("a cluster token is required")
+	}
+
+	// Get the token for the cluster (if it exists, same response either way)
+	// woooomp wommmmp!
+	cluster, err := s.db.GetCluster(in.Cluster, in.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert data to string, should be the cluster name
+	// TODO make this better, I'm sure there is a better way
+	log.Printf("📝️ received job %s for cluster %s", in.Name, cluster.Name)
+	status, jobid, err := s.db.SubmitJob(in, cluster)
+	return &pb.SubmitJobResponse{
+		Status: status,
+		Jobid:  jobid,
+	}, err
+}
+
 // TEST ENDPOINTS ------------------------------------------------
 // Stream implements the Stream method of the Service.
 func (s *Server) Stream(stream pb.Service_StreamServer) error {

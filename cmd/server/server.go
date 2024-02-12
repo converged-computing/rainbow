@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/converged-computing/rainbow/pkg/server"
+	"github.com/converged-computing/rainbow/pkg/types"
 )
 
 var (
@@ -13,11 +14,8 @@ var (
 	name        = "rainbow"
 	sqliteFile  = "rainbow.db"
 	environment = "development"
-
-	// Remove the previous database
-	skipCleanup = false
+	cleanup     = false
 	secret      = "chocolate-cookies"
-	version     = "v0.0.1-default"
 )
 
 func main() {
@@ -26,12 +24,12 @@ func main() {
 	flag.StringVar(&sqliteFile, "db", sqliteFile, "sqlite3 database file (default: rainbow.db)")
 	flag.StringVar(&secret, "secret", secret, "secret to validate registration (default: chocolate-cookies)")
 	flag.StringVar(&environment, "environment", environment, "environment (default: development)")
-	flag.BoolVar(&skipCleanup, "skip-cleanup", skipCleanup, "skip cleanup of previous sqlite database (default: false)")
+	flag.BoolVar(&cleanup, "cleanup", cleanup, "cleanup previous sqlite database (default: false)")
 	flag.Parse()
 
 	// create server
 	log.Print("creating 🌈️ server...")
-	s, err := server.NewServer(name, version, environment, sqliteFile, !skipCleanup, secret)
+	s, err := server.NewServer(name, types.Version, environment, sqliteFile, cleanup, secret)
 	if err != nil {
 		log.Fatalf("error while creating server: %v", err)
 	}

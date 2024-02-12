@@ -50,7 +50,7 @@ stream: ## Runs the interface client
 
 .PHONY: register
 register: ## Run mock registration
-	go run cmd/register/register.go
+	go run cmd/rainbow/rainbow.go register
 
 .PHONY: tag
 tag: ## Creates release tag 
@@ -64,6 +64,7 @@ tagless: ## Delete the current release tag
 
 .PHONY: clean
 clean: ## Cleans bin and temp directories
+	rm -rf ./rainbow.db
 	go clean
 	rm -fr ./vendor
 	rm -fr ./bin

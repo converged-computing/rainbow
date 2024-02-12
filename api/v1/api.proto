@@ -15,7 +15,7 @@ service Service {
   rpc Register(RegisterRequest) returns (RegisterResponse);
 
   // Job Submission - request for submitting a job to a named cluster
-  rpc SubmitJob(Request) returns (SubmitJobResponse);
+  rpc SubmitJob(SubmitJobRequest) returns (SubmitJobResponse);
 
   // TESTING ENDPOINTS
   // Serial checks the connectivity and response time of the service.
@@ -41,17 +41,29 @@ message Content {
 // Request represents the request for a method invocation.
 // It includes the content to be sent and a timestamp.
 message Request {
-  // The content to be sent in the request.
   Content content = 1;
-
-  // Timestamp when the message was sent, represented in Unix epoch format.
   google.protobuf.Timestamp sent = 2;
 }
 
+// RegisterRequest registers a cluster to the scheduler service 
+// The shared secret is required to validate the request
 message RegisterRequest {
   string name = 1;
   string secret = 2;
   google.protobuf.Timestamp sent = 3;
+}
+
+// SubmitJobRequest takes a job name, cluster name
+// and requires the cluster token. Since we want to be generic,
+// we currently accept nodes, tasks, and the command
+message SubmitJobRequest {
+  string name = 1;
+  string cluster = 2;
+  string token = 3;
+  int32 nodes = 4;
+  int32 tasks = 5;
+  string command = 6;
+  google.protobuf.Timestamp sent = 7;
 }
 
 
@@ -65,16 +77,9 @@ message Response {
     RESULT_TYPE_ERROR = 2;
   }
 
-  // Unique identifier correlating to the request.
   string request_id = 1;
-
-  // Total number of messages received in the request.
   int64 message_count = 2;
-
-  // Number of messages successfully processed.
   int64 messages_processed = 3;
-
-  // Detailed information or description of the processing result.
   string processing_details = 4;
 }
 
@@ -105,5 +110,6 @@ message SubmitJobResponse {
     SUBMIT_DENIED = 3;
   }
   string request_id = 1;
-  string job_id = 2;
+  int32 jobid = 2;
+  ResultType status = 3;
 }

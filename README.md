@@ -54,7 +54,7 @@ go run cmd/server/server.go
 2024/02/11 18:06:57 server listening: [::]:50051
 2024/02/11 18:06:59 📝️ received register: keebler
 SELECT count(*) from clusters WHERE name LIKE "keebler": (0)
-INSERT into clusters VALUES ("keebler", "2804a013-89df-433d-a904-4666a6415ad0"): (1)
+INSERT into clusters VALUES ("keebler", "712747b7-b2a9-4bea-b630-056cd64856e6"): (1)
 ```
 
 And then mock a registration:
@@ -68,11 +68,55 @@ go run cmd/register/register.go
 2024/02/11 18:06:59 🌈️ starting client (localhost:50051)...
 2024/02/11 18:06:59 registering cluster: keebler
 2024/02/11 18:06:59 status: REGISTER_SUCCESS
-2024/02/11 18:06:59  token: 2804a013-89df-433d-a904-4666a6415ad0
+2024/02/11 18:06:59  token: 712747b7-b2a9-4bea-b630-056cd64856e6
 ```
 
-In the above, we are providing a cluster name (keebler) and it is being registered to the database, and a token and status returned.
-We would then use this token for subsequent requests to interact with the cluster.
+In the above, we are providing a cluster name (keebler) and it is being registered to the database, and a token and status returned. Note that if we want to submit a job to the "keebler" cluster, from anywhere, we need this token! Let's try that next.
+
+```bash
+# Look at help
+go run ./cmd/rainbow/rainbow.go submit --help
+```
+```
+usage: rainbow submit [-h|--help] [-s|--secret "<value>"] [-n|--nodes
+               <integer>] [-t|--tasks <integer>] [-c|--command "<value>"]
+               [--job-name "<value>"] [--host "<value>"] [--cluster-name
+               "<value>"]
+
+               Submit a job to a rainbow cluster
+
+Arguments:
+
+  -h  --help          Print help information
+  -s  --secret        Registration 'secret'. Default: chocolate-cookies
+  -n  --nodes         Number of nodes to request. Default: 1
+  -t  --tasks         Number of tasks to request (per node? total?)
+  -c  --command       Command to submit. Default: chocolate-cookies
+      --job-name      Name for the job (defaults to first command).
+      --host          Scheduler server address (host:port). Default:
+                      localhost:50051
+      --cluster-name  Name of cluster to register. Default: keebler
+```
+Let's try doing that.
+
+```bash
+go run ./cmd/rainbow/rainbow.go submit --secret "712747b7-b2a9-4bea-b630-056cd64856e6" --command hostname
+```
+```console
+2024/02/11 21:43:17 🌈️ starting client (localhost:50051)...
+2024/02/11 21:43:17 submit job: hostname
+2024/02/11 21:43:17 status:SUBMIT_SUCCESS
+```
+
+Hooray! On the server log side we see...
+
+```console
+SELECT * from clusters WHERE name LIKE "keebler" LIMIT 1: keebler
+2024/02/11 21:43:17 📝️ received job hostname for cluster keebler
+```
+
+Now we have a job in the database, and it's oriented for a specific cluster.
+Now we need to write the logic for the cluster to poll asking for jobs assigned to it to receive it! I'll work on that next.
 
 ## Container Images
 
@@ -80,10 +124,7 @@ We would then use this token for subsequent requests to interact with the cluste
 
 ## TODO
 
-- Write the job submission endpoint, which should take a cluster name and command, and return status (success, denied, etc.)
-- Make a nicer (single UI entrypoint) for client with different functions
-
-At this point we will have a dumb little database with jobs assigned to clusters. We can then modify the client to add a polling command (intended to be run on a flux instance) that will use the cluster-specific token to say "Do you have any jobs for me?" at some interval. This can run anywhere there is a Flux instance. It can receive the job, and run it. When it receives the job, the job will be deleted from the database, because we don't care anymore.
+At this point we have a dumb little database with jobs assigned to clusters. We can then modify the client to add a polling command (intended to be run on a flux instance) that will use the cluster-specific token to say "Do you have any jobs for me?" at some interval. This can run anywhere there is a Flux instance. It can receive the job, and run it. When it receives the job, the job will be deleted from the database, because we don't care anymore.
 
 And that should be a very basic prototype - we can then build this into containers and deploy in different places (and deploy a client separate from a Flux instance) and demonstrate submitting jobs across different places. For the Flux instance logic, we could write the grpc endpoints in Python, but it would be more fun to (finally) make Go bindings for flux core.
 

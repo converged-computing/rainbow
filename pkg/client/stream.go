@@ -5,16 +5,16 @@ import (
 	"log"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
-	"github.com/converged-computing/rainbow/pkg/provider"
+	"github.com/converged-computing/rainbow/pkg/types"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	anypb "google.golang.org/protobuf/types/known/anypb"
-	tspb "google.golang.org/protobuf/types/known/timestamppb"
-	wrbp "google.golang.org/protobuf/types/known/wrapperspb"
+	ts "google.golang.org/protobuf/types/known/timestamppb"
+	wrapper "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // Stream sends a message to the server and receives the response.
-func (c *RainbowClient) Stream(ctx context.Context, it provider.MessageIterator) error {
+func (c *RainbowClient) Stream(ctx context.Context, it types.MessageIterator) error {
 	if it == nil {
 		return errors.New("message provider is required")
 	}
@@ -41,7 +41,7 @@ func (c *RainbowClient) Stream(ctx context.Context, it provider.MessageIterator)
 		}
 
 		// create message with wrapper
-		a, err := anypb.New(wrbp.String(it.Next()))
+		a, err := anypb.New(wrapper.String(it.Next()))
 		if err != nil {
 			return errors.Wrap(err, "unable to create message")
 		}
@@ -52,7 +52,7 @@ func (c *RainbowClient) Stream(ctx context.Context, it provider.MessageIterator)
 				Id:   uuid.New().String(),
 				Data: a,
 			},
-			Sent: tspb.Now(),
+			Sent: ts.Now(),
 		}); err != nil {
 			return errors.Wrap(err, "failed to send a message")
 		}

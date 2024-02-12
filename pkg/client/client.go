@@ -5,7 +5,7 @@ import (
 	"log"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
-	"github.com/converged-computing/rainbow/pkg/provider"
+	"github.com/converged-computing/rainbow/pkg/types"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
@@ -24,8 +24,9 @@ var _ Client = (*RainbowClient)(nil)
 // Client interface defines functions required for a valid client
 type Client interface {
 	Serial(ctx context.Context, message string) (string, error)
-	Stream(ctx context.Context, it provider.MessageIterator) error
+	Stream(ctx context.Context, it types.MessageIterator) error
 	Register(ctx context.Context, clusterName, secret string) (*pb.RegisterResponse, error)
+	SubmitJob(ctx context.Context, job types.JobSpec, cluster, token string) (*pb.SubmitJobResponse, error)
 }
 
 // NewClient creates a new RainbowClient
