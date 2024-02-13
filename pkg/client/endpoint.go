@@ -57,6 +57,42 @@ func (c *RainbowClient) SubmitJob(
 	return response, err
 }
 
+// RequestJobs requests jobs for a specific cluster
+func (c *RainbowClient) RequestJobs(
+	ctx context.Context,
+	cluster string,
+	secret string,
+	maxJobs int32,
+) (*pb.RequestJobsResponse, error) {
+
+	response := &pb.RequestJobsResponse{}
+
+	// First validate the job
+	if maxJobs < 1 {
+		return response, fmt.Errorf("max jobs greater than 1")
+	}
+	if !c.Connected() {
+		return response, errors.New("client is not connected")
+	}
+	if cluster == "" {
+		return response, errors.New("cluster name is required")
+	}
+	if secret == "" {
+		return response, errors.New("cluster secret is required")
+	}
+
+	// Contact the server...
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	response, err := c.service.RequestJobs(ctx, &pb.RequestJobsRequest{
+		Cluster: cluster,
+		Secret:  secret,
+		MaxJobs: maxJobs,
+		Sent:    ts.Now(),
+	})
+	return response, err
+}
+
 // Register makes a request to register a new cluster
 func (c *RainbowClient) Register(
 	ctx context.Context,

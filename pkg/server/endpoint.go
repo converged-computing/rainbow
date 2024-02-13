@@ -19,16 +19,8 @@ func (s *Server) Register(_ context.Context, in *pb.RegisterRequest) (*pb.Regist
 	if in.Secret == "" || (in.Secret != s.secret) {
 		return nil, errors.New("request denied")
 	}
-
-	// Convert data to string, should be the cluster name
-	// TODO make this better, I'm sure there is a better way
 	log.Printf("📝️ received register: %s", in.Name)
-
-	status, token, err := s.db.RegisterCluster(in.Name)
-	return &pb.RegisterResponse{
-		Status: status,
-		Token:  token,
-	}, err
+	return s.db.RegisterCluster(in.Name)
 }
 
 // SubmitJob submits a job to a specific cluster, or adds an entry to the database
@@ -42,21 +34,33 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 		return nil, errors.New("a cluster token is required")
 	}
 
-	// Get the token for the cluster (if it exists, same response either way)
-	// woooomp wommmmp!
-	cluster, err := s.db.GetCluster(in.Cluster, in.Token)
+	// Validate the token for the cluster (if it exists)
+	cluster, err := s.db.ValidateClusterToken(in.Cluster, in.Token)
 	if err != nil {
 		return nil, err
 	}
-
-	// Convert data to string, should be the cluster name
-	// TODO make this better, I'm sure there is a better way
 	log.Printf("📝️ received job %s for cluster %s", in.Name, cluster.Name)
-	status, jobid, err := s.db.SubmitJob(in, cluster)
-	return &pb.SubmitJobResponse{
-		Status: status,
-		Jobid:  jobid,
-	}, err
+	return s.db.SubmitJob(in, cluster)
+}
+
+// RequestJobs receives a cluster / instance / other receiving entity request for jobs
+func (s *Server) RequestJobs(_ context.Context, in *pb.RequestJobsRequest) (*pb.RequestJobsResponse, error) {
+	if in == nil {
+		return nil, errors.New("request is required")
+	}
+
+	// Nogo without a secret to validate cluster owns the namespace
+	if in.Secret == "" {
+		return nil, errors.New("a cluster secret is required")
+	}
+
+	// Validate the secret matches the cluster
+	cluster, err := s.db.ValidateClusterSecret(in.Cluster, in.Secret)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("🌀️ requesting %d max jobs for cluster %s", in.MaxJobs, cluster.Name)
+	return s.db.RequestJobs(in, cluster)
 }
 
 // TEST ENDPOINTS ------------------------------------------------

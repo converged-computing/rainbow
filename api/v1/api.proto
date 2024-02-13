@@ -16,6 +16,9 @@ service RainbowScheduler {
   // Job Submission - request for submitting a job to a named cluster
   rpc SubmitJob(SubmitJobRequest) returns (SubmitJobResponse);
 
+  // Request Job - ask the rainbow scheduler for up to max jobs
+  rpc RequestJobs(RequestJobsRequest) returns (RequestJobsResponse);
+
   // TESTING ENDPOINTS
   // Serial checks the connectivity and response time of the service.
   rpc Serial(Request) returns (Response);
@@ -65,6 +68,22 @@ message SubmitJobRequest {
   google.protobuf.Timestamp sent = 7;
 }
 
+// RequestJobsRequest is used by a cluster (or other entity that can run jobs)
+// to get back a maximum of N jobs. This will (and should) eventually
+// support filters / sorting criteria, but now we just take the top
+// N from a query. The response includes the ids that are accepted
+message RequestJobsRequest {
+  string cluster = 1;
+
+  // cluster secret given on registration 
+  // No other cluster or user can take a cluster's jobs!
+  string secret = 2;
+
+  // Max jobs to request
+  int32 maxJobs = 3;
+  google.protobuf.Timestamp sent = 7;
+}
+
 
 // Testing response - the server's response to a request.
 message Response {
@@ -94,8 +113,14 @@ message RegisterResponse {
     REGISTER_EXISTS = 4;
   }
   string request_id = 1;
+
+  // The "token" is given to clients (or this cluster) to submit jobs
+  // In the future this should be able to be refreshed
   string token = 2;
-  ResultType status = 3;
+
+  // The "secret" is for this cluster to receive them.
+  string secret = 3;
+  ResultType status = 4;
 }
 
 // Submit Job Response
@@ -110,5 +135,21 @@ message SubmitJobResponse {
   }
   string request_id = 1;
   int32 jobid = 2;
+  ResultType status = 3;
+}
+
+// RequestJobsResponse
+message RequestJobsResponse {
+
+  // Enum to represent the result types of the operation.
+  enum ResultType {
+    REQUEST_JOBS_NORESULTS = 0;
+    REQUEST_JOBS_SUCCESS = 1;
+    REQUEST_JOBS_ERROR = 2;
+    REQUEST_JOBS_DENIED = 3;
+  }
+  string request_id = 1;
+  map<int32, string> jobs = 2;
+  //  repeated int32 accepted_jobids = 2;
   ResultType status = 3;
 }
