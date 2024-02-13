@@ -146,6 +146,8 @@ emulate that.
 
 ### Request Jobs
 
+> Also List Jobs
+
 We now are pretending to be the cluster that originally registered, and we want to request some number of max jobs
 to look at. This doesn't mean we have to run them, but we want to ask for some small set to consider for running.
 Right now this just does a query for the count, but in the future we can have actual filters / query parameters
@@ -169,9 +171,38 @@ And on the server side:
 2024/02/12 23:27:29 🌀️ requesting 3 max jobs for cluster keebler
 ```
 
+Note that if you don't define the max jobs (so it is essentially 0) you will get all jobs. This is akin to listing jobs.
 Awesome! Next we can put that logic in a flux instance (from the Python grpc to start) and then have Flux
-accept some number of them. The response back to the rainbow scheduler will be those to accept, which will then
-be removed from the database. For another day.
+accept some number of them. The response back to the rainbow scheduler will be those to accept, which will then be removed from the database. For another day.
+
+
+### Accept Jobs
+
+A derivative of the above is to request and accept jobs. This can be done with the example client above, and adding `--accept N`.
+
+```console
+$ go run ./cmd/rainbow/rainbow.go request --request-secret 3cc06871-0990-4dc2-94d5-eec653c5d7a0 --cluster-name keebler --max-jobs 3 --accept 1
+```
+```console
+2024/02/13 12:29:29 🌀️ Found 3 jobs!
+2024/02/13 12:29:29 1 : {"id":1,"cluster":"keebler","name":"hostname","nodes":1,"tasks":0,"command":"hostname"}
+2024/02/13 12:29:29 2 : {"id":2,"cluster":"keebler","name":"sleep","nodes":1,"tasks":0,"command":"sleep 10"}
+2024/02/13 12:29:29 3 : {"id":3,"cluster":"keebler","name":"dinosaur","nodes":1,"tasks":0,"command":"dinosaur things"}
+2024/02/13 12:29:29 ✅️ Accepting 1 jobs!
+2024/02/13 12:29:29    1
+2024/02/13 12:29:29 status:RESULT_TYPE_SUCCESS
+```
+
+What this does is randomly select from the set you receive, and send back a response to the server to accept it, meaning the identifier is removed from the database. The server shows the following:
+
+```console
+2024/02/13 12:29:29 🌀️ accepting 1 for cluster keebler
+2024/02/13 12:29:29 DELETE FROM jobs WHERE cluster = 'keebler' AND idJob in (1): (1)
+```
+
+The logic you would expect is there - that you can't accept greater than the number available.
+You could try asking for a high level of max jobs again, and see that there is one fewer than before. It was deleted from the database.
+
 
 ## Container Images
 
@@ -179,11 +210,17 @@ be removed from the database. For another day.
 
 ## TODO
 
-- write a poll / receive endpoint for a cluster to ask for N jobs (need a way to accept)
+- endpoint to summarize jobs? Or update the request jobs to return a summary?
+- request jobs should accept way to filter or specify criteria for request
+- receiving endpoint to accept (meaning just deleting from the database)
 
-At this point we have a dumb little database with jobs assigned to clusters. We can then modify the client to add a polling command (intended to be run on a flux instance) that will use the cluster-specific token to say "Do you have any jobs for me?" at some interval. This can run anywhere there is a Flux instance. It can receive the job, and run it. When it receives the job, the job will be deleted from the database, because we don't care anymore.
+Next steps: Python bindings so we can run the client in a flux instance and:
 
-And that should be a very basic prototype - we can then build this into containers and deploy in different places (and deploy a client separate from a Flux instance) and demonstrate submitting jobs across different places. For the Flux instance logic, we could write the grpc endpoints in Python, but it would be more fun to (finally) make Go bindings for flux core.
+- Run in poll, at some increment
+- "Do you have jobs for me?"
+- "Yes I'll accept and run N" (delete from database)
+
+The above should be a very basic prototype - we can then build this into containers and deploy in different places (and deploy a client separate from a Flux instance) and demonstrate submitting jobs across different places. For the Flux instance logic, we could write the grpc endpoints in Python, but it would be more fun to (finally) make Go bindings for flux core.
 
 ## License
 

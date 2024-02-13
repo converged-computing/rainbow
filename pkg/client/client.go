@@ -23,11 +23,18 @@ var _ Client = (*RainbowClient)(nil)
 
 // Client interface defines functions required for a valid client
 type Client interface {
-	Serial(ctx context.Context, message string) (string, error)
-	Stream(ctx context.Context, it types.MessageIterator) error
+
+	// Cluster interactions
 	Register(ctx context.Context, clusterName, secret string) (*pb.RegisterResponse, error)
+
+	// Job Client Interactions
+	AcceptJobs(ctx context.Context, cluster, secret string, jobids []int32) (*pb.AcceptJobsResponse, error)
 	SubmitJob(ctx context.Context, job types.JobSpec, cluster, token string) (*pb.SubmitJobResponse, error)
 	RequestJobs(ctx context.Context, cluster, token string, maxJobs int32) (*pb.RequestJobsResponse, error)
+
+	// Testing or prototype endpoints
+	Serial(ctx context.Context, message string) (string, error)
+	Stream(ctx context.Context, it types.MessageIterator) error
 }
 
 // NewClient creates a new RainbowClient

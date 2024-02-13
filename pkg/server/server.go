@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
+	"github.com/converged-computing/rainbow/pkg/database"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -45,7 +46,7 @@ func NewServer(
 	}
 
 	// init the database, creating jobs and clusters tables
-	db, err := initDatabase(sqliteFile, cleanup)
+	db, err := database.InitDatabase(sqliteFile, cleanup)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -71,7 +72,7 @@ type Server struct {
 	version     string
 	environment string
 	secret      string
-	db          *Database
+	db          *database.Database
 }
 
 func (s *Server) String() string {

@@ -61,6 +61,18 @@ class SubmitJobRequest(_message.Message):
     sent: _timestamp_pb2.Timestamp
     def __init__(self, name: _Optional[str] = ..., cluster: _Optional[str] = ..., token: _Optional[str] = ..., nodes: _Optional[int] = ..., tasks: _Optional[int] = ..., command: _Optional[str] = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
+class RequestJobsRequest(_message.Message):
+    __slots__ = ("cluster", "secret", "maxJobs", "sent")
+    CLUSTER_FIELD_NUMBER: _ClassVar[int]
+    SECRET_FIELD_NUMBER: _ClassVar[int]
+    MAXJOBS_FIELD_NUMBER: _ClassVar[int]
+    SENT_FIELD_NUMBER: _ClassVar[int]
+    cluster: str
+    secret: str
+    maxJobs: int
+    sent: _timestamp_pb2.Timestamp
+    def __init__(self, cluster: _Optional[str] = ..., secret: _Optional[str] = ..., maxJobs: _Optional[int] = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+
 class Response(_message.Message):
     __slots__ = ("request_id", "message_count", "messages_processed", "processing_details")
     class ResultType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
@@ -82,7 +94,7 @@ class Response(_message.Message):
     def __init__(self, request_id: _Optional[str] = ..., message_count: _Optional[int] = ..., messages_processed: _Optional[int] = ..., processing_details: _Optional[str] = ...) -> None: ...
 
 class RegisterResponse(_message.Message):
-    __slots__ = ("request_id", "token", "status")
+    __slots__ = ("request_id", "token", "secret", "status")
     class ResultType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = ()
         REGISTER_UNSPECIFIED: _ClassVar[RegisterResponse.ResultType]
@@ -97,11 +109,13 @@ class RegisterResponse(_message.Message):
     REGISTER_EXISTS: RegisterResponse.ResultType
     REQUEST_ID_FIELD_NUMBER: _ClassVar[int]
     TOKEN_FIELD_NUMBER: _ClassVar[int]
+    SECRET_FIELD_NUMBER: _ClassVar[int]
     STATUS_FIELD_NUMBER: _ClassVar[int]
     request_id: str
     token: str
+    secret: str
     status: RegisterResponse.ResultType
-    def __init__(self, request_id: _Optional[str] = ..., token: _Optional[str] = ..., status: _Optional[_Union[RegisterResponse.ResultType, str]] = ...) -> None: ...
+    def __init__(self, request_id: _Optional[str] = ..., token: _Optional[str] = ..., secret: _Optional[str] = ..., status: _Optional[_Union[RegisterResponse.ResultType, str]] = ...) -> None: ...
 
 class SubmitJobResponse(_message.Message):
     __slots__ = ("request_id", "jobid", "status")
@@ -122,3 +136,30 @@ class SubmitJobResponse(_message.Message):
     jobid: int
     status: SubmitJobResponse.ResultType
     def __init__(self, request_id: _Optional[str] = ..., jobid: _Optional[int] = ..., status: _Optional[_Union[SubmitJobResponse.ResultType, str]] = ...) -> None: ...
+
+class RequestJobsResponse(_message.Message):
+    __slots__ = ("request_id", "jobs", "status")
+    class ResultType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        REQUEST_JOBS_NORESULTS: _ClassVar[RequestJobsResponse.ResultType]
+        REQUEST_JOBS_SUCCESS: _ClassVar[RequestJobsResponse.ResultType]
+        REQUEST_JOBS_ERROR: _ClassVar[RequestJobsResponse.ResultType]
+        REQUEST_JOBS_DENIED: _ClassVar[RequestJobsResponse.ResultType]
+    REQUEST_JOBS_NORESULTS: RequestJobsResponse.ResultType
+    REQUEST_JOBS_SUCCESS: RequestJobsResponse.ResultType
+    REQUEST_JOBS_ERROR: RequestJobsResponse.ResultType
+    REQUEST_JOBS_DENIED: RequestJobsResponse.ResultType
+    class JobsEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: int
+        value: str
+        def __init__(self, key: _Optional[int] = ..., value: _Optional[str] = ...) -> None: ...
+    REQUEST_ID_FIELD_NUMBER: _ClassVar[int]
+    JOBS_FIELD_NUMBER: _ClassVar[int]
+    STATUS_FIELD_NUMBER: _ClassVar[int]
+    request_id: str
+    jobs: _containers.ScalarMap[int, str]
+    status: RequestJobsResponse.ResultType
+    def __init__(self, request_id: _Optional[str] = ..., jobs: _Optional[_Mapping[int, str]] = ..., status: _Optional[_Union[RequestJobsResponse.ResultType, str]] = ...) -> None: ...

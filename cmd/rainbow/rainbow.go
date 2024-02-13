@@ -40,7 +40,8 @@ func main() {
 
 	// Request Jobs
 	clusterSecret := requestCmd.String("", "request-secret", &argparse.Options{Help: "Cluster 'secret' to retrieve jobs"})
-	maxJobs := requestCmd.Int("j", "max-jobs", &argparse.Options{Default: 1, Help: "Maximum number of jobs to request"})
+	maxJobs := requestCmd.Int("j", "max-jobs", &argparse.Options{Help: "Maximum number of jobs to request"})
+	acceptJobs := requestCmd.Int("", "accept-jobs", &argparse.Options{Default: 0, Help: "Jobs to accept from the set"})
 
 	// Register
 	secret := registerCmd.String("s", "secret", &argparse.Options{Default: defaultSecret, Help: "Registration 'secret'"})
@@ -66,7 +67,7 @@ func main() {
 			log.Fatalf("Issue with register: %s\n", err)
 		}
 	} else if requestCmd.Happened() {
-		err := request.Run(*host, *clusterName, *clusterSecret, *maxJobs)
+		err := request.Run(*host, *clusterName, *clusterSecret, *maxJobs, *acceptJobs)
 		if err != nil {
 			log.Fatalf("Issue with request jobs: %s\n", err)
 		}
