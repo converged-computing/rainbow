@@ -2,6 +2,7 @@
 
 > 🌈️ Where keebler elves and schedulers live, somewhere in the clouds, and with marshmallows 
 
+[![PyPI version](https://badge.fury.io/py/rainbow-scheduler.svg)](https://badge.fury.io/py/rainbow-scheduler)
 ![img/rainbow.png](img/rainbow.png)
 
 This is a prototype that will use a Go [gRPC](https://grpc.io/) server/client to demonstrate multi-cluster scheduling. This won't be doing anything intelligent with respect to scheduling (but could) but instead:
