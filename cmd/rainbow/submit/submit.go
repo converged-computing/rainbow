@@ -15,7 +15,7 @@ import (
 func Run(
 	host, jobName, command string,
 	nodes, tasks int,
-	submitSecret, clusterName string,
+	token, clusterName string,
 ) error {
 
 	c, err := client.NewClient(host)
@@ -42,7 +42,7 @@ func Run(
 	}
 
 	// Last argument is secret, empty for now
-	response, err := c.SubmitJob(context.Background(), jobspec, clusterName, submitSecret)
+	response, err := c.SubmitJob(context.Background(), jobspec, clusterName, token)
 	if err != nil {
 		return err
 	}

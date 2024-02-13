@@ -24,6 +24,7 @@ func Run(host, clusterName, secret string) error {
 
 	// If we get here, success! Dump all the stuff.
 	log.Printf("status: %s", response.Status)
+	log.Printf("secret: %s", response.Secret)
 	log.Printf(" token: %s", response.Token)
 	return nil
 }

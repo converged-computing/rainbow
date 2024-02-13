@@ -7,6 +7,7 @@ import (
 
 	"github.com/akamensky/argparse"
 	register "github.com/converged-computing/rainbow/cmd/rainbow/register"
+	request "github.com/converged-computing/rainbow/cmd/rainbow/request"
 	submit "github.com/converged-computing/rainbow/cmd/rainbow/submit"
 	"github.com/converged-computing/rainbow/pkg/types"
 )
@@ -27,20 +28,25 @@ func RunVersion() {
 
 func main() {
 
-	parser := argparse.NewParser("rainbow", "Interact with a rainbow multi-cluster")
-	versionCmd := parser.NewCommand("version", "See the version of compspec")
+	parser := argparse.NewParser("rainbow", "Interact with a rainbow scheduler")
+	versionCmd := parser.NewCommand("version", "See the version of rainbow")
 	registerCmd := parser.NewCommand("register", "Register a new cluster")
-	submitCmd := parser.NewCommand("submit", "Submit a job to a rainbow cluster")
+	submitCmd := parser.NewCommand("submit", "Submit a job to a rainbow scheduler")
+	requestCmd := parser.NewCommand("request", "Request to inspect some max jobs assigned to a cluster")
 
 	// Shared values
 	host := parser.String("", "host", &argparse.Options{Default: "localhost:50051", Help: "Scheduler server address (host:port)"})
 	clusterName := parser.String("", "cluster-name", &argparse.Options{Default: "keebler", Help: "Name of cluster to register"})
 
+	// Request Jobs
+	clusterSecret := requestCmd.String("", "request-secret", &argparse.Options{Help: "Cluster 'secret' to retrieve jobs"})
+	maxJobs := requestCmd.Int("j", "max-jobs", &argparse.Options{Default: 1, Help: "Maximum number of jobs to request"})
+
 	// Register
 	secret := registerCmd.String("s", "secret", &argparse.Options{Default: defaultSecret, Help: "Registration 'secret'"})
 
 	// Submit (note that command for now needs to be in quotes to get the whole thing)
-	submitSecret := submitCmd.String("s", "secret", &argparse.Options{Default: defaultSecret, Help: "Registration 'secret'"})
+	token := submitCmd.String("", "token", &argparse.Options{Default: defaultSecret, Help: "Client token to submit jobs with."})
 	nodes := submitCmd.Int("n", "nodes", &argparse.Options{Default: 1, Help: "Number of nodes to request"})
 	tasks := submitCmd.Int("t", "tasks", &argparse.Options{Help: "Number of tasks to request (per node? total?)"})
 	command := submitCmd.String("c", "command", &argparse.Options{Default: defaultSecret, Help: "Command to submit"})
@@ -59,8 +65,13 @@ func main() {
 		if err != nil {
 			log.Fatalf("Issue with register: %s\n", err)
 		}
+	} else if requestCmd.Happened() {
+		err := request.Run(*host, *clusterName, *clusterSecret, *maxJobs)
+		if err != nil {
+			log.Fatalf("Issue with request jobs: %s\n", err)
+		}
 	} else if submitCmd.Happened() {
-		err := submit.Run(*host, *jobName, *command, *nodes, *tasks, *submitSecret, *clusterName)
+		err := submit.Run(*host, *jobName, *command, *nodes, *tasks, *token, *clusterName)
 		if err != nil {
 			log.Fatal(err.Error())
 		}

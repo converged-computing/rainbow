@@ -27,6 +27,7 @@ type Client interface {
 	Stream(ctx context.Context, it types.MessageIterator) error
 	Register(ctx context.Context, clusterName, secret string) (*pb.RegisterResponse, error)
 	SubmitJob(ctx context.Context, job types.JobSpec, cluster, token string) (*pb.SubmitJobResponse, error)
+	RequestJobs(ctx context.Context, cluster, token string, maxJobs int32) (*pb.RequestJobsResponse, error)
 }
 
 // NewClient creates a new RainbowClient
