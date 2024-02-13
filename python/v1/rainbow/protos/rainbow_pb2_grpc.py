@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from . import api_pb2 as api__pb2
+from . import rainbow_pb2 as rainbow__pb2
 
 
 class RainbowSchedulerStub(object):
@@ -17,23 +17,28 @@ class RainbowSchedulerStub(object):
         """
         self.Register = channel.unary_unary(
                 '/convergedcomputing.org.grpc.v1.RainbowScheduler/Register',
-                request_serializer=api__pb2.RegisterRequest.SerializeToString,
-                response_deserializer=api__pb2.RegisterResponse.FromString,
+                request_serializer=rainbow__pb2.RegisterRequest.SerializeToString,
+                response_deserializer=rainbow__pb2.RegisterResponse.FromString,
                 )
         self.SubmitJob = channel.unary_unary(
                 '/convergedcomputing.org.grpc.v1.RainbowScheduler/SubmitJob',
-                request_serializer=api__pb2.SubmitJobRequest.SerializeToString,
-                response_deserializer=api__pb2.SubmitJobResponse.FromString,
+                request_serializer=rainbow__pb2.SubmitJobRequest.SerializeToString,
+                response_deserializer=rainbow__pb2.SubmitJobResponse.FromString,
+                )
+        self.RequestJobs = channel.unary_unary(
+                '/convergedcomputing.org.grpc.v1.RainbowScheduler/RequestJobs',
+                request_serializer=rainbow__pb2.RequestJobsRequest.SerializeToString,
+                response_deserializer=rainbow__pb2.RequestJobsResponse.FromString,
                 )
         self.Serial = channel.unary_unary(
                 '/convergedcomputing.org.grpc.v1.RainbowScheduler/Serial',
-                request_serializer=api__pb2.Request.SerializeToString,
-                response_deserializer=api__pb2.Response.FromString,
+                request_serializer=rainbow__pb2.Request.SerializeToString,
+                response_deserializer=rainbow__pb2.Response.FromString,
                 )
         self.Stream = channel.stream_stream(
                 '/convergedcomputing.org.grpc.v1.RainbowScheduler/Stream',
-                request_serializer=api__pb2.Request.SerializeToString,
-                response_deserializer=api__pb2.Response.FromString,
+                request_serializer=rainbow__pb2.Request.SerializeToString,
+                response_deserializer=rainbow__pb2.Response.FromString,
                 )
 
 
@@ -50,6 +55,13 @@ class RainbowSchedulerServicer(object):
 
     def SubmitJob(self, request, context):
         """Job Submission - request for submitting a job to a named cluster
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RequestJobs(self, request, context):
+        """Request Job - ask the rainbow scheduler for up to max jobs
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -76,23 +88,28 @@ def add_RainbowSchedulerServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Register': grpc.unary_unary_rpc_method_handler(
                     servicer.Register,
-                    request_deserializer=api__pb2.RegisterRequest.FromString,
-                    response_serializer=api__pb2.RegisterResponse.SerializeToString,
+                    request_deserializer=rainbow__pb2.RegisterRequest.FromString,
+                    response_serializer=rainbow__pb2.RegisterResponse.SerializeToString,
             ),
             'SubmitJob': grpc.unary_unary_rpc_method_handler(
                     servicer.SubmitJob,
-                    request_deserializer=api__pb2.SubmitJobRequest.FromString,
-                    response_serializer=api__pb2.SubmitJobResponse.SerializeToString,
+                    request_deserializer=rainbow__pb2.SubmitJobRequest.FromString,
+                    response_serializer=rainbow__pb2.SubmitJobResponse.SerializeToString,
+            ),
+            'RequestJobs': grpc.unary_unary_rpc_method_handler(
+                    servicer.RequestJobs,
+                    request_deserializer=rainbow__pb2.RequestJobsRequest.FromString,
+                    response_serializer=rainbow__pb2.RequestJobsResponse.SerializeToString,
             ),
             'Serial': grpc.unary_unary_rpc_method_handler(
                     servicer.Serial,
-                    request_deserializer=api__pb2.Request.FromString,
-                    response_serializer=api__pb2.Response.SerializeToString,
+                    request_deserializer=rainbow__pb2.Request.FromString,
+                    response_serializer=rainbow__pb2.Response.SerializeToString,
             ),
             'Stream': grpc.stream_stream_rpc_method_handler(
                     servicer.Stream,
-                    request_deserializer=api__pb2.Request.FromString,
-                    response_serializer=api__pb2.Response.SerializeToString,
+                    request_deserializer=rainbow__pb2.Request.FromString,
+                    response_serializer=rainbow__pb2.Response.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -117,8 +134,8 @@ class RainbowScheduler(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/convergedcomputing.org.grpc.v1.RainbowScheduler/Register',
-            api__pb2.RegisterRequest.SerializeToString,
-            api__pb2.RegisterResponse.FromString,
+            rainbow__pb2.RegisterRequest.SerializeToString,
+            rainbow__pb2.RegisterResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -134,8 +151,25 @@ class RainbowScheduler(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/convergedcomputing.org.grpc.v1.RainbowScheduler/SubmitJob',
-            api__pb2.SubmitJobRequest.SerializeToString,
-            api__pb2.SubmitJobResponse.FromString,
+            rainbow__pb2.SubmitJobRequest.SerializeToString,
+            rainbow__pb2.SubmitJobResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def RequestJobs(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/convergedcomputing.org.grpc.v1.RainbowScheduler/RequestJobs',
+            rainbow__pb2.RequestJobsRequest.SerializeToString,
+            rainbow__pb2.RequestJobsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -151,8 +185,8 @@ class RainbowScheduler(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/convergedcomputing.org.grpc.v1.RainbowScheduler/Serial',
-            api__pb2.Request.SerializeToString,
-            api__pb2.Response.FromString,
+            rainbow__pb2.Request.SerializeToString,
+            rainbow__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -168,7 +202,7 @@ class RainbowScheduler(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.stream_stream(request_iterator, target, '/convergedcomputing.org.grpc.v1.RainbowScheduler/Stream',
-            api__pb2.Request.SerializeToString,
-            api__pb2.Response.FromString,
+            rainbow__pb2.Request.SerializeToString,
+            rainbow__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

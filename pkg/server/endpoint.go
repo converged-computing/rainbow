@@ -63,49 +63,27 @@ func (s *Server) RequestJobs(_ context.Context, in *pb.RequestJobsRequest) (*pb.
 	return s.db.RequestJobs(in, cluster)
 }
 
-// TEST ENDPOINTS ------------------------------------------------
-// Stream implements the Stream method of the Service.
-func (s *Server) Stream(stream pb.RainbowScheduler_StreamServer) error {
-	if stream == nil {
-		return errors.New("stream is required")
-	}
-
-	for {
-		in, err := stream.Recv()
-		if err != nil {
-			return errors.Wrap(err, "failed to receive")
-		}
-
-		c := in.GetContent()
-		log.Printf("received stream: %v", c.GetData())
-
-		s.counter.Add(1)
-		response := &pb.Response{
-			RequestId:         c.GetId(),
-			MessageCount:      s.GetCounter(),
-			MessagesProcessed: s.GetCounter(),
-			ProcessingDetails: success,
-		}
-		if err := stream.Send(response); err != nil {
-			return errors.Wrap(err, "failed to send")
-		}
-	}
-}
-
-// Serialimplements the single method of the Service.
-func (s *Server) Serial(_ context.Context, in *pb.Request) (*pb.Response, error) {
+// RequestJobs receives a cluster / instance / other receiving entity request for jobs
+func (s *Server) AcceptJobs(_ context.Context, in *pb.AcceptJobsRequest) (*pb.AcceptJobsResponse, error) {
 	if in == nil {
 		return nil, errors.New("request is required")
 	}
 
-	c := in.GetContent()
-	log.Printf("received serial: %v", c.GetData())
+	// Nogo without a secret to validate cluster owns the namespace
+	if in.Secret == "" {
+		return nil, errors.New("a cluster secret is required")
+	}
 
-	// This is redundant, but for protobuf responses I like to see them directly
-	return &pb.Response{
-		RequestId:         c.GetId(),
-		MessageCount:      s.GetCounter(),
-		MessagesProcessed: s.GetCounter(),
-		ProcessingDetails: success,
-	}, nil
+	// Doesn't make sense to accept < 1
+	if len(in.Jobids) < 1 {
+		return nil, errors.New("one or more jobs must be accepted")
+	}
+
+	// Validate the secret matches the cluster
+	cluster, err := s.db.ValidateClusterSecret(in.Cluster, in.Secret)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("🌀️ accepting %d for cluster %s", len(in.Jobids), cluster.Name)
+	return s.db.AcceptJobs(in, cluster)
 }

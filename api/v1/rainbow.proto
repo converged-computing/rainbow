@@ -19,6 +19,9 @@ service RainbowScheduler {
   // Request Job - ask the rainbow scheduler for up to max jobs
   rpc RequestJobs(RequestJobsRequest) returns (RequestJobsResponse);
 
+   // Accept Jobs - accept some number of jobs
+   rpc AcceptJobs(AcceptJobsRequest) returns (AcceptJobsResponse);
+
   // TESTING ENDPOINTS
   // Serial checks the connectivity and response time of the service.
   rpc Serial(Request) returns (Response);
@@ -82,6 +85,14 @@ message RequestJobsRequest {
   // Max jobs to request
   int32 maxJobs = 3;
   google.protobuf.Timestamp sent = 7;
+}
+
+// N from a query. The response includes the ids that are accepted
+message AcceptJobsRequest {
+  string cluster = 1;
+  string secret = 2;
+  repeated int32 jobids = 3;
+  google.protobuf.Timestamp sent = 4;
 }
 
 
@@ -152,4 +163,16 @@ message RequestJobsResponse {
   map<int32, string> jobs = 2;
   //  repeated int32 accepted_jobids = 2;
   ResultType status = 3;
+}
+
+// Accept Jobs Response
+message AcceptJobsResponse {
+
+  enum ResultType {
+    RESULT_TYPE_UNSPECIFIED = 0;
+    RESULT_TYPE_PARTIAL = 1;
+    RESULT_TYPE_SUCCESS = 2;
+    RESULT_TYPE_ERROR = 3;
+  }
+  ResultType status = 1;
 }

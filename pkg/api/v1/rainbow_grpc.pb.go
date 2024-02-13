@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.20.3
-// source: api.proto
+// source: rainbow.proto
 
 package v1
 
@@ -28,6 +28,8 @@ type RainbowSchedulerClient interface {
 	SubmitJob(ctx context.Context, in *SubmitJobRequest, opts ...grpc.CallOption) (*SubmitJobResponse, error)
 	// Request Job - ask the rainbow scheduler for up to max jobs
 	RequestJobs(ctx context.Context, in *RequestJobsRequest, opts ...grpc.CallOption) (*RequestJobsResponse, error)
+	// Accept Jobs - accept some number of jobs
+	AcceptJobs(ctx context.Context, in *AcceptJobsRequest, opts ...grpc.CallOption) (*AcceptJobsResponse, error)
 	// TESTING ENDPOINTS
 	// Serial checks the connectivity and response time of the service.
 	Serial(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
@@ -65,6 +67,15 @@ func (c *rainbowSchedulerClient) SubmitJob(ctx context.Context, in *SubmitJobReq
 func (c *rainbowSchedulerClient) RequestJobs(ctx context.Context, in *RequestJobsRequest, opts ...grpc.CallOption) (*RequestJobsResponse, error) {
 	out := new(RequestJobsResponse)
 	err := c.cc.Invoke(ctx, "/convergedcomputing.org.grpc.v1.RainbowScheduler/RequestJobs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rainbowSchedulerClient) AcceptJobs(ctx context.Context, in *AcceptJobsRequest, opts ...grpc.CallOption) (*AcceptJobsResponse, error) {
+	out := new(AcceptJobsResponse)
+	err := c.cc.Invoke(ctx, "/convergedcomputing.org.grpc.v1.RainbowScheduler/AcceptJobs", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -121,6 +132,8 @@ type RainbowSchedulerServer interface {
 	SubmitJob(context.Context, *SubmitJobRequest) (*SubmitJobResponse, error)
 	// Request Job - ask the rainbow scheduler for up to max jobs
 	RequestJobs(context.Context, *RequestJobsRequest) (*RequestJobsResponse, error)
+	// Accept Jobs - accept some number of jobs
+	AcceptJobs(context.Context, *AcceptJobsRequest) (*AcceptJobsResponse, error)
 	// TESTING ENDPOINTS
 	// Serial checks the connectivity and response time of the service.
 	Serial(context.Context, *Request) (*Response, error)
@@ -142,6 +155,9 @@ func (UnimplementedRainbowSchedulerServer) SubmitJob(context.Context, *SubmitJob
 }
 func (UnimplementedRainbowSchedulerServer) RequestJobs(context.Context, *RequestJobsRequest) (*RequestJobsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestJobs not implemented")
+}
+func (UnimplementedRainbowSchedulerServer) AcceptJobs(context.Context, *AcceptJobsRequest) (*AcceptJobsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AcceptJobs not implemented")
 }
 func (UnimplementedRainbowSchedulerServer) Serial(context.Context, *Request) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Serial not implemented")
@@ -216,6 +232,24 @@ func _RainbowScheduler_RequestJobs_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RainbowScheduler_AcceptJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcceptJobsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RainbowSchedulerServer).AcceptJobs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/convergedcomputing.org.grpc.v1.RainbowScheduler/AcceptJobs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RainbowSchedulerServer).AcceptJobs(ctx, req.(*AcceptJobsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RainbowScheduler_Serial_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Request)
 	if err := dec(in); err != nil {
@@ -280,6 +314,10 @@ var RainbowScheduler_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RainbowScheduler_RequestJobs_Handler,
 		},
 		{
+			MethodName: "AcceptJobs",
+			Handler:    _RainbowScheduler_AcceptJobs_Handler,
+		},
+		{
 			MethodName: "Serial",
 			Handler:    _RainbowScheduler_Serial_Handler,
 		},
@@ -292,5 +330,5 @@ var RainbowScheduler_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
-	Metadata: "api.proto",
+	Metadata: "rainbow.proto",
 }

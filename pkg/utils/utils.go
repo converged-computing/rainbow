@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
 )
 
@@ -16,4 +17,13 @@ func PathExists(path string) (bool, error) {
 		return true, fmt.Errorf("warning: exists but another error happened (debug): %s", err)
 	}
 	return true, nil
+}
+
+// ShuffleJobs randomly shuffles jobs
+func ShuffleJobs(jobs []int32) []int32 {
+	for i := range jobs {
+		j := rand.Intn(i + 1)
+		jobs[i], jobs[j] = jobs[j], jobs[i]
+	}
+	return jobs
 }
