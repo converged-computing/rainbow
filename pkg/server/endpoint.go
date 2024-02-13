@@ -61,7 +61,7 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 
 // TEST ENDPOINTS ------------------------------------------------
 // Stream implements the Stream method of the Service.
-func (s *Server) Stream(stream pb.Service_StreamServer) error {
+func (s *Server) Stream(stream pb.RainbowScheduler_StreamServer) error {
 	if stream == nil {
 		return errors.New("stream is required")
 	}

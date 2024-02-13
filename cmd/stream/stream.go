@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/converged-computing/rainbow/pkg/client"
-	"github.com/converged-computing/rainbow/pkg/provider"
+	"github.com/converged-computing/rainbow/pkg/types"
 )
 
 var (
@@ -36,7 +36,7 @@ func main() {
 	defer cancel()
 
 	log.Printf("starting stream with %v timeout...", d)
-	if err := c.Stream(ctx, provider.MockedMessageProvider); err != nil {
+	if err := c.Stream(ctx, types.MockedMessageProvider); err != nil {
 		log.Fatalf("error: %v", err)
 	}
 

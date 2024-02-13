@@ -82,11 +82,12 @@ func (db *Database) RegisterCluster(name string) (pb.RegisterResponse_ResultType
 	}
 	defer conn.Close()
 
-	// First determine if it exists
-	query := fmt.Sprintf("SELECT count(*) from clusters WHERE name LIKE \"%s\"", name)
-	result, err := conn.Exec(query)
-	count, err := result.RowsAffected()
-
+	// First determine if it exists - this needs to get the results
+	query := fmt.Sprintf("SELECT count(*) from clusters WHERE name = '%s'", name)
+	count, err := countResults(conn, query)
+	if err != nil {
+		return 0, "", err
+	}
 	// Debugging extra for now
 	log.Printf("%s: (%d)\n", query, count)
 
@@ -98,7 +99,7 @@ func (db *Database) RegisterCluster(name string) (pb.RegisterResponse_ResultType
 	// Generate a "secret" token, lol
 	token := uuid.New().String()
 	query = fmt.Sprintf("INSERT into clusters (name, secret) VALUES (\"%s\", \"%s\")", name, token)
-	result, err = conn.Exec(query)
+	result, err := conn.Exec(query)
 	if err != nil {
 		return 2, "", err
 	}
@@ -139,6 +140,7 @@ func (db *Database) SubmitJob(job *pb.SubmitJobRequest, cluster *Cluster) (pb.Su
 	if err != nil {
 		return 2, jobid, err
 	}
+	defer statement.Close()
 
 	// We expect only one job
 	rows, err := statement.Query()
@@ -156,6 +158,17 @@ func (db *Database) SubmitJob(job *pb.SubmitJobRequest, cluster *Cluster) (pb.Su
 	}
 	// Success
 	return 1, j.Id, nil
+}
+
+// countResults counts the results for a specific query
+func countResults(conn *sql.DB, query string) (int64, error) {
+
+	var count int
+	err := conn.QueryRow(query).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return int64(count), nil
 }
 
 // GetCluster gets a cluster if it exists AND the token for it is valid

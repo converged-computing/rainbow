@@ -9,6 +9,12 @@ rainbow.db
 *.test
 tmp
 
+# Python
+__pycache__
+rainbow_scheduler.egg-info
+.eggs
+env 
+
 # Coverage
 *.out
 

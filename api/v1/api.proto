@@ -7,9 +7,8 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/converged-computing/rainbow/pkg/api/v1";
 
-// Service provides API endpoints for interacting with the central scheduler
-// service
-service Service {
+// RainbowSchedulerService provides API endpoints for interacting with the central scheduler service
+service RainbowScheduler {
 
   // Register cluster - request to register a new cluster
   rpc Register(RegisterRequest) returns (RegisterResponse);

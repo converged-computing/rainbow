@@ -61,7 +61,7 @@ func NewServer(
 
 // Server is used to implement your Service.
 type Server struct {
-	pb.UnimplementedServiceServer
+	pb.UnimplementedRainbowSchedulerServer
 	server   *grpc.Server
 	listener net.Listener
 
@@ -119,7 +119,7 @@ func (s *Server) serve(_ context.Context, lis net.Listener) error {
 	}
 	s.listener = lis
 	s.server = grpc.NewServer()
-	pb.RegisterServiceServer(s.server, s)
+	pb.RegisterRainbowSchedulerServer(s.server, s)
 	log.Printf("server listening: %v", s.listener.Addr())
 	if err := s.server.Serve(s.listener); err != nil && err.Error() != "closed" {
 		return errors.Wrap(err, "failed to serve")

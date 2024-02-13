@@ -16,7 +16,7 @@ import (
 type RainbowClient struct {
 	host       string
 	connection *grpc.ClientConn
-	service    pb.ServiceClient
+	service    pb.RainbowSchedulerClient
 }
 
 var _ Client = (*RainbowClient)(nil)
@@ -46,7 +46,7 @@ func NewClient(host string) (Client, error) {
 	}
 
 	c.connection = conn
-	c.service = pb.NewServiceClient(conn)
+	c.service = pb.NewRainbowSchedulerClient(conn)
 
 	return c, nil
 }
