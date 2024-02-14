@@ -2,5 +2,5 @@
 
 Examples coming soon:
 
- - Running with local docker images
+ - [docker-compose](docker-compose): Simple setup to run a scheduler and two clusters with local docker images
  - Kubernetes in Docker (kind)

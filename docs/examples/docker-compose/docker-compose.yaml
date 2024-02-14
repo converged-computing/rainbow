@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  scheduler:
+    restart: always
+    hostname: scheduler
+    container_name: scheduler
+    image: ghcr.io/converged-computing/rainbow-scheduler:latest
+    entrypoint: rainbow-scheduler
+    command: --address :8080 --name rainbow --secret peanutbuttajellay
+    volumes:
+      - ./data:/data
+    ports:
+      - 8080:8080
+
+  cluster-blue: &cluster
+    restart: always
+    hostname: cluster-blue
+    container_name: cluster-blue
+    image: ghcr.io/converged-computing/rainbow-flux:latest
+    entrypoint: tail
+    command: -F oreo-cookies
+    volumes:
+      - ./data:/data
+    links:
+      - scheduler
+
+  cluster-yellow:
+    <<: *cluster
+    hostname: cluster-yellow
+    container_name: cluster-yellow
+
+  cluster-red:
+    hostname: cluster-red
+    container_name: cluster-red
+    <<: *cluster
