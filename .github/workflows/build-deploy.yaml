@@ -1,0 +1,76 @@
+name: rainbow build-and deploy
+
+on:
+  pull_request: []
+  release:
+    types: [published]
+  push:
+    branches:
+    - main
+
+# Note that:
+# rainbow:flux is the same, but has flux (and considered a client container)
+# rainbow:latest doesn't have flux (for the scheduler)
+# both have the rainbow / rainbow-scheduler build, it's just one has flux ;)
+jobs:
+  build-rainbow:
+    permissions:
+      packages: write
+    env:
+      container: ghcr.io/converged-computing/rainbow-flux
+    runs-on: ubuntu-latest
+    name: build rainbow (client)
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build Containers
+      run: make docker-flux
+
+    - name: Tag Release Image
+      if: (github.event_name == 'release')
+      run: |
+        tag=${GITHUB_REF#refs/tags/}
+        echo "Tagging and releasing ${{ env.container}}:${tag}"        
+        docker tag ${{ env.container }}:latest ${{ env.container }}:${tag}
+
+    - name: GHCR Login
+      if: (github.event_name != 'pull_request')
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Deploy Container
+      if: (github.event_name != 'pull_request')
+      run: docker push ${{ env.container }} --all-tags
+      
+  build-rainbow-scheduler:
+    permissions:
+      packages: write
+    env:
+      container: ghcr.io/converged-computing/rainbow-scheduler
+    runs-on: ubuntu-latest
+    name: build rainbow (scheduler)
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build Containers
+      run: make docker-ubuntu
+
+    - name: Tag Release Image
+      if: (github.event_name == 'release')
+      run: |
+        tag=${GITHUB_REF#refs/tags/}
+        echo "Tagging and releasing ${{ env.container}}:${tag}"        
+        docker tag ${{ env.container }}:latest ${{ env.container }}:${tag}
+
+    - name: GHCR Login
+      if: (github.event_name != 'pull_request')
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Deploy Container
+      if: (github.event_name != 'pull_request')
+      run: docker push ${{ env.container }} --all-tags

@@ -2,7 +2,7 @@ HERE ?= $(shell pwd)
 LOCALBIN ?= $(shell pwd)/bin
 VERSION    :=$(shell cat .version)
 YAML_FILES :=$(shell find . ! -path "./vendor/*" -type f -regex ".*y*ml" -print)
-REG_URI    ?=ghcr.io/converged-computing
+REGISTRY  ?= ghcr.io/converged-computing
 REPO_NAME  :=$(shell basename $(PWD))
 
 all: help
@@ -15,7 +15,29 @@ $(LOCALBIN):
 protoc: $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 	GOBIN=$(LOCALBIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-	
+
+.PHONY: build
+build: build-cli build-rainbow
+
+.PHONY: build-cli
+build-cli: $(LOCALBIN)
+	GO111MODULE="on" go build -o $(LOCALBIN)/rainbow cmd/rainbow/rainbow.go
+
+.PHONY: build-rainbow
+build-rainbow: $(LOCALBIN)
+	GO111MODULE="on" go build -o $(LOCALBIN)/rainbow-scheduler cmd/server/server.go
+
+.PHONY: docker
+docker: docker-flux docker-ubuntu
+
+.PHONY: docker-flux
+docker-flux:
+	docker build --build-arg base=fluxrm/flux-sched:jammy -t $(REGISTRY)/rainbow-flux:latest .
+
+.PHONY: docker-ubuntu
+docker-ubuntu: 
+	docker build -t $(REGISTRY)/rainbow-scheduler:latest .
+
 .PHONY: proto
 proto: protoc ## Generates the API code and documentation
 	mkdir -p pkg/api/v1
