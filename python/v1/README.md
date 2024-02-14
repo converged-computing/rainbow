@@ -41,10 +41,12 @@ python ./examples/flux/register.py keebler
 ```
 ```console
 $ python ./examples/flux/register.py keebler
-token: "956580b8-7339-40aa-84c2-489539bbdc16"
+token: "e2d48b92-7801-4ad3-8b4d-87e30c1441e0"
+secret: "39ef6c99-ac20-40de-92df-d16e9fe651e1"
 status: REGISTER_SUCCESS
 
-The token you will need to submit jobs to this cluster is 956580b8-7339-40aa-84c2-489539bbdc16
+🤫️ The token you will need to submit jobs to this cluster is e2d48b92-7801-4ad3-8b4d-87e30c1441e0
+🔐️ The secret you will need to accept jobs is 39ef6c99-ac20-40de-92df-d16e9fe651e1
 ```
 
 Try running it again - you can't register a cluster twice.
@@ -56,19 +58,101 @@ status: REGISTER_EXISTS
 The cluster keebler alreadey exists.
 ```
 
-But of course other cluster names you can register. A "cluster" can actually be a cluster, or a flux instance, or any entity that can accept jobs.
+But of course other cluster names you can register. A "cluster" can actually be a cluster, or a flux instance, or any entity that can accept jobs. The script also accepts arguments (see `register.py --help`)
+
+```console
+python ./examples/flux/register.py --help
+
+🌈️ Rainbow scheduler register
+
+options:
+  -h, --help         show this help message and exit
+  --cluster CLUSTER  cluster name to register
+  --host HOST        host of rainbow cluster
+  --secret SECRET    Rainbow cluster registration secret
+```
 
 ### Submit Job
 
-Now let's submit a job to our faux cluster. We need to provide the token we received above.
+Now let's submit a job to our faux cluster. We need to provide the token we received above. Note you can provide other arguments too:
 
 ```console
-$ python examples/flux/submit-job.py 956580b8-7339-40aa-84c2-489539bbdc16
+python ./examples/flux/submit-job.py --help
+
+🌈️ Rainbow scheduler register
+
+positional arguments:
+  command            Command to submit
+
+options:
+  -h, --help         show this help message and exit
+  --cluster CLUSTER  cluster name to register
+  --host HOST        host of rainbow cluster
+  --token TOKEN      Cluster token for permission to submit jobs
+  --nodes NODES      Nodes for job (defaults to 1)
+```
+
+And then submit!
+
+```console
+$ python examples/flux/submit-job.py --token $token --cluster keebler echo hello world
+⭐️ Submitting job: echo hello world
 status: SUBMIT_SUCCESS
 ```
 
-Nice! We will next be writing a receiving endpoint that can poll the server at some increment to ask for jobs, and then accept some number. TBA!
+### Poll and Accept
 
+Given the above (we have submit jobs to the keebler cluster, not necessarily from it) we would then (from the keebler cluster)
+want to receive them, and accept some number to run. Let's mock that next. This is going to include two steps:
+
+ - request jobs: a request from the keebler cluster to list jobs (requires the secret)
+ - accept jobs: given the list of jobs requested, tell the rainbow scheduler you accept some subset to run.
+
+
+```console
+python ./examples/flux/poll-jobs.py --help
+
+🌈️ Rainbow scheduler poll (request jobs) and accept
+
+options:
+  -h, --help           show this help message and exit
+  --cluster CLUSTER    cluster name to register
+  --host HOST          host of rainbow cluster
+  --max-jobs MAX_JOBS  Maximum jobs to request (unset defaults to all)
+  --secret SECRET      Cluster secret to access job queue
+  --nodes NODES        Nodes for job (defaults to 1)
+  --accept ACCEPT      Number of jobs to accept
+```
+
+And then request (poll) for jobs. This does not accept any, it's akin to just asking for a listing, and up to a maximum
+number. We will eventually want to add logic to better filter or query for what we _can_ accept.
+
+```console
+$ python examples/flux/poll-jobs.py --secret $secret --cluster keebler echo hello world
+Status: REQUEST_JOBS_SUCCESS
+Received 3 jobs for inspection!
+{"id":6,"cluster":"blueberry","name":"","nodes":1,"tasks":0,"command":"echo hello world"}
+{"id":4,"cluster":"blueberry","name":"","nodes":1,"tasks":0,"command":"echo hello world"}
+{"id":5,"cluster":"blueberry","name":"","nodes":1,"tasks":0,"command":"echo hello world"}
+```
+
+Now let's try accepting! 
+
+```console
+$ python examples/flux/poll-jobs.py --secret $secret --cluster keebler echo hello world
+Status: REQUEST_JOBS_SUCCESS
+Received 3 jobs for inspection!
+{"id":4,"cluster":"blueberry","name":"","nodes":1,"tasks":0,"command":"echo hello world"}
+{"id":6,"cluster":"blueberry","name":"","nodes":1,"tasks":0,"command":"echo hello world"}
+{"id":5,"cluster":"blueberry","name":"","nodes":1,"tasks":0,"command":"echo hello world"}
+Accepting 1 jobs...
+[4]
+```
+
+If you were to ask again (for all jobs) you'd only see two because you took one off of the dispatcher,
+and it's now owned by your keebler cluster. 
+And that's it! Next we can build the above into a container with an actual flux instance and actually run
+the jobs we accept.
 
 ## License
 

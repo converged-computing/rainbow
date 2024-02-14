@@ -23,7 +23,7 @@ proto: protoc ## Generates the API code and documentation
 
 .PHONY: python
 python: python ## Generate python proto files in python
-	pip freeze | grep grpcio-tools
+	# pip freeze | grep grpcio-tools
 	mkdir -p python/v1/rainbow/protos
 	cd python/v1/rainbow/protos
 	python -m grpc_tools.protoc -I./api/v1 --python_out=./python/v1/rainbow/protos --pyi_out=./python/v1/rainbow/protos --grpc_python_out=./python/v1/rainbow/protos ./api/v1/rainbow.proto
@@ -35,12 +35,12 @@ version: ## Prints the current version
 	@echo $(VERSION)
 
 .PHONY: tidy
-tidy: ## Updates the go modules and vendors all dependancies 
+tidy: ## Updates the go modules and vendors all dependencies
 	go mod tidy
 	go mod vendor
 
 .PHONY: upgrade
-upgrade: ## Upgrades all dependancies 
+upgrade: ## Upgrades all dependencies
 	go get -d -u ./...
 	go mod tidy
 	go mod vendor

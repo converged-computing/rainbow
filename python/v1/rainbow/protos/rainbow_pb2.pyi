@@ -4,7 +4,7 @@ from google.protobuf.internal import containers as _containers
 from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Optional, Union as _Union
+from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -72,6 +72,18 @@ class RequestJobsRequest(_message.Message):
     maxJobs: int
     sent: _timestamp_pb2.Timestamp
     def __init__(self, cluster: _Optional[str] = ..., secret: _Optional[str] = ..., maxJobs: _Optional[int] = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+
+class AcceptJobsRequest(_message.Message):
+    __slots__ = ("cluster", "secret", "jobids", "sent")
+    CLUSTER_FIELD_NUMBER: _ClassVar[int]
+    SECRET_FIELD_NUMBER: _ClassVar[int]
+    JOBIDS_FIELD_NUMBER: _ClassVar[int]
+    SENT_FIELD_NUMBER: _ClassVar[int]
+    cluster: str
+    secret: str
+    jobids: _containers.RepeatedScalarFieldContainer[int]
+    sent: _timestamp_pb2.Timestamp
+    def __init__(self, cluster: _Optional[str] = ..., secret: _Optional[str] = ..., jobids: _Optional[_Iterable[int]] = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
 class Response(_message.Message):
     __slots__ = ("request_id", "message_count", "messages_processed", "processing_details")
@@ -163,3 +175,19 @@ class RequestJobsResponse(_message.Message):
     jobs: _containers.ScalarMap[int, str]
     status: RequestJobsResponse.ResultType
     def __init__(self, request_id: _Optional[str] = ..., jobs: _Optional[_Mapping[int, str]] = ..., status: _Optional[_Union[RequestJobsResponse.ResultType, str]] = ...) -> None: ...
+
+class AcceptJobsResponse(_message.Message):
+    __slots__ = ("status",)
+    class ResultType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        RESULT_TYPE_UNSPECIFIED: _ClassVar[AcceptJobsResponse.ResultType]
+        RESULT_TYPE_PARTIAL: _ClassVar[AcceptJobsResponse.ResultType]
+        RESULT_TYPE_SUCCESS: _ClassVar[AcceptJobsResponse.ResultType]
+        RESULT_TYPE_ERROR: _ClassVar[AcceptJobsResponse.ResultType]
+    RESULT_TYPE_UNSPECIFIED: AcceptJobsResponse.ResultType
+    RESULT_TYPE_PARTIAL: AcceptJobsResponse.ResultType
+    RESULT_TYPE_SUCCESS: AcceptJobsResponse.ResultType
+    RESULT_TYPE_ERROR: AcceptJobsResponse.ResultType
+    STATUS_FIELD_NUMBER: _ClassVar[int]
+    status: AcceptJobsResponse.ResultType
+    def __init__(self, status: _Optional[_Union[AcceptJobsResponse.ResultType, str]] = ...) -> None: ...

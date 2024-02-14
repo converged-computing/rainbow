@@ -203,6 +203,22 @@ What this does is randomly select from the set you receive, and send back a resp
 The logic you would expect is there - that you can't accept greater than the number available.
 You could try asking for a high level of max jobs again, and see that there is one fewer than before. It was deleted from the database.
 
+## Python
+
+To build Python GRPC, ensure you have the grpc-tools installed:
+
+```bash
+pip install grpcio-tools
+```
+
+Then:
+
+```bash
+make python
+```
+
+and cd into [python/v1](python/v1) and follow the README instructions there.
+
 
 ## Container Images
 
@@ -210,11 +226,9 @@ You could try asking for a high level of max jobs again, and see that there is o
 
 ## TODO
 
-- endpoint to summarize jobs? Or update the request jobs to return a summary?
-- request jobs should accept way to filter or specify criteria for request
-- receiving endpoint to accept (meaning just deleting from the database)
+- (advanced) request jobs should accept way to filter or specify criteria for request
 
-Next steps: Python bindings so we can run the client in a flux instance and:
+Next steps: Containers and example (kind?) to run in a flux instance and:
 
 - Run in poll, at some increment
 - "Do you have jobs for me?"
