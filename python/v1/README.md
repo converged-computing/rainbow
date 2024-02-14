@@ -2,7 +2,7 @@
 
 > 🌈️ Where keebler elves and schedulers live, somewhere in the clouds, and with marshmallows 
 
-![https://github.com/converged-computing/rainbow/raw/main/img/rainbow.png](https://github.com/converged-computing/rainbow/raw/main/img/rainbow.png)
+![https://github.com/converged-computing/rainbow/raw/main/docs/img/rainbow.png](https://github.com/converged-computing/rainbow/raw/main/docs/img/rainbow.png)
 
 This is the rainbow scheduler prototype, specifically Python bindings for a gRPC client. To learn more about rainbow, visit [https://github.com/converged-computing/rainbow](https://github.com/converged-computing/rainbow).
 
