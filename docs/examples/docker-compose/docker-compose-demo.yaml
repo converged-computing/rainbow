@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  scheduler:
+    restart: always
+    hostname: scheduler
+    container_name: scheduler
+    image: ghcr.io/converged-computing/rainbow-scheduler:latest
+    entrypoint: rainbow-scheduler
+    command: --address :8080 --name rainbow --secret peanutbuttajellay
+    volumes:
+      - ./data:/data
+    ports:
+      - 8080:8080
+
+  cluster-blue: &cluster
+    restart: always
+    hostname: cluster-blue
+    container_name: cluster-blue
+    image: ghcr.io/converged-computing/rainbow-flux:latest
+    entrypoint: flux
+    command: start python3 /data/run-demo.py --peer cluster-red --peer cluster-blue --peer cluster-yellow
+    volumes:
+      - ./data:/data
+    links:
+      - scheduler
+
+  cluster-yellow:
+    <<: *cluster
+    hostname: cluster-yellow
+    container_name: cluster-yellow
+
+  # We are going to interactively watch red
+  cluster-red:
+    hostname: cluster-red
+    container_name: cluster-red
+    entrypoint: tail
+    command: -F /dev/null
+    <<: *cluster
