@@ -203,7 +203,29 @@ What this does is randomly select from the set you receive, and send back a resp
 The logic you would expect is there - that you can't accept greater than the number available.
 You could try asking for a high level of max jobs again, and see that there is one fewer than before. It was deleted from the database.
 
-## Python
+## Development
+
+### Build
+
+You can build the binaries:
+
+```console
+$ make build
+mkdir -p /home/vanessa/Desktop/Code/rainbow/bin
+GO111MODULE="on" go build -o /home/vanessa/Desktop/Code/rainbow/bin/rainbow cmd/rainbow/rainbow.go
+GO111MODULE="on" go build -o /home/vanessa/Desktop/Code/rainbow/bin/rainbow-scheduler cmd/server/server.go
+```
+
+Note that the `rainbow-scheduler` starts the server, and `rainbow` is the set of client commands.
+
+```console
+$ ls bin/
+protoc-gen-go  protoc-gen-go-grpc  rainbow  rainbow-scheduler
+```
+
+They are placed in the local bin, as shown above.
+
+### Python
 
 To build Python GRPC, ensure you have the grpc-tools installed:
 
@@ -222,7 +244,29 @@ and cd into [python/v1](python/v1) and follow the README instructions there.
 
 ## Container Images
 
-**Coming soon**
+We provide make commands to build:
+
+- **ghcr.io/converged-computing/rainbow-scheduler**: the scheduler (the `rainbow` client and `rainbow-scheduler` binaries in an ubuntu base, intended to be run as the scheduler image)
+- **ghcr.io/converged-computing/rainbow-flux**: the client (includes flux) for interacting with a scheduler.
+
+Both images above have both binaries, it's just that the second has flux added. We can add more schedulers or other entities that can
+accept jobs as needed. You can build in any of the following ways:
+
+```bash
+# both images, default registry
+make docker
+
+# scheduler
+make docker-ubuntu
+
+# client with flux
+make docker-flux
+
+# customize the registry for any command above
+REGISTRY=vanessa make docker
+```
+
+Further instructions will be added for running these containers in the next round of work - likely we will have a basic kind setup that demonstrates the orchestration.
 
 ## TODO
 
