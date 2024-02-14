@@ -1,15 +1,59 @@
-# Multi-Cluster Proof of Concept
+# Rainbow Scheduler
 
-We can design a "tiny" setup of a more production setup as a proof of concept. Namely, we want to show that it's possible to submit jobs (from anywhere) that are directed to run on different clusters. We want to untangle this work from requiring specific workflow tools that might add additional toil or error, and direct development in a direction that makes things ultiamtely harder. That should be fairly easy to do I think.
+The rainbow scheduler is a combined scheduler and client to allow for multi-cluster scheduling, meaning submission and management of jobs across environments. It is currently in a prototype state.
 
-![img/rainbow-scheduler.png](img/rainbow-scheduler.png)
+## Prototype Design
 
+Our current design does not have a scheduler yet, and simply:
 
-In the above:
+- Exposes an API that can take job requests, where a request is a simple command and resources.
+- Clusters can register to it, meaning they are allowed to ask for work.
+- Users will submit jobs (from anywhere) to the API, targeting a specific cluster (again, no scheduling here)
+- The cluster will run a client that periodically checks for new jobs to run.
 
-- The **"scheduler"** can be thought of like a rabbitmq (or other task) queue, but with bells and whistles, and under our control. It will eventually have a scheduler that has high level information about clusters, but to start is just a simple database and endpoints to support job submission and registration. For registration, a secret is required, and then a cluster-specific token sent back for subsequent requests. This will need to be further hardened but is OK for a dummy proof of concept.
-- Any **Flux instance** is allowed to hit the register endpoint and request to register with a specific cluster identifier (A or B in the diagram above) and is required to provide the secret. It receives back a token that can be used for subsequent requests. For this first dummy prototype, we will have a simple loop running in the instance that checks the scheduler for jobs assigned to it.
-- Any **standalone client** (including the flux instances themselves) can then submit jobs, and request them to be run on any known cluster. This means that instance A can submit to B (and vice versa) and the standalone client can submit to A or B.
+This is currently a prototype that demonstrates we can do a basic interaction from multiple places, and obviously will have a lot of room for improvement.
+We can run the client alongside any flux instance that has access to this service (and is given some shared secret).
 
-The reason I want to prototype the above is that we will want a simple design to test with additional compatibility metadata, and (when actual scheduler bindings are ready) we can add a basic graph to the scheduler above. As we develop we can harden the endpoints / authentication, etc.
+For more details on the design, see [design.md](design.md)
 
+## Components
+
+ - The main server (and optionally, a client) are implemented in Go, here
+ - Under [python](https://github.com/converged-computing/rainbow/tree/main/python/v1) we also have a client that is intended to run from a flux instance, another scheduler, or anywhere really. We haven't implemented the same server in entirety because it's assumed if you plan to run a server, Go is the better choice (and from a container we will provide). That said, the skeleton is there, but unimplemented for the most part.
+ - See [examples](https://github.com/converged-computing/rainbow/tree/main/docs/examples) for basic documentation and ways to deploy (containers and Kubernetes with kind, for example).
+
+## Setup
+
+Ensure you have your dependencies:
+
+```bash
+make tidy
+```
+
+In two terminals, start the server in one:
+
+```bash
+make server
+```
+```console
+go run cmd/server/server.go
+2024/02/12 19:38:58 creating 🌈️ server...
+2024/02/12 19:38:58 ✨️ creating rainbow.db...
+2024/02/12 19:38:58    rainbow.db file created
+2024/02/12 19:38:58    create cluster table...
+2024/02/12 19:38:58    cluster table created
+2024/02/12 19:38:58    create jobs table...
+2024/02/12 19:38:58    jobs table created
+2024/02/12 19:38:58 starting scheduler server: rainbow v0.1.0-draft
+2024/02/12 19:38:58 server listening: [::]:50051
+```
+
+Note that we also provide [containers](https://github.com/orgs/converged-computing/packages?repo_name=rainbow) for running the scheduler, or a client with Flux. For more advanced examples, continue reading commands below or check out our [examples](https://github.com/converged-computing/rainbow/tree/main/docs/examples). 
+
+## Commands
+
+Read more about the commands shown above [here](commands.md#commands).
+
+## Development
+
+Read our [developer guide](#developer.md)
