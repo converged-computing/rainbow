@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: clusters
+spec:
+  completions: 3
+  parallelism: 3
+  completionMode: Indexed
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: cluster
+        image: ghcr.io/converged-computing/rainbow-flux:latest
+        command: ["flux"]
+
+        # Note that --host defaults to scheduler.rainbow.default.svc.cluster.local:8080
+        args: ["start", "python3",
+               "/code/docs/examples/kind/scripts/run-demo.py",
+               "--peer", "clusters-0",
+               "--peer", "clusters-1",
+               "--peer", "clusters-2",
+               "--iters", "5"]
+        imagePullPolicy: Never

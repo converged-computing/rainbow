@@ -7,7 +7,7 @@ services:
     container_name: scheduler
     image: ghcr.io/converged-computing/rainbow-scheduler:latest
     entrypoint: rainbow-scheduler
-    command: --address :8080 --name rainbow --secret peanutbuttajellay
+    command: --host :8080 --name rainbow --secret peanutbuttajellay
     volumes:
       - ./data:/data
     ports:

@@ -61,7 +61,7 @@ func (db *Database) connect() (*sql.DB, error) {
 }
 
 // RegisterCluster registers a cluster or returns another status
-func (db *Database) RegisterCluster(name string) (*pb.RegisterResponse, error) {
+func (db *Database) RegisterCluster(name, globalToken string) (*pb.RegisterResponse, error) {
 	response := &pb.RegisterResponse{}
 
 	// Connect!
@@ -88,8 +88,15 @@ func (db *Database) RegisterCluster(name string) (*pb.RegisterResponse, error) {
 
 	// Generate a token and a secret.
 	// The "token" is given to clients to submit jobs
+	// If we are using a global token, they are given the same one
+	var token string
+	if globalToken != "" {
+		token = globalToken
+	} else {
+		token = uuid.New().String()
+	}
+
 	// The "secret" is used by the cluster to request jobs for itself
-	token := uuid.New().String()
 	secret := uuid.New().String()
 	values := fmt.Sprintf("(\"%s\", \"%s\", \"%s\")", name, token, secret)
 	query = fmt.Sprintf("INSERT into clusters (name, token, secret) VALUES %s", values)
