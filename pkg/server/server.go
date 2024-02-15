@@ -24,12 +24,29 @@ var (
 	defaultName = "rainbow"
 )
 
+// Server is used to implement your Service.
+type Server struct {
+	pb.UnimplementedRainbowSchedulerServer
+	server   *grpc.Server
+	listener net.Listener
+
+	// counter will be for job ids
+	counter     atomic.Uint64
+	name        string
+	version     string
+	environment string
+	secret      string
+	globalToken string
+	db          *database.Database
+}
+
 // NewServer creates a new "scheduler" server
 // The scheduler server registers clusters and then accepts jobs
 func NewServer(
 	name, version, environment, sqliteFile string,
 	cleanup bool,
 	secret string,
+	globalToken string,
 ) (*Server, error) {
 
 	if secret == "" {
@@ -56,23 +73,9 @@ func NewServer(
 		name:        name,
 		version:     version,
 		secret:      secret,
+		globalToken: globalToken,
 		environment: environment,
 	}, nil
-}
-
-// Server is used to implement your Service.
-type Server struct {
-	pb.UnimplementedRainbowSchedulerServer
-	server   *grpc.Server
-	listener net.Listener
-
-	// counter will be for job ids
-	counter     atomic.Uint64
-	name        string
-	version     string
-	environment string
-	secret      string
-	db          *database.Database
 }
 
 func (s *Server) String() string {
@@ -104,11 +107,11 @@ func (s *Server) Stop() {
 }
 
 // Start the server
-func (s *Server) Start(ctx context.Context, address string) error {
+func (s *Server) Start(ctx context.Context, host string) error {
 	// Create a listener on the specified address.
-	lis, err := net.Listen(protocol, address)
+	lis, err := net.Listen(protocol, host)
 	if err != nil {
-		return errors.Wrapf(err, "failed to listen: %s", address)
+		return errors.Wrapf(err, "failed to listen: %s", host)
 	}
 	return s.serve(ctx, lis)
 }

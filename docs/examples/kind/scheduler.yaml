@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler
+spec:
+  selector:
+    matchLabels:
+      app: rainbow
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        # Matches the headless service
+        app: rainbow
+    spec:
+      subdomain: rainbow
+      hostname: scheduler
+      containers:
+      - name: scheduler
+        image: ghcr.io/converged-computing/rainbow-scheduler:latest
+
+        # Note that we are setting a global token (not recommended)! So that 
+        # we don't need a shared filesystem.
+        command: ["rainbow-scheduler"]
+        args: ["--host", ":8080", "--name", "rainbow", "--secret", "peanutbutta", "--global-token", "jellaytime"]
+        imagePullPolicy: Never

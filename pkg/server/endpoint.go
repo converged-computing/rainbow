@@ -20,7 +20,7 @@ func (s *Server) Register(_ context.Context, in *pb.RegisterRequest) (*pb.Regist
 		return nil, errors.New("request denied")
 	}
 	log.Printf("📝️ received register: %s", in.Name)
-	return s.db.RegisterCluster(in.Name)
+	return s.db.RegisterCluster(in.Name, s.globalToken)
 }
 
 // SubmitJob submits a job to a specific cluster, or adds an entry to the database
