@@ -1,4 +1,6 @@
-# Multi-Cluster Design
+# Designs
+
+## Multi-Cluster Design
 
 > Proof of Concept
 
@@ -13,5 +15,20 @@ In the above:
 - Any **standalone client** (including the flux instances themselves) can then submit jobs, and request them to be run on any known cluster. This means that instance A can submit to B (and vice versa) and the standalone client can submit to A or B.
 
 The reason I want to prototype the above is that we will want a simple design to test with additional compatibility metadata, and (when actual scheduler bindings are ready) we can add a basic graph to the scheduler above. As we develop we can harden the endpoints / authentication, etc.
+
+### Design 1: Rainbow Dispatcher
+
+> February 2024
+
+This first design was a proof of concept that we could submit jobs from a single point to multiple different flux clusters. In that sense, it was mostly a dispatcher (no scheduler) that:
+
+- Exposes an API that can take job requests, where a request is a simple command and resources.
+- Clusters can register to it, meaning they are allowed to ask for work.
+- Users will submit jobs (from anywhere) to the API, targeting a specific cluster (again, no scheduling here)
+- The cluster will run a client that periodically checks for new jobs to run.
+
+This is currently a prototype that demonstrates we can do a basic interaction from multiple places, and obviously will have a lot of room for improvement.
+We can run the client alongside any flux instance that has access to this service (and is given some shared secret).
+
 
 [home](/README.md#rainbow-scheduler)

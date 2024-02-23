@@ -14,6 +14,7 @@ func Run(
 	host, cluster, secret string,
 	maxJobs int,
 	acceptJobs int,
+	cfgFile string,
 ) error {
 
 	c, err := client.NewClient(host)
@@ -25,6 +26,13 @@ func Run(
 	if maxJobs >= 1 {
 		log.Printf("request jobs: %d", maxJobs)
 	}
+
+	// TODO this needs to handle submission to multiple clusters
+	// Read in the config, if provided, command line takes preference
+	//cfg, err := config.NewRainbowClientConfig(cfgFile, clusterName, secret)
+	//if err != nil {
+	//	return err
+	//}
 
 	// Last argument is secret, empty for now
 	response, err := c.RequestJobs(context.Background(), cluster, secret, int32(maxJobs))

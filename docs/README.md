@@ -4,7 +4,50 @@ The rainbow scheduler is a combined scheduler and client to allow for multi-clus
 
 ## Prototype Design
 
-Our current design does not have a scheduler yet, and simply:
+For earlier designs, see the [design](design.md) pages
+
+### Current Design
+
+> Late February 2024
+
+We next want to add a simple scheduler, meaning that the new user interaction works as follows:
+
+1. The user submits a job or application specification (e.g., run a container with compatibility information, or an application with the same) to the rainbow scheduler.
+2. The rainbow scheduler then authenticates the user, and can select a best match from a subset of clusters for which the user has access
+  - This requires the user tokens, and eventually something more robust like accounts in a database). - This also requires (finally) a graph in rainbow, making it more of a scheduler 
+3. The rainbow scheduler then filters down clusters to those that might match.
+  - This requires sending over cluster metadata on the register step
+4. The clusters respond with Yes/No and ETA or cost to choose from.
+5. The job is assigned a cluster (or rejected). If assigned, the cluster queries for it when ready.
+ - Akin to before, the cluster can have its own means to select jobs to run from the set assigned to it.
+
+### Authentication
+
+In more detail, this is what the above means for work:
+
+- Authentication: We need to authenticate the user for *multiple* clusters. We should likely create a token/auth file to do this, that has cluster names and tokens. To start (with testing) the tokens can be the same (shared). Eventually this should be more robust.
+- In the server, we have to check all tokens to see if the user has permission. In the future there could be some concept of a cluster group (with one token).
+
+
+### Registration
+
+The new flow will be as follows:
+
+- At registration, the cluster also sends over metadata about itself (and the nodes it has). This is going to allow for selection for those nodes. But it needs to be some kind of summary information, maybe across a graph? TODO: start with a spec of nodes, maybe Kubernetes, and summarize counts?
+- When submitting a job, the user no longer is giving an exact command, but a command + an image with compatibility metadata. The compatibility metadata (somehow) needs to be used to inform the cluster selection.
+- At selection, the rainbow schdeuler needs to filter down cluster options, and choose a subset.
+ - Level 1: Don't ask, juts choose the top choice and submit
+ - Level 2: Ask the cluster for TBA time or cost, choose based on that.
+ - Job is added to that queue.
+
+TODO:
+
+- first make config file with multiple secrets for multiple clusters
+- then allow specifying to give the config file instead
+- then write client function that can read in a graph of nodes (how to generate)?
+
+
+This first design was a proof of concept that we could submit jobs from a single point to multiple different flux clusters. In that sense, it was mostly a dispatcher (no scheduler) that:
 
 - Exposes an API that can take job requests, where a request is a simple command and resources.
 - Clusters can register to it, meaning they are allowed to ask for work.
@@ -13,6 +56,7 @@ Our current design does not have a scheduler yet, and simply:
 
 This is currently a prototype that demonstrates we can do a basic interaction from multiple places, and obviously will have a lot of room for improvement.
 We can run the client alongside any flux instance that has access to this service (and is given some shared secret).
+
 
 For more details on the design, see [design.md](design.md)
 

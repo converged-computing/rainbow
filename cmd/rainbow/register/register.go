@@ -5,19 +5,26 @@ import (
 	"log"
 
 	"github.com/converged-computing/rainbow/pkg/client"
+	"github.com/converged-computing/rainbow/pkg/config"
 )
 
 // Run will run an extraction of host metadata
-func Run(host, clusterName, secret string) error {
+func Run(host, clusterName, secret, cfgFile string) error {
 	c, err := client.NewClient(host)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("registering cluster: %s", clusterName)
+	// Read in the config, if provided, command line takes preference
+	cfg, err := config.NewRainbowClientConfig(cfgFile, clusterName, secret)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("registering cluster: %s", cfg.Scheduler.Name)
 
 	// Last argument is secret, empty for now
-	response, err := c.Register(context.Background(), clusterName, secret)
+	response, err := c.Register(context.Background(), cfg.Scheduler.Name, cfg.Scheduler.Secret)
 	if err != nil {
 		return err
 	}

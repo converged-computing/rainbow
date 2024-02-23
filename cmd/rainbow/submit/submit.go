@@ -15,7 +15,7 @@ import (
 func Run(
 	host, jobName, command string,
 	nodes, tasks int,
-	token, clusterName string,
+	token, clusterName, cfgFile string,
 ) error {
 
 	c, err := client.NewClient(host)
@@ -40,6 +40,12 @@ func Run(
 		Tasks:   int32(tasks),
 		Command: command,
 	}
+
+	// Read in the config, if provided, TODO we need a set of tokens here?
+	//cfg, err := config.NewRainbowClientConfig(cfgFile, clusterName, "")
+	//if err != nil {
+	//	return err
+	//}
 
 	// Last argument is secret, empty for now
 	response, err := c.SubmitJob(context.Background(), jobspec, clusterName, token)

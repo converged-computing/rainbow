@@ -135,6 +135,9 @@ func (c *RainbowClient) Register(
 	if cluster == "" {
 		return response, errors.New("cluster is required")
 	}
+	if secret == "" {
+		return response, errors.New("secret is required")
+	}
 	if !c.Connected() {
 		return response, errors.New("client is not connected")
 	}
