@@ -6,7 +6,9 @@ import (
 	"time"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
+	"github.com/converged-computing/rainbow/pkg/graph"
 	"github.com/converged-computing/rainbow/pkg/types"
+	"github.com/converged-computing/rainbow/pkg/utils"
 	"github.com/pkg/errors"
 	ts "google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -129,14 +131,36 @@ func (c *RainbowClient) Register(
 	ctx context.Context,
 	cluster string,
 	secret string,
+	clusterNodes string,
 ) (*pb.RegisterResponse, error) {
 
 	response := &pb.RegisterResponse{}
 	if cluster == "" {
 		return response, errors.New("cluster is required")
 	}
+	if secret == "" {
+		return response, errors.New("secret is required")
+	}
 	if !c.Connected() {
 		return response, errors.New("client is not connected")
+	}
+	// The cluster nodes file must be defined
+	if clusterNodes == "" {
+		return response, fmt.Errorf("cluster nodes file must be provided with --cluster-nodes")
+	}
+
+	// and exist
+	_, err := utils.PathExists(clusterNodes)
+	if err != nil {
+		return response, errors.New(fmt.Sprintf("cluster nodes file %s does not exist: %s", clusterNodes, err))
+	}
+
+	// Read in the cluster nodes
+	// jgf: is the struct, we do this to ensure it can unmarshal
+	// nodes: is the string to send over gRPC
+	_, nodes, err := graph.ReadNodeJsonGraph(clusterNodes)
+	if err != nil {
+		return response, err
 	}
 
 	// Contact the server and print out its response.
@@ -144,9 +168,10 @@ func (c *RainbowClient) Register(
 	defer cancel()
 
 	// Hit the register endpoint
-	response, err := c.service.Register(ctx, &pb.RegisterRequest{
+	response, err = c.service.Register(ctx, &pb.RegisterRequest{
 		Name:   cluster,
 		Secret: secret,
+		Nodes:  nodes,
 		Sent:   ts.Now(),
 	})
 

@@ -36,7 +36,8 @@ func main() {
 
 	// Shared values
 	host := parser.String("", "host", &argparse.Options{Default: "localhost:50051", Help: "Scheduler server address (host:port)"})
-	clusterName := parser.String("", "cluster-name", &argparse.Options{Default: "keebler", Help: "Name of cluster to register"})
+	clusterName := parser.String("", "cluster-name", &argparse.Options{Help: "Name of cluster to register"})
+	cfg := parser.String("", "config", &argparse.Options{Help: "Configuration file for cluster credentials"})
 
 	// Request Jobs
 	clusterSecret := requestCmd.String("", "request-secret", &argparse.Options{Help: "Cluster 'secret' to retrieve jobs"})
@@ -45,6 +46,7 @@ func main() {
 
 	// Register
 	secret := registerCmd.String("s", "secret", &argparse.Options{Default: defaultSecret, Help: "Registration 'secret'"})
+	clusterNodes := registerCmd.String("", "cluster-nodes", &argparse.Options{Help: "Cluster nodes json (JGF v2)"})
 
 	// Submit (note that command for now needs to be in quotes to get the whole thing)
 	token := submitCmd.String("", "token", &argparse.Options{Default: defaultSecret, Help: "Client token to submit jobs with."})
@@ -62,17 +64,17 @@ func main() {
 	}
 
 	if registerCmd.Happened() {
-		err := register.Run(*host, *clusterName, *secret)
+		err := register.Run(*host, *clusterName, *clusterNodes, *secret, *cfg)
 		if err != nil {
 			log.Fatalf("Issue with register: %s\n", err)
 		}
 	} else if requestCmd.Happened() {
-		err := request.Run(*host, *clusterName, *clusterSecret, *maxJobs, *acceptJobs)
+		err := request.Run(*host, *clusterName, *clusterSecret, *maxJobs, *acceptJobs, *cfg)
 		if err != nil {
 			log.Fatalf("Issue with request jobs: %s\n", err)
 		}
 	} else if submitCmd.Happened() {
-		err := submit.Run(*host, *jobName, *command, *nodes, *tasks, *token, *clusterName)
+		err := submit.Run(*host, *jobName, *command, *nodes, *tasks, *token, *clusterName, *cfg)
 		if err != nil {
 			log.Fatal(err.Error())
 		}

@@ -10,7 +10,7 @@ const (
 	VersionMinor = 1
 
 	// VersionPatch is for backwards-compatible bug fixes
-	VersionPatch = 0
+	VersionPatch = 1
 
 	// VersionDraft indicates development branch. Releases will be empty string.
 	VersionDraft = "-draft"

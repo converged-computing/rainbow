@@ -2,19 +2,9 @@
 
 The rainbow scheduler is a combined scheduler and client to allow for multi-cluster scheduling, meaning submission and management of jobs across environments. It is currently in a prototype state.
 
-## Prototype Design
+## Designs
 
-Our current design does not have a scheduler yet, and simply:
-
-- Exposes an API that can take job requests, where a request is a simple command and resources.
-- Clusters can register to it, meaning they are allowed to ask for work.
-- Users will submit jobs (from anywhere) to the API, targeting a specific cluster (again, no scheduling here)
-- The cluster will run a client that periodically checks for new jobs to run.
-
-This is currently a prototype that demonstrates we can do a basic interaction from multiple places, and obviously will have a lot of room for improvement.
-We can run the client alongside any flux instance that has access to this service (and is given some shared secret).
-
-For more details on the design, see [design.md](design.md)
+For designs, see the [design](design.md) pages
 
 ## Components
 
