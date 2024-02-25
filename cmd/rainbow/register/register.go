@@ -8,8 +8,8 @@ import (
 	"github.com/converged-computing/rainbow/pkg/config"
 )
 
-// Run will run an extraction of host metadata
-func Run(host, clusterName, secret, cfgFile string) error {
+// Run will register the cluster with rainbow
+func Run(host, clusterName, clusterNodes, secret, cfgFile string) error {
 	c, err := client.NewClient(host)
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ func Run(host, clusterName, secret, cfgFile string) error {
 	log.Printf("registering cluster: %s", cfg.Scheduler.Name)
 
 	// Last argument is secret, empty for now
-	response, err := c.Register(context.Background(), cfg.Scheduler.Name, cfg.Scheduler.Secret)
+	response, err := c.Register(context.Background(), cfg.Scheduler.Name, cfg.Scheduler.Secret, clusterNodes)
 	if err != nil {
 		return err
 	}

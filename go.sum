@@ -1,5 +1,7 @@
 github.com/akamensky/argparse v1.4.0 h1:YGzvsTqCvbEZhL8zZu2AiA5nq805NZh75JNj4ajn1xc=
 github.com/akamensky/argparse v1.4.0/go.mod h1:S5kwC7IuDcEr5VeXtGPRVZ5o/FdhcMlQz4IZQuw64xA=
+github.com/converged-computing/jsongraph-go v0.0.0-20240225004212-223ddffb7565 h1:ZwJngPrF1yvM4ZGEyoT1b8h5e0qUumOxeDZLN37pPTk=
+github.com/converged-computing/jsongraph-go v0.0.0-20240225004212-223ddffb7565/go.mod h1:+DhVyLXGVfBsfta4185jd33jqa94inshCcdvsXK2Irk=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
 github.com/golang/protobuf v1.5.3 h1:KhyjKVUg7Usr/dYsdSqoFveMYd5ko72D+zANwlG1mmg=
 github.com/golang/protobuf v1.5.3/go.mod h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=

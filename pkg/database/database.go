@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 
+	"github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
 	"github.com/converged-computing/rainbow/pkg/utils"
 	"github.com/google/uuid"
@@ -61,8 +62,15 @@ func (db *Database) connect() (*sql.DB, error) {
 }
 
 // RegisterCluster registers a cluster or returns another status
-func (db *Database) RegisterCluster(name, globalToken string) (*pb.RegisterResponse, error) {
+func (db *Database) RegisterCluster(
+	name, globalToken string,
+	nodesGraph graph.JsonGraph,
+) (*pb.RegisterResponse, error) {
+
 	response := &pb.RegisterResponse{}
+
+	// Verify we have the graph
+	log.Printf("Received cluster graph with %d nodes and %d edges\n", len(nodesGraph.Graph.Nodes), len(nodesGraph.Graph.Edges))
 
 	// Connect!
 	conn, err := db.connect()

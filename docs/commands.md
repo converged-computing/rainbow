@@ -2,9 +2,35 @@
 
 The following commands are currently supported. For Python, see the [README](https://github.com/converged-computing/rainbow/tree/main/python/v1) in the Python directory.
 
+## Prepare to Register
+
+The registration step happens when a cluster joins the rainbow scheduler. The registering cluster submits a [JGF format](https://github.com/converged-computing/jsongraph-go) resource graph.
+This allows the rainbow scheduler to "intelligently"  (subjective right there I know, especially if I wrote it 😜️) filter down clusters to choose your cluster (or not) based on the resources you provide. If you
+cannot provide a cluster graph (a likely case if your cluster is ephemeral, created on demand, or does not have consistent resources) then we will likely (eventually) have a specification for limits of requests still.
+This is not developed yet.
+
+In the example below, we will extract node level metadata with `compspec extract` ([see here](https://github.com/compspec/compspec-go/tree/main/docs/rainbow)) and then generate the cluster JGF to send for registration with compspec create-nodes.
+That two step process looks like this, and note this is faux cluster node metadata since I'm running it three times on my local machine :). The faux use case is that my cluster has three identical nodes.
+
+```bash
+mkdir -p ./docs/rainbow/cluster
+compspec extract --name library --name nfd[cpu,memory,network,storage,system] --name system[cpu,processor,arch,memory] --out ./docs/rainbow/cluster/node-1.json
+compspec extract --name library --name nfd[cpu,memory,network,storage,system] --name system[cpu,processor,arch,memory] --out ./docs/rainbow/cluster/node-2.json
+compspec extract --name library --name nfd[cpu,memory,network,storage,system] --name system[cpu,processor,arch,memory] --out ./docs/rainbow/cluster/node-3.json
+```
+
+Then we give that directory to compspec, and used the cluster creation plugin to output the JGF of the cluster:
+
+```bash
+compspec create nodes --cluster-name cluster-red --node-dir ./docs/rainbow/cluster/ --nodes-output ./cluster-nodes.json
+```
+
+That example is provided in [examples](examples/scheduler/cluster-nodes.json). This is the cluster metadata that we need to send over to the rainbow scheduler on the register step,
+discussed next.
+
 ## Register
 
-And then mock a registration:
+The registration step happens when a cluster joins. Using the make command it is expected that you have the cluster-nodes.json in the path shown above.
 
 ```bash
 make register
@@ -16,6 +42,11 @@ go run cmd/rainbow/rainbow.go register
 2024/02/12 22:17:43 status: REGISTER_SUCCESS
 2024/02/12 22:17:43 secret: 54c4568a-14f2-465f-aa1e-5e6e0e3efd33
 2024/02/12 22:17:43  token: 67e0f258-96c3-4d88-8253-287a95653138
+```
+
+If you ran this using the rainbow client you would do:
+
+```bash
 ```
 
 In the above:

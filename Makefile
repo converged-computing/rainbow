@@ -73,7 +73,7 @@ test: tidy ## Runs unit tests
 
 .PHONY: server
 server: ## Runs uncompiled version of the server
-	go run cmd/server/server.go
+	go run cmd/server/server.go --global-token rainbow
 
 .PHONY: stream
 stream: ## Runs the interface client
@@ -81,7 +81,7 @@ stream: ## Runs the interface client
 
 .PHONY: register
 register: ## Run mock registration
-	go run cmd/rainbow/rainbow.go register
+	go run cmd/rainbow/rainbow.go register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json
 
 .PHONY: tag
 tag: ## Creates release tag 
