@@ -53,12 +53,13 @@ run a corresponding databaset that your application can interact with.
 ## Register
 
 The registration step happens when a cluster joins. Using the make command it is expected that you have the cluster-nodes.json in the path shown above.
+You should also be running a server with a database selected (e.g., `make server` to use the default in memory model):
 
 ```bash
 make register
 ```
 ```console
-go run cmd/rainbow/rainbow.go register
+go run cmd/rainbow/rainbow.go register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json
 2024/02/12 22:17:43 🌈️ starting client (localhost:50051)...
 2024/02/12 22:17:43 registering cluster: keebler
 2024/02/12 22:17:43 status: REGISTER_SUCCESS
@@ -69,22 +70,72 @@ go run cmd/rainbow/rainbow.go register
 If you ran this using the rainbow client you would do:
 
 ```bash
+rainbow register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json
 ```
 
-In the above:
+If you are watching the server, you'll see that the registration happens (token, secret, etc) and then the nodes are sent over
+to rainbow. 
+
+```console
+2024/02/27 01:26:10 creating 🌈️ server...
+2024/02/27 01:26:10 ✨️ creating rainbow.db...
+2024/02/27 01:26:10    rainbow.db file created
+2024/02/27 01:26:10    create jobs table...
+2024/02/27 01:26:10    jobs table created
+2024/02/27 01:26:10    create cluster table...
+2024/02/27 01:26:10    cluster table created
+2024/02/27 01:26:10 ⚠️ WARNING: global-token is set, use with caution.
+2024/02/27 01:26:10 starting scheduler server: rainbow v0.1.1-draft
+2024/02/27 01:26:10 🧠️ Registering memory graph database...
+2024/02/27 01:26:10 Adding special vertex root at index 0
+2024/02/27 01:26:10 server listening: [::]:50051
+2024/02/27 01:26:11 📝️ received register: keebler
+2024/02/27 01:26:11 Received cluster graph with 44 nodes and 86 edges
+2024/02/27 01:26:11 SELECT count(*) from clusters WHERE name = 'keebler': (0)
+2024/02/27 01:26:11 INSERT into clusters (name, token, secret) VALUES ("keebler", "rainbow", "4a5d5f6d-c510-45f2-9cca-cd53f4a40e79"): (1)
+2024/02/27 01:26:11 Preparing to load 44 nodes and 86 edges
+2024/02/27 01:26:11 Adding special vertex keebler at index 1
+2024/02/27 01:26:11 We have made an in memory graph (subsystem) with 46 vertices!
+```
+
+This is actually a modular process that works as follows:
+
+1. When we create the server, we select a database backend. The default is a "memory" (in memory graph database)
+2. The client is interacting with rainbow via GRPC, and doesn't need to know about the database.
+3. The rainbow client hits the rainbow server via GRPC, and sends over the cluster nodes, from JSON into a [json graph version 2](https://github.com/converged-computing/jsongraph-go)
+4. Once the registration is validated, the graph database service is sent the nodes to add to the graph.
+
+For the last step, the default in memory database still serves GRPC (anticipating a client will interact with it in a read only fashion in the future to assess jobspecs), but
+since this default database plugin is part of rainbow, we interact with the in memory database directly to write, and we do this because it's faster than GRPC.
+At the end, you see that the nodes are sent over, and added to the graph, and that's the most that you should care about! In the client window, the registration
+is successful:
+
+```console
+2024/02/27 01:26:11 🌈️ starting client (localhost:50051)...
+2024/02/27 01:26:11 registering cluster: keebler
+2024/02/27 01:26:11 status: REGISTER_SUCCESS
+2024/02/27 01:26:11 secret: 4a5d5f6d-c510-45f2-9cca-cd53f4a40e79
+2024/02/27 01:26:11  token: rainbow
+```
+
+In case you don't remember, here is what the response metadata mean. Both of these parameters you can save to a `rainbow-config.yaml` for future, programmatic use.
 
 - `token` is what is given to clients to submit jobs
 - `secret` is a secret just for your cluster / instance / place you can receive jobs to receive them!
 
-You'll see this from the server:
+While this isn't the final design, for an early first crack (that is likely making graph experts spin in their graves) I am creating a single, dominant subsystem (node resources)
+off of which we can add as many clusters as we like. For salient vertices that need to be found again, we have a small lookup. This is primarily the root and named clusters off of that.
+For persistence of data, if the config you provide has a backup file for the graph database, it will be saved and loaded as a [gob](https://pkg.go.dev/encoding/gob).
+I'm hoping to come up with a more elegant "multi-cluster" graph design, and also add support for multiple subsystems, which should be possible by linking vertices between subsystem graphs.
+I actually don't know because I haven't thought about it yet. Finally, the metadata for nodes obviously needs to be added. As a final distinguishing note, I decided to use vertex instead of node for
+the following reasons:
 
-```console
-2024/02/12 22:17:43 📝️ received register: keebler
-2024/02/12 22:17:43 SELECT count(*) from clusters WHERE name = 'keebler': (0)
-2024/02/12 22:17:43 INSERT into clusters (name, token, secret) VALUES ("keebler", "67e0f258-96c3-4d88-8253-287a95653138", "54c4568a-14f2-465f-aa1e-5e6e0e3efd33"): (1)
-```
+- A **node** is typically referring to the physical node of an HPC system or Kubernetes
+- A **vertex** is "that thing" but represented in the graph.
 
-In the above, we are providing a cluster name (keebler) and it is being registered to the database, and a token, secret and status returned. Note that if we want to submit a job to the "keebler" cluster, from anywhere, we need this token! Let's try that next.
+In Computer Science I think they are used interchangeably. For next steps we will be updating the memory graph database to be a little more meaty (adding proper metadata and likely a summary of resources at the top as a quick "does it satisfy" heuristic)
+and then working on the next interaction, the client submit command, which is going to hit the `Satisfies` endpoint. I will write up more about the database and submit design after that.
+
 
 ## Submit Job
 

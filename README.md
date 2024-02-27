@@ -13,6 +13,9 @@ For more information:
 
 ## TODO
 
+- we can have top level metrics for quick assessment if cluster is OK
+- subsystems should allow for multiple (with keys) and references across to dominant subsystem
+- is there a way to unify into one graph?
 - (advanced) request jobs should accept way to filter or specify criteria for request
 - ephemeral case - actual nodes don't exist, but instead rules for requests and limits. Need to develop this and means to authenticate to use it.
 

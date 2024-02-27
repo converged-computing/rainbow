@@ -29,6 +29,7 @@ type ClusterGraph struct {
 func NewClusterGraph() *ClusterGraph {
 
 	// TODO options / algorithms can come from config
+	// TODO: we should allow multiple subsystems here (node resources are dominant)
 	g := &ClusterGraph{
 		subsystem: NewSubsystem(),
 		metrics:   Metrics{},
@@ -118,9 +119,61 @@ func (g *ClusterGraph) RegisterCluster(name string, payload string) (*service.Re
 
 func (g *ClusterGraph) LoadClusterNodes(name string, nodes *jgf.JsonGraph) error {
 
+	// Let's be pedantic - no clusters allowed without nodes or edges
+	nNodes := len(nodes.Graph.Nodes)
+	nEdges := len(nodes.Graph.Edges)
+	if nEdges == 0 || nNodes == 0 {
+		return fmt.Errorf("cluster must have at least one edge and node")
+	}
+
 	g.lock.Lock()
 	defer g.lock.Unlock()
-	fmt.Println("Preparing to load nodes %s", nodes)
+	log.Printf("Preparing to load %d nodes and %d edges\n", nNodes, nEdges)
+
+	// Get the root vertex, every new cluster starts there!
+	root, exists := g.subsystem.GetNode("root")
+	if !exists {
+		return fmt.Errorf("root node does not exist, this should not happen")
+	}
+
+	// Add a cluster root to it, and connect to the top root
+	// What can we do with a weight? We probably want metadata too.
+	// One thing at a time!
+	clusterRoot := g.subsystem.AddNode(name)
+	err := g.subsystem.AddEdge(root, clusterRoot, 0)
+	if err != nil {
+		return err
+	}
+
+	// Now loop through the nodes and add them, keeping a temporary lookup
+	lookup := map[string]int{"root": root, name: clusterRoot}
+
+	// This is pretty dumb because we don't add metadata yet, oh well
+	// we will!
+	for nid, _ := range nodes.Graph.Nodes {
+		id := g.subsystem.AddNode("")
+		lookup[nid] = id
+	}
+
+	// Now add edges
+	for _, edge := range nodes.Graph.Edges {
+
+		// Get the nodes in the lookup
+		src, ok := lookup[edge.Source]
+		if !ok {
+			return fmt.Errorf("source %s is defined as an edge, but missing as node in graph", edge.Label)
+		}
+		dest, ok := lookup[edge.Target]
+		if !ok {
+			return fmt.Errorf("destination %s is defined as an edge, but missing as node in graph", edge.Label)
+		}
+		err := g.subsystem.AddEdge(src, dest, 0)
+		if err != nil {
+			return err
+		}
+	}
+
+	log.Printf("We have made an in memory graph (subsystem) with %d vertices!", g.subsystem.CountVertices())
 	return nil
 }
 
