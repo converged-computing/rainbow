@@ -15,6 +15,9 @@ type RainbowConfig struct {
 	// Configuration section for Rainbow
 	Scheduler RainbowScheduler `json:"scheduler"`
 
+	// Graph database selected
+	GraphDatabase GraphDatabase `json:"graph"`
+
 	// One or more clusters to submit to
 	Clusters []ClusterCredential `json:"clusters"`
 }
@@ -33,8 +36,19 @@ type ClusterCredential struct {
 	Token string `json:"token" yaml:"token"`
 }
 
+// A Graph Database Backend takes a name and can handle options
+type GraphDatabase struct {
+	Name    string            `json:"name,omitempty" yaml:"name,omitempty"`
+	Options map[string]string `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
 // NewRainbowClientConfig reads in a config or generates a new one
-func NewRainbowClientConfig(filename, clusterName, secret string) (*RainbowConfig, error) {
+func NewRainbowClientConfig(
+	filename,
+	clusterName,
+	secret,
+	database string,
+) (*RainbowConfig, error) {
 
 	config := RainbowConfig{}
 	var err error
@@ -53,6 +67,12 @@ func NewRainbowClientConfig(filename, clusterName, secret string) (*RainbowConfi
 	}
 	if secret != "" {
 		config.Scheduler.Secret = secret
+	}
+
+	// By default we use the in-memory (vanilla, simple) database
+	config.GraphDatabase.Name = "memory"
+	if database != "" {
+		config.GraphDatabase.Name = database
 	}
 	return &config, err
 }

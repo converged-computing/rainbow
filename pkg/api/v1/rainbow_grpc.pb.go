@@ -30,12 +30,6 @@ type RainbowSchedulerClient interface {
 	RequestJobs(ctx context.Context, in *RequestJobsRequest, opts ...grpc.CallOption) (*RequestJobsResponse, error)
 	// Accept Jobs - accept some number of jobs
 	AcceptJobs(ctx context.Context, in *AcceptJobsRequest, opts ...grpc.CallOption) (*AcceptJobsResponse, error)
-	// TESTING ENDPOINTS
-	// Serial checks the connectivity and response time of the service.
-	Serial(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
-	// Stream continuously sends and receives response messages.
-	// It is useful for scenarios where constant data flow is required.
-	Stream(ctx context.Context, opts ...grpc.CallOption) (RainbowScheduler_StreamClient, error)
 }
 
 type rainbowSchedulerClient struct {
@@ -82,46 +76,6 @@ func (c *rainbowSchedulerClient) AcceptJobs(ctx context.Context, in *AcceptJobsR
 	return out, nil
 }
 
-func (c *rainbowSchedulerClient) Serial(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/convergedcomputing.org.grpc.v1.RainbowScheduler/Serial", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *rainbowSchedulerClient) Stream(ctx context.Context, opts ...grpc.CallOption) (RainbowScheduler_StreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &RainbowScheduler_ServiceDesc.Streams[0], "/convergedcomputing.org.grpc.v1.RainbowScheduler/Stream", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &rainbowSchedulerStreamClient{stream}
-	return x, nil
-}
-
-type RainbowScheduler_StreamClient interface {
-	Send(*Request) error
-	Recv() (*Response, error)
-	grpc.ClientStream
-}
-
-type rainbowSchedulerStreamClient struct {
-	grpc.ClientStream
-}
-
-func (x *rainbowSchedulerStreamClient) Send(m *Request) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *rainbowSchedulerStreamClient) Recv() (*Response, error) {
-	m := new(Response)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 // RainbowSchedulerServer is the server API for RainbowScheduler service.
 // All implementations must embed UnimplementedRainbowSchedulerServer
 // for forward compatibility
@@ -134,12 +88,6 @@ type RainbowSchedulerServer interface {
 	RequestJobs(context.Context, *RequestJobsRequest) (*RequestJobsResponse, error)
 	// Accept Jobs - accept some number of jobs
 	AcceptJobs(context.Context, *AcceptJobsRequest) (*AcceptJobsResponse, error)
-	// TESTING ENDPOINTS
-	// Serial checks the connectivity and response time of the service.
-	Serial(context.Context, *Request) (*Response, error)
-	// Stream continuously sends and receives response messages.
-	// It is useful for scenarios where constant data flow is required.
-	Stream(RainbowScheduler_StreamServer) error
 	mustEmbedUnimplementedRainbowSchedulerServer()
 }
 
@@ -158,12 +106,6 @@ func (UnimplementedRainbowSchedulerServer) RequestJobs(context.Context, *Request
 }
 func (UnimplementedRainbowSchedulerServer) AcceptJobs(context.Context, *AcceptJobsRequest) (*AcceptJobsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AcceptJobs not implemented")
-}
-func (UnimplementedRainbowSchedulerServer) Serial(context.Context, *Request) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Serial not implemented")
-}
-func (UnimplementedRainbowSchedulerServer) Stream(RainbowScheduler_StreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method Stream not implemented")
 }
 func (UnimplementedRainbowSchedulerServer) mustEmbedUnimplementedRainbowSchedulerServer() {}
 
@@ -250,50 +192,6 @@ func _RainbowScheduler_AcceptJobs_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RainbowScheduler_Serial_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RainbowSchedulerServer).Serial(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/convergedcomputing.org.grpc.v1.RainbowScheduler/Serial",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RainbowSchedulerServer).Serial(ctx, req.(*Request))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _RainbowScheduler_Stream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(RainbowSchedulerServer).Stream(&rainbowSchedulerStreamServer{stream})
-}
-
-type RainbowScheduler_StreamServer interface {
-	Send(*Response) error
-	Recv() (*Request, error)
-	grpc.ServerStream
-}
-
-type rainbowSchedulerStreamServer struct {
-	grpc.ServerStream
-}
-
-func (x *rainbowSchedulerStreamServer) Send(m *Response) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *rainbowSchedulerStreamServer) Recv() (*Request, error) {
-	m := new(Request)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 // RainbowScheduler_ServiceDesc is the grpc.ServiceDesc for RainbowScheduler service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -317,18 +215,7 @@ var RainbowScheduler_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "AcceptJobs",
 			Handler:    _RainbowScheduler_AcceptJobs_Handler,
 		},
-		{
-			MethodName: "Serial",
-			Handler:    _RainbowScheduler_Serial_Handler,
-		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "Stream",
-			Handler:       _RainbowScheduler_Stream_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "rainbow.proto",
 }

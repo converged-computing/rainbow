@@ -28,6 +28,28 @@ compspec create nodes --cluster-name cluster-red --node-dir ./docs/rainbow/clust
 That example is provided in [examples](examples/scheduler/cluster-nodes.json). This is the cluster metadata that we need to send over to the rainbow scheduler on the register step,
 discussed next.
 
+## Config
+
+If you want to generate a new configuration file:
+
+```bash
+$ ./bin/rainbow config init
+2024/02/26 15:55:36 Writing rainbow config to rainbow-config.yaml
+```
+This generates the following file.
+
+```yaml
+scheduler:
+    secret: chocolate-cookied
+    name: rainbow-cluster
+graphdatabase:
+    name: memory
+clusters: []
+```
+
+Note that the name of the database corresponds to your choice of graph database. For each, you should read about [databases](databases.md) to 
+run a corresponding databaset that your application can interact with.
+
 ## Register
 
 The registration step happens when a cluster joins. Using the make command it is expected that you have the cluster-nodes.json in the path shown above.

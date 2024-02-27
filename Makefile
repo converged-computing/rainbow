@@ -42,6 +42,7 @@ docker-ubuntu:
 proto: protoc ## Generates the API code and documentation
 	mkdir -p pkg/api/v1
 	PATH=$(LOCALBIN):${PATH} protoc --proto_path=api/v1 --go_out=pkg/api/v1 --go_opt=paths=source_relative --go-grpc_out=pkg/api/v1 --go-grpc_opt=paths=source_relative rainbow.proto
+	PATH=$(LOCALBIN):${PATH} protoc --proto_path=backends/memory/service --go_out=backends/memory/service --go_opt=paths=source_relative --go-grpc_out=backends/memory/service --go-grpc_opt=paths=source_relative memory.proto
 
 .PHONY: python
 python: python ## Generate python proto files in python
