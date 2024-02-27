@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/akamensky/argparse"
+	config "github.com/converged-computing/rainbow/cmd/rainbow/config"
 	register "github.com/converged-computing/rainbow/cmd/rainbow/register"
 	request "github.com/converged-computing/rainbow/cmd/rainbow/request"
 	submit "github.com/converged-computing/rainbow/cmd/rainbow/submit"
@@ -34,10 +35,16 @@ func main() {
 	submitCmd := parser.NewCommand("submit", "Submit a job to a rainbow scheduler")
 	requestCmd := parser.NewCommand("request", "Request to inspect some max jobs assigned to a cluster")
 
+	// Configuration
+	configCmd := parser.NewCommand("config", "Interact with rainbow configs")
+	configInitCmd := configCmd.NewCommand("init", "Create a new configuration file")
+	configPath := parser.String("", "config-path", &argparse.Options{Default: "rainbow-config.yaml", Help: "Rainbow config file"})
+
 	// Shared values
 	host := parser.String("", "host", &argparse.Options{Default: "localhost:50051", Help: "Scheduler server address (host:port)"})
 	clusterName := parser.String("", "cluster-name", &argparse.Options{Help: "Name of cluster to register"})
 	cfg := parser.String("", "config", &argparse.Options{Help: "Configuration file for cluster credentials"})
+	graphDatabase := parser.String("", "graph-database", &argparse.Options{Help: "Graph database backend to use"})
 
 	// Request Jobs
 	clusterSecret := requestCmd.String("", "request-secret", &argparse.Options{Help: "Cluster 'secret' to retrieve jobs"})
@@ -63,8 +70,14 @@ func main() {
 		return
 	}
 
-	if registerCmd.Happened() {
-		err := register.Run(*host, *clusterName, *clusterNodes, *secret, *cfg)
+	if configCmd.Happened() && configInitCmd.Happened() {
+		err := config.RunInit(*configPath)
+		if err != nil {
+			log.Fatalf("Issue with config: %s\n", err)
+		}
+
+	} else if registerCmd.Happened() {
+		err := register.Run(*host, *clusterName, *clusterNodes, *secret, *cfg, *graphDatabase)
 		if err != nil {
 			log.Fatalf("Issue with register: %s\n", err)
 		}

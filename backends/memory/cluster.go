@@ -1,0 +1,209 @@
+package memory
+
+import (
+	"encoding/gob"
+	"errors"
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+
+	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
+	"github.com/converged-computing/rainbow/backends/memory/service"
+	"github.com/converged-computing/rainbow/pkg/graph"
+	"github.com/converged-computing/rainbow/pkg/utils"
+)
+
+// A ClusterGraph holds one or more subsystems
+// TODO add support for >1 subsystem, start with dominant
+type ClusterGraph struct {
+	subsystem  Subsystem
+	lock       sync.RWMutex
+	metrics    Metrics
+	backupFile string
+}
+
+// NewClusterGraph creates a new cluster graph with a dominant subsystem
+func NewClusterGraph() *ClusterGraph {
+
+	// TODO options / algorithms can come from config
+	// TODO: we should allow multiple subsystems here (node resources are dominant)
+	g := &ClusterGraph{
+		subsystem: NewSubsystem(),
+		metrics:   Metrics{},
+	}
+	// Listen for syscalls to exit
+	g.awaitExit()
+
+	// Load backup file, if exists
+	g.LoadBackup()
+	return g
+}
+
+// await listens for syscalls and exits when they happen
+func (g *ClusterGraph) awaitExit() {
+	var stopper = make(chan os.Signal, 1)
+	signal.Notify(stopper, syscall.SIGTERM, syscall.SIGINT)
+
+	go func() {
+		sig := <-stopper
+		fmt.Printf("memory graph database caught signal: %+v\n", sig)
+		err := g.Close()
+		if err != nil {
+			log.Println(err.Error())
+		}
+		os.Exit(0)
+	}()
+}
+
+// Close the database and save to backup file
+func (g *ClusterGraph) Close() error {
+
+	// No backup file, nothing to save
+	if g.backupFile == "" {
+		return nil
+	}
+	fp, err := os.Create(g.backupFile)
+	if err != nil {
+		return err
+	}
+
+	// a "gob" is "binary values exchanged between an encode->decoder"
+	encoder := gob.NewEncoder(fp)
+	defer func() {
+		recovered := recover()
+		if recovered != nil {
+			err = errors.New("error registering item types with Gob library")
+		}
+	}()
+	g.lock.Lock()
+	defer g.lock.Unlock()
+
+	err = encoder.Encode(&g.subsystem)
+	if err != nil {
+		fp.Close()
+		return err
+	}
+	return fp.Close()
+}
+
+func (g *ClusterGraph) GetMetrics() Metrics {
+	m := g.metrics
+	m.Vertices = g.subsystem.CountVertices()
+	return m
+}
+
+// Register cluster should:
+// 1. Load in json graph of nodes from string
+// 2. Add nodes to the graph, also keep top level metrics?
+// 3. Return corresponding response
+func (g *ClusterGraph) RegisterCluster(name string, payload string) (*service.Response, error) {
+
+	// Prepare a response
+	response := service.Response{}
+
+	// Load payload into jgf
+	nodes, err := graph.ReadNodeJsonGraphString(payload)
+	if err != nil {
+		return nil, errors.New("cluster nodes are invalid")
+	}
+
+	// Load jgf into graph!
+	err = g.LoadClusterNodes(name, &nodes)
+
+	// do something with g.subsystem
+	return &response, err
+}
+
+func (g *ClusterGraph) LoadClusterNodes(name string, nodes *jgf.JsonGraph) error {
+
+	// Let's be pedantic - no clusters allowed without nodes or edges
+	nNodes := len(nodes.Graph.Nodes)
+	nEdges := len(nodes.Graph.Edges)
+	if nEdges == 0 || nNodes == 0 {
+		return fmt.Errorf("cluster must have at least one edge and node")
+	}
+
+	g.lock.Lock()
+	defer g.lock.Unlock()
+	log.Printf("Preparing to load %d nodes and %d edges\n", nNodes, nEdges)
+
+	// Get the root vertex, every new cluster starts there!
+	root, exists := g.subsystem.GetNode("root")
+	if !exists {
+		return fmt.Errorf("root node does not exist, this should not happen")
+	}
+
+	// Add a cluster root to it, and connect to the top root
+	// What can we do with a weight? We probably want metadata too.
+	// One thing at a time!
+	clusterRoot := g.subsystem.AddNode(name)
+	err := g.subsystem.AddEdge(root, clusterRoot, 0)
+	if err != nil {
+		return err
+	}
+
+	// Now loop through the nodes and add them, keeping a temporary lookup
+	lookup := map[string]int{"root": root, name: clusterRoot}
+
+	// This is pretty dumb because we don't add metadata yet, oh well
+	// we will!
+	for nid, _ := range nodes.Graph.Nodes {
+		id := g.subsystem.AddNode("")
+		lookup[nid] = id
+	}
+
+	// Now add edges
+	for _, edge := range nodes.Graph.Edges {
+
+		// Get the nodes in the lookup
+		src, ok := lookup[edge.Source]
+		if !ok {
+			return fmt.Errorf("source %s is defined as an edge, but missing as node in graph", edge.Label)
+		}
+		dest, ok := lookup[edge.Target]
+		if !ok {
+			return fmt.Errorf("destination %s is defined as an edge, but missing as node in graph", edge.Label)
+		}
+		err := g.subsystem.AddEdge(src, dest, 0)
+		if err != nil {
+			return err
+		}
+	}
+
+	log.Printf("We have made an in memory graph (subsystem) with %d vertices!", g.subsystem.CountVertices())
+	return nil
+}
+
+// LoadBackup loads the saved database from a backup
+func (g *ClusterGraph) LoadBackup() error {
+
+	// No backup file, no need to save
+	if g.backupFile == "" {
+		return nil
+
+	}
+	exists, err := utils.PathExists(g.backupFile)
+	if !exists || err != nil {
+		return err
+	}
+
+	fp, err := os.Open(g.backupFile)
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
+
+	// Load the subsystem from the filesystem gob
+	dec := gob.NewDecoder(fp)
+	items := g.subsystem
+	err = dec.Decode(&items)
+	if err == nil {
+		g.lock.Lock()
+		defer g.lock.Unlock()
+		g.subsystem = items
+	}
+	return err
+}

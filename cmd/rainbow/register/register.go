@@ -9,14 +9,14 @@ import (
 )
 
 // Run will register the cluster with rainbow
-func Run(host, clusterName, clusterNodes, secret, cfgFile string) error {
+func Run(host, clusterName, clusterNodes, secret, cfgFile, graphDatabase string) error {
 	c, err := client.NewClient(host)
 	if err != nil {
 		return err
 	}
 
 	// Read in the config, if provided, command line takes preference
-	cfg, err := config.NewRainbowClientConfig(cfgFile, clusterName, secret)
+	cfg, err := config.NewRainbowClientConfig(cfgFile, clusterName, secret, graphDatabase)
 	if err != nil {
 		return err
 	}

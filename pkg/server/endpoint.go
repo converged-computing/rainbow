@@ -27,13 +27,22 @@ func (s *Server) Register(_ context.Context, in *pb.RegisterRequest) (*pb.Regist
 	}
 
 	// That can be read in...
-	jgf, err := graph.ReadNodeJsonGraphString(in.Nodes)
+	nodes, err := graph.ReadNodeJsonGraphString(in.Nodes)
 	if err != nil {
 		return nil, errors.New("cluster nodes are invalid")
 	}
 
 	log.Printf("📝️ received register: %s", in.Name)
-	return s.db.RegisterCluster(in.Name, s.globalToken, jgf)
+	response, err := s.db.RegisterCluster(in.Name, s.globalToken, nodes)
+	if err != nil {
+		return response, err
+	}
+
+	// If we get here, now we can interact with the graph database to add the nodes
+	if response.Status == pb.RegisterResponse_REGISTER_SUCCESS {
+		err = s.graph.AddCluster(in.Name, &nodes)
+	}
+	return response, err
 }
 
 // SubmitJob submits a job to a specific cluster, or adds an entry to the database

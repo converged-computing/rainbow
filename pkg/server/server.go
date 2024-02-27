@@ -8,7 +8,9 @@ import (
 	"sync/atomic"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
+	"github.com/converged-computing/rainbow/pkg/config"
 	"github.com/converged-computing/rainbow/pkg/database"
+	"github.com/converged-computing/rainbow/pkg/graph/backend"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -20,7 +22,6 @@ const (
 )
 
 var (
-	defaultEnv  = "development"
 	defaultName = "rainbow"
 )
 
@@ -34,33 +35,41 @@ type Server struct {
 	counter     atomic.Uint64
 	name        string
 	version     string
-	environment string
 	secret      string
 	globalToken string
 	db          *database.Database
+
+	// graph database handle
+	graph backend.GraphBackend
 }
 
 // NewServer creates a new "scheduler" server
 // The scheduler server registers clusters and then accepts jobs
 func NewServer(
-	name, version, environment, sqliteFile string,
+	cfg *config.RainbowConfig,
+	version, sqliteFile string,
 	cleanup bool,
-	secret string,
 	globalToken string,
 ) (*Server, error) {
 
-	if secret == "" {
+	if cfg.Scheduler.Secret == "" {
 		return nil, errors.New("secret is required")
 	}
 	if version == "" {
 		return nil, errors.New("version is required")
 	}
-	if name == "" {
-		name = defaultName
+	if cfg.Scheduler.Name == "" {
+		cfg.Scheduler.Name = defaultName
 	}
-	if environment == "" {
-		environment = defaultEnv
+
+	// Load the graph backend!
+	graphDB, err := backend.Get(cfg.GraphDatabase.Name)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	// Run init with any options from the config
+	graphDB.Init(cfg.GraphDatabase.Options)
 
 	// init the database, creating jobs and clusters tables
 	db, err := database.InitDatabase(sqliteFile, cleanup)
@@ -70,11 +79,11 @@ func NewServer(
 
 	return &Server{
 		db:          db,
-		name:        name,
+		name:        cfg.Scheduler.Name,
+		graph:       graphDB,
 		version:     version,
-		secret:      secret,
+		secret:      cfg.Scheduler.Secret,
 		globalToken: globalToken,
-		environment: environment,
 	}, nil
 }
 
@@ -117,13 +126,22 @@ func (s *Server) Start(ctx context.Context, host string) error {
 }
 
 // serve is the main function to ensure the server is listening, etc.
+// If we have an additional database to add, ensure it is added
 func (s *Server) serve(_ context.Context, lis net.Listener) error {
 	if lis == nil {
 		return errors.New("listener is required")
 	}
 	s.listener = lis
+
+	// TODO: should we add grpc.KeepaliveParams here?
 	s.server = grpc.NewServer()
+
+	// This is the main rainbow scheduler service
 	pb.RegisterRainbowSchedulerServer(s.server, s)
+
+	// Add the graph backend to it
+	s.graph.RegisterService(s.server)
+
 	log.Printf("server listening: %v", s.listener.Addr())
 	if err := s.server.Serve(s.listener); err != nil && err.Error() != "closed" {
 		return errors.Wrap(err, "failed to serve")
