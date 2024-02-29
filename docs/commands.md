@@ -96,6 +96,21 @@ to rainbow.
 2024/02/28 23:26:19 Preparing to load 44 nodes and 86 edges
 2024/02/28 23:26:19 Adding special vertex keebler at index 1
 2024/02/28 23:26:19 We have made an in memory graph (subsystem nodes) with 46 vertices!
+2024/02/29 01:17:37 Preparing to load 44 nodes and 86 edges
+2024/02/29 01:17:37 Adding special vertex keebler at index 1
+2024/02/29 01:17:37 We have made an in memory graph (subsystem nodes) with 46 vertices!
+{
+ "keebler": {
+  "Name": "keebler",
+  "Counts": {
+   "cluster": 1,
+   "core": 36,
+   "node": 3,
+   "rack": 1,
+   "socket": 3
+  }
+ }
+}
 ```
 
 This is actually a modular process that works as follows:

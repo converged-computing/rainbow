@@ -184,9 +184,12 @@ func (g *ClusterGraph) LoadClusterNodes(
 		delete(ss.lookup, name)
 	}
 
+	// Create an empty resource counter for the cluster
+	ss.Metrics.NewResource(name)
+
 	// Add a cluster root to it, and connect to the top root. We can add metadata/weight here too
-	clusterRoot := ss.AddNode(name)
-	err := ss.AddEdge(root, clusterRoot, 0)
+	clusterRoot := ss.AddNode("", name, "cluster", 1, "")
+	err := ss.AddEdge(root, clusterRoot, 0, "")
 	if err != nil {
 		return err
 	}
@@ -196,8 +199,15 @@ func (g *ClusterGraph) LoadClusterNodes(
 
 	// This is pretty dumb because we don't add metadata yet, oh well
 	// we will!
-	for nid, _ := range nodes.Graph.Nodes {
-		id := ss.AddNode("")
+	for nid, node := range nodes.Graph.Nodes {
+
+		// Currently we are saving the type, size, and unit
+		resource := NewResource(node)
+
+		// levelName (cluster)
+		// name for lookup/cache (if we want to keep it there)
+		// resource type, size, and unit
+		id := ss.AddNode(name, "", resource.Type, resource.Size, resource.Unit)
 		lookup[nid] = id
 	}
 
@@ -213,14 +223,16 @@ func (g *ClusterGraph) LoadClusterNodes(
 		if !ok {
 			return fmt.Errorf("destination %s is defined as an edge, but missing as node in graph", edge.Label)
 		}
-		err := ss.AddEdge(src, dest, 0)
+		err := ss.AddEdge(src, dest, 0, edge.Relation)
 		if err != nil {
 			return err
 		}
 	}
-
 	log.Printf("We have made an in memory graph (subsystem %s) with %d vertices!", subsystem, ss.CountVertices())
 	g.subsystem[subsystem] = ss
+
+	// Show metrics
+	ss.Metrics.Show()
 	return nil
 }
 
