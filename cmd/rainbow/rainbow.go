@@ -54,6 +54,7 @@ func main() {
 	// Register
 	secret := registerCmd.String("s", "secret", &argparse.Options{Default: defaultSecret, Help: "Registration 'secret'"})
 	clusterNodes := registerCmd.String("", "cluster-nodes", &argparse.Options{Help: "Cluster nodes json (JGF v2)"})
+	subsystem := registerCmd.String("", "subsystem", &argparse.Options{Help: "Subsystem to register cluster to (defaults to dominant, nodes)"})
 
 	// Submit (note that command for now needs to be in quotes to get the whole thing)
 	token := submitCmd.String("", "token", &argparse.Options{Default: defaultSecret, Help: "Client token to submit jobs with."})
@@ -77,7 +78,7 @@ func main() {
 		}
 
 	} else if registerCmd.Happened() {
-		err := register.Run(*host, *clusterName, *clusterNodes, *secret, *cfg, *graphDatabase)
+		err := register.Run(*host, *clusterName, *clusterNodes, *secret, *cfg, *graphDatabase, *subsystem)
 		if err != nil {
 			log.Fatalf("Issue with register: %s\n", err)
 		}

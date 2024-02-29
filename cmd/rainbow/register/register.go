@@ -9,7 +9,16 @@ import (
 )
 
 // Run will register the cluster with rainbow
-func Run(host, clusterName, clusterNodes, secret, cfgFile, graphDatabase string) error {
+func Run(
+	host,
+	clusterName,
+	clusterNodes,
+	secret,
+	cfgFile,
+	graphDatabase,
+	subsystem string,
+) error {
+
 	c, err := client.NewClient(host)
 	if err != nil {
 		return err
@@ -24,7 +33,13 @@ func Run(host, clusterName, clusterNodes, secret, cfgFile, graphDatabase string)
 	log.Printf("registering cluster: %s", cfg.Scheduler.Name)
 
 	// Last argument is secret, empty for now
-	response, err := c.Register(context.Background(), cfg.Scheduler.Name, cfg.Scheduler.Secret, clusterNodes)
+	response, err := c.Register(
+		context.Background(),
+		cfg.Scheduler.Name,
+		cfg.Scheduler.Secret,
+		clusterNodes,
+		subsystem,
+	)
 	if err != nil {
 		return err
 	}

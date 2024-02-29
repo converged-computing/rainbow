@@ -19,20 +19,43 @@ import (
 // A ClusterGraph holds one or more subsystems
 // TODO add support for >1 subsystem, start with dominant
 type ClusterGraph struct {
-	subsystem  Subsystem
+	subsystem  map[string]*Subsystem
 	lock       sync.RWMutex
-	metrics    Metrics
 	backupFile string
+
+	// TODO: cluster level metrics?
+
+	// The dominant subsystem is a lookup in the subsystem map
+	// It defaults to nodes (node resources)
+	dominantSubsystem string
+}
+
+// Dominant subsystem gets the dominant subsystem
+func (c *ClusterGraph) DominantSubsystem() *Subsystem {
+	return c.subsystem[c.dominantSubsystem]
+}
+
+// getSubsystem returns a named subsystem, or falls back to the default
+func (c *ClusterGraph) getSubsystem(subsystem string) string {
+	if subsystem == "" {
+		subsystem = c.dominantSubsystem
+	}
+	return subsystem
 }
 
 // NewClusterGraph creates a new cluster graph with a dominant subsystem
+// TODO we will want a function that can add a new subsystem
 func NewClusterGraph() *ClusterGraph {
 
+	// For now, the dominant subsystem is hard coded to be nodes (resources)
+	dominant := "nodes"
+	subsystem := NewSubsystem()
+	subsystems := map[string]*Subsystem{dominant: subsystem}
+
 	// TODO options / algorithms can come from config
-	// TODO: we should allow multiple subsystems here (node resources are dominant)
 	g := &ClusterGraph{
-		subsystem: NewSubsystem(),
-		metrics:   Metrics{},
+		subsystem:         subsystems,
+		dominantSubsystem: dominant,
 	}
 	// Listen for syscalls to exit
 	g.awaitExit()
@@ -89,17 +112,22 @@ func (g *ClusterGraph) Close() error {
 	return fp.Close()
 }
 
-func (g *ClusterGraph) GetMetrics() Metrics {
-	m := g.metrics
-	m.Vertices = g.subsystem.CountVertices()
-	return m
+// GetMetrics for a named subsystem, defaulting to dominant
+func (g *ClusterGraph) GetMetrics(subsystem string) Metrics {
+	subsystem = g.getSubsystem(subsystem)
+	ss := g.subsystem[subsystem]
+	return ss.Metrics
 }
 
 // Register cluster should:
 // 1. Load in json graph of nodes from string
 // 2. Add nodes to the graph, also keep top level metrics?
 // 3. Return corresponding response
-func (g *ClusterGraph) RegisterCluster(name string, payload string) (*service.Response, error) {
+func (g *ClusterGraph) RegisterCluster(
+	name string,
+	payload string,
+	subsystem string,
+) (*service.Response, error) {
 
 	// Prepare a response
 	response := service.Response{}
@@ -110,14 +138,21 @@ func (g *ClusterGraph) RegisterCluster(name string, payload string) (*service.Re
 		return nil, errors.New("cluster nodes are invalid")
 	}
 
-	// Load jgf into graph!
-	err = g.LoadClusterNodes(name, &nodes)
+	// Load jgf into graph for that subsystem!
+	err = g.LoadClusterNodes(name, &nodes, subsystem)
 
 	// do something with g.subsystem
 	return &response, err
 }
 
-func (g *ClusterGraph) LoadClusterNodes(name string, nodes *jgf.JsonGraph) error {
+func (g *ClusterGraph) LoadClusterNodes(
+	name string,
+	nodes *jgf.JsonGraph,
+	subsystem string,
+) error {
+
+	// Fall back to dominant subsystem name
+	subsystem = g.getSubsystem(subsystem)
 
 	// Let's be pedantic - no clusters allowed without nodes or edges
 	nNodes := len(nodes.Graph.Nodes)
@@ -126,21 +161,35 @@ func (g *ClusterGraph) LoadClusterNodes(name string, nodes *jgf.JsonGraph) error
 		return fmt.Errorf("cluster must have at least one edge and node")
 	}
 
+	// Grab the current subsystem - it must exist
+	ss, ok := g.subsystem[subsystem]
+	if !ok {
+		return fmt.Errorf("subsystem %s does not exist. Ensure it is created first", subsystem)
+	}
+
 	g.lock.Lock()
 	defer g.lock.Unlock()
 	log.Printf("Preparing to load %d nodes and %d edges\n", nNodes, nEdges)
 
-	// Get the root vertex, every new cluster starts there!
-	root, exists := g.subsystem.GetNode("root")
+	// Get the root vertex, every new subsystem starts there!
+	root, exists := ss.GetNode("root")
 	if !exists {
-		return fmt.Errorf("root node does not exist, this should not happen")
+		return fmt.Errorf("root node does not exist for subsystem %s, this should not happen", subsystem)
 	}
 
-	// Add a cluster root to it, and connect to the top root
-	// What can we do with a weight? We probably want metadata too.
-	// One thing at a time!
-	clusterRoot := g.subsystem.AddNode(name)
-	err := g.subsystem.AddEdge(root, clusterRoot, 0)
+	// The cluster root can only exist as one, and needs to be deleted if it does.
+	_, ok = ss.lookup[name]
+	if ok {
+		log.Printf("cluster %s already exists, cleaning up\n", name)
+		delete(ss.lookup, name)
+	}
+
+	// Create an empty resource counter for the cluster
+	ss.Metrics.NewResource(name)
+
+	// Add a cluster root to it, and connect to the top root. We can add metadata/weight here too
+	clusterRoot := ss.AddNode("", name, "cluster", 1, "")
+	err := ss.AddEdge(root, clusterRoot, 0, "")
 	if err != nil {
 		return err
 	}
@@ -150,8 +199,15 @@ func (g *ClusterGraph) LoadClusterNodes(name string, nodes *jgf.JsonGraph) error
 
 	// This is pretty dumb because we don't add metadata yet, oh well
 	// we will!
-	for nid, _ := range nodes.Graph.Nodes {
-		id := g.subsystem.AddNode("")
+	for nid, node := range nodes.Graph.Nodes {
+
+		// Currently we are saving the type, size, and unit
+		resource := NewResource(node)
+
+		// levelName (cluster)
+		// name for lookup/cache (if we want to keep it there)
+		// resource type, size, and unit
+		id := ss.AddNode(name, "", resource.Type, resource.Size, resource.Unit)
 		lookup[nid] = id
 	}
 
@@ -167,13 +223,16 @@ func (g *ClusterGraph) LoadClusterNodes(name string, nodes *jgf.JsonGraph) error
 		if !ok {
 			return fmt.Errorf("destination %s is defined as an edge, but missing as node in graph", edge.Label)
 		}
-		err := g.subsystem.AddEdge(src, dest, 0)
+		err := ss.AddEdge(src, dest, 0, edge.Relation)
 		if err != nil {
 			return err
 		}
 	}
+	log.Printf("We have made an in memory graph (subsystem %s) with %d vertices!", subsystem, ss.CountVertices())
+	g.subsystem[subsystem] = ss
 
-	log.Printf("We have made an in memory graph (subsystem) with %d vertices!", g.subsystem.CountVertices())
+	// Show metrics
+	ss.Metrics.Show()
 	return nil
 }
 

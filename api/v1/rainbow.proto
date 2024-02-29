@@ -27,10 +27,11 @@ service RainbowScheduler {
 message RegisterRequest {
   string name = 1;
   string secret = 2;
-  
+
   // JGF json of nodes (needs to be read in with jsongraph-go)
   string nodes = 3;
-  google.protobuf.Timestamp sent = 4;
+  string subsystem = 4;
+  google.protobuf.Timestamp sent = 5;
 }
 
 // SubmitJobRequest takes a job name, cluster name

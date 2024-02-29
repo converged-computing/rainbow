@@ -40,7 +40,7 @@ func (s *Server) Register(_ context.Context, in *pb.RegisterRequest) (*pb.Regist
 
 	// If we get here, now we can interact with the graph database to add the nodes
 	if response.Status == pb.RegisterResponse_REGISTER_SUCCESS {
-		err = s.graph.AddCluster(in.Name, &nodes)
+		err = s.graph.AddCluster(in.Name, &nodes, in.Subsystem)
 	}
 	return response, err
 }
