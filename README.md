@@ -13,6 +13,9 @@ For more information:
 
 ## TODO
 
+- subsystems
+  - we will want a function to add a new subsystem, right now we have one dominant for nodes
+  - make also a function to delete subsystems
 - we can have top level metrics for quick assessment if cluster is OK
 - subsystems should allow for multiple (with keys) and references across to dominant subsystem
 - is there a way to unify into one graph?

@@ -132,6 +132,7 @@ func (c *RainbowClient) Register(
 	cluster string,
 	secret string,
 	clusterNodes string,
+	subsystem string,
 ) (*pb.RegisterResponse, error) {
 
 	response := &pb.RegisterResponse{}
@@ -169,10 +170,11 @@ func (c *RainbowClient) Register(
 
 	// Hit the register endpoint
 	response, err = c.service.Register(ctx, &pb.RegisterRequest{
-		Name:   cluster,
-		Secret: secret,
-		Nodes:  nodes,
-		Sent:   ts.Now(),
+		Name:      cluster,
+		Secret:    secret,
+		Nodes:     nodes,
+		Subsystem: subsystem,
+		Sent:      ts.Now(),
 	})
 
 	// For now we blindly accept all register, it's a fake endpoint

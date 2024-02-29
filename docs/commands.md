@@ -77,25 +77,25 @@ If you are watching the server, you'll see that the registration happens (token,
 to rainbow. 
 
 ```console
-2024/02/27 01:26:10 creating 🌈️ server...
-2024/02/27 01:26:10 ✨️ creating rainbow.db...
-2024/02/27 01:26:10    rainbow.db file created
-2024/02/27 01:26:10    create jobs table...
-2024/02/27 01:26:10    jobs table created
-2024/02/27 01:26:10    create cluster table...
-2024/02/27 01:26:10    cluster table created
-2024/02/27 01:26:10 ⚠️ WARNING: global-token is set, use with caution.
-2024/02/27 01:26:10 starting scheduler server: rainbow v0.1.1-draft
-2024/02/27 01:26:10 🧠️ Registering memory graph database...
-2024/02/27 01:26:10 Adding special vertex root at index 0
-2024/02/27 01:26:10 server listening: [::]:50051
-2024/02/27 01:26:11 📝️ received register: keebler
-2024/02/27 01:26:11 Received cluster graph with 44 nodes and 86 edges
-2024/02/27 01:26:11 SELECT count(*) from clusters WHERE name = 'keebler': (0)
-2024/02/27 01:26:11 INSERT into clusters (name, token, secret) VALUES ("keebler", "rainbow", "4a5d5f6d-c510-45f2-9cca-cd53f4a40e79"): (1)
-2024/02/27 01:26:11 Preparing to load 44 nodes and 86 edges
-2024/02/27 01:26:11 Adding special vertex keebler at index 1
-2024/02/27 01:26:11 We have made an in memory graph (subsystem) with 46 vertices!
+2024/02/28 23:26:17 creating 🌈️ server...
+2024/02/28 23:26:17 ✨️ creating rainbow.db...
+2024/02/28 23:26:17    rainbow.db file created
+2024/02/28 23:26:17    create cluster table...
+2024/02/28 23:26:17    cluster table created
+2024/02/28 23:26:17    create jobs table...
+2024/02/28 23:26:17    jobs table created
+2024/02/28 23:26:17 ⚠️ WARNING: global-token is set, use with caution.
+2024/02/28 23:26:17 starting scheduler server: rainbow v0.1.1-draft
+2024/02/28 23:26:17 🧠️ Registering memory graph database...
+2024/02/28 23:26:17 Adding special vertex root at index 0
+2024/02/28 23:26:17 server listening: [::]:50051
+2024/02/28 23:26:19 📝️ received register: keebler
+2024/02/28 23:26:19 Received cluster graph with 44 nodes and 86 edges
+2024/02/28 23:26:19 SELECT count(*) from clusters WHERE name = 'keebler': (0)
+2024/02/28 23:26:19 INSERT into clusters (name, token, secret) VALUES ("keebler", "rainbow", "3f78d433-f24b-4664-858c-0577971e259e"): (1)
+2024/02/28 23:26:19 Preparing to load 44 nodes and 86 edges
+2024/02/28 23:26:19 Adding special vertex keebler at index 1
+2024/02/28 23:26:19 We have made an in memory graph (subsystem nodes) with 46 vertices!
 ```
 
 This is actually a modular process that works as follows:

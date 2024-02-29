@@ -6,16 +6,18 @@ import (
 )
 
 // NewSubsystem generates a new subsystem graph
-func NewSubsystem() Subsystem {
+func NewSubsystem() *Subsystem {
 	vertices := map[int]*Vertex{}
 	lookup := map[string]int{}
+	metrics := Metrics{}
 
 	// TODO need to add metadata onto vertices
-	s := Subsystem{Vertices: vertices, lookup: lookup}
+	s := Subsystem{Vertices: vertices, lookup: lookup, Metrics: metrics}
 
 	// Create a top level vertex for all clusters that will be added
+	// Question: should the root be above the subsystems?
 	s.AddNode("root")
-	return s
+	return &s
 }
 
 // AddNode (a physical node) as a vertex, return the vertex id

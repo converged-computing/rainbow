@@ -13,6 +13,7 @@ service MemoryGraph {
 message RegisterRequest {
     string name = 1; 
     string payload = 2; 
+    string subsystem = 3;
 }
 
 

@@ -34,7 +34,11 @@ func (m MemoryGraph) Description() string {
 // Note that a client can interact with the database (in read only)
 // but since this is directly in the rainbow cluster, we call
 // the functions directly.
-func (m MemoryGraph) AddCluster(name string, nodes *jgf.JsonGraph) error {
+func (m MemoryGraph) AddCluster(
+	name string,
+	nodes *jgf.JsonGraph,
+	subsystem string,
+) error {
 
 	// How this might look for an external client
 	/* var opts []grpc.DialOption
@@ -47,7 +51,7 @@ func (m MemoryGraph) AddCluster(name string, nodes *jgf.JsonGraph) error {
 	client := service.NewMemoryGraphClient(conn)
 	ctx := context.Background()
 	client.Register(...) */
-	return graphClient.LoadClusterNodes(name, nodes)
+	return graphClient.LoadClusterNodes(name, nodes, subsystem)
 }
 
 func (m MemoryGraph) RegisterService(s *grpc.Server) error {

@@ -14,6 +14,9 @@ type Subsystem struct {
 
 	// Simple counter for adding the next code
 	counter int
+
+	// Subsystem level metrics
+	Metrics Metrics
 }
 
 // A vertex is defined by an identifier. We use an int

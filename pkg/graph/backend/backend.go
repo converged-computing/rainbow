@@ -34,7 +34,7 @@ type GraphBackend interface {
 	RegisterService(*grpc.Server) error
 
 	// Add nodes for a newly registered cluster
-	AddCluster(name string, nodes *graph.JsonGraph) error
+	AddCluster(name string, nodes *graph.JsonGraph, subsystem string) error
 }
 
 // List returns known backends
