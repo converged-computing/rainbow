@@ -5,6 +5,7 @@ import (
 	"log"
 
 	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
+	v1 "github.com/compspec/jobspec-go/pkg/jobspec/v1"
 )
 
 // NewSubsystem generates a new subsystem graph
@@ -32,32 +33,57 @@ func (s *Subsystem) DFSForMatch(jobspec *js.Jobspec) ([]string, error) {
 
 	// Do a quick top level count for resource types
 	totals := map[string]int32{}
-	for _, resource := range jobspec.Resources {
+
+	// Go sets loops to an initial value at start,
+	// so we need a function to recurse into nested resources
+	var checkResource func(resource *v1.Resource)
+	checkResource = func(resource *v1.Resource) {
 		count, ok := totals[resource.Type]
 		if !ok {
 			count = 0
 		}
 		count += resource.Count
 		totals[resource.Type] = count
+
+		// This is the recursive bit
+		if resource.With != nil {
+			for _, with := range resource.With {
+				checkResource(&with)
+			}
+		}
+	}
+
+	for _, resource := range jobspec.Resources {
+		checkResource(&resource)
 	}
 
 	// Compare against each cluster we know about
 	for cluster, summary := range s.Metrics.ResourceSummary {
+		fmt.Println(summary)
+
 		isMatch := true
 		for resourceType, needed := range totals {
+
+			// TODO this should be part of a subsystem spec to ignore
+			if resourceType == "slot" {
+				continue
+			}
+
 			actual, ok := summary.Counts[resourceType]
 
 			// We don't know. Assume we can't schedule
 			if !ok {
-				fmt.Printf("cluster %s is missing resource type %s, assuming cannot schedule\n", cluster, resourceType)
+				fmt.Printf("  ❌️ cluster %s is missing resource type %s, assuming cannot schedule\n", cluster, resourceType)
 				isMatch = false
 				break
 			}
 			// We don't have enough resources
 			if int32(actual) < needed {
-				fmt.Printf("cluster %s does not have sufficient resource type %s - actual %d vs needed %d\n", cluster, resourceType, actual, needed)
+				fmt.Printf("  ❌️ cluster %s does not have sufficient resource type %s - actual %d vs needed %d\n", cluster, resourceType, actual, needed)
 				isMatch = false
 				break
+			} else {
+				fmt.Printf("  ✅️ cluster %s has sufficient resource type %s - actual %d vs needed %d\n", cluster, resourceType, actual, needed)
 			}
 		}
 		// I don't think we need this, just be pedantic
