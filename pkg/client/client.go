@@ -4,8 +4,10 @@ import (
 	"context"
 	"log"
 
+	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
+
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
-	"github.com/converged-computing/rainbow/pkg/types"
+	"github.com/converged-computing/rainbow/pkg/config"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
@@ -29,7 +31,7 @@ type Client interface {
 
 	// Job Client Interactions
 	AcceptJobs(ctx context.Context, cluster, secret string, jobids []int32) (*pb.AcceptJobsResponse, error)
-	SubmitJob(ctx context.Context, job types.JobSpec, cluster, token string) (*pb.SubmitJobResponse, error)
+	SubmitJob(ctx context.Context, job *js.Jobspec, cfg *config.RainbowConfig) (*pb.SubmitJobResponse, error)
 	RequestJobs(ctx context.Context, cluster, token string, maxJobs int32) (*pb.RequestJobsResponse, error)
 }
 

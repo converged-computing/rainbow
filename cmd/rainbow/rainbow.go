@@ -11,6 +11,9 @@ import (
 	request "github.com/converged-computing/rainbow/cmd/rainbow/request"
 	submit "github.com/converged-computing/rainbow/cmd/rainbow/submit"
 	"github.com/converged-computing/rainbow/pkg/types"
+
+	// Register database backends
+	_ "github.com/converged-computing/rainbow/backends/memory"
 )
 
 var (
@@ -38,12 +41,11 @@ func main() {
 	// Configuration
 	configCmd := parser.NewCommand("config", "Interact with rainbow configs")
 	configInitCmd := configCmd.NewCommand("init", "Create a new configuration file")
-	configPath := parser.String("", "config-path", &argparse.Options{Default: "rainbow-config.yaml", Help: "Rainbow config file"})
+	cfg := parser.String("", "config-path", &argparse.Options{Help: "Configuration file for cluster credentials"})
 
 	// Shared values
 	host := parser.String("", "host", &argparse.Options{Default: "localhost:50051", Help: "Scheduler server address (host:port)"})
 	clusterName := parser.String("", "cluster-name", &argparse.Options{Help: "Name of cluster to register"})
-	cfg := parser.String("", "config", &argparse.Options{Help: "Configuration file for cluster credentials"})
 	graphDatabase := parser.String("", "graph-database", &argparse.Options{Help: "Graph database backend to use"})
 
 	// Request Jobs
@@ -72,7 +74,7 @@ func main() {
 	}
 
 	if configCmd.Happened() && configInitCmd.Happened() {
-		err := config.RunInit(*configPath)
+		err := config.RunInit(*cfg)
 		if err != nil {
 			log.Fatalf("Issue with config: %s\n", err)
 		}
@@ -88,7 +90,7 @@ func main() {
 			log.Fatalf("Issue with request jobs: %s\n", err)
 		}
 	} else if submitCmd.Happened() {
-		err := submit.Run(*host, *jobName, *command, *nodes, *tasks, *token, *clusterName, *cfg)
+		err := submit.Run(*host, *jobName, *command, *nodes, *tasks, *token, *clusterName, *graphDatabase, *cfg)
 		if err != nil {
 			log.Fatal(err.Error())
 		}

@@ -4,7 +4,9 @@ go 1.20
 
 require (
 	github.com/akamensky/argparse v1.4.0
+	github.com/compspec/jobspec-go v0.0.0-20240226213125-007327866207
 	github.com/converged-computing/jsongraph-go v0.0.0-20240229082022-c6887a5a00fe
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/pkg/errors v0.9.1

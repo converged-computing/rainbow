@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -39,7 +40,29 @@ type ClusterCredential struct {
 // A Graph Database Backend takes a name and can handle options
 type GraphDatabase struct {
 	Name    string            `json:"name,omitempty" yaml:"name,omitempty"`
+	Host    string            `json:"host,omitempty" yaml:"host,omitempty"`
 	Options map[string]string `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
+// AddCluster adds a cluster on the fly to a config, likely for a one-off submit
+func (c *RainbowConfig) AddCluster(clusterName, token string) error {
+
+	if clusterName == "" {
+		return fmt.Errorf("a cluster name is required")
+	}
+	if token == "" {
+		return fmt.Errorf("a token for cluster %s is required", clusterName)
+	}
+
+	// Ensure we don't have it already
+	for _, item := range c.Clusters {
+		if item.Name == clusterName {
+			return fmt.Errorf("cluster %s is already added to the configuration file", clusterName)
+		}
+	}
+	newCluster := ClusterCredential{Name: clusterName, Token: token}
+	c.Clusters = append(c.Clusters, newCluster)
+	return nil
 }
 
 // NewRainbowClientConfig reads in a config or generates a new one
@@ -73,6 +96,11 @@ func NewRainbowClientConfig(
 	config.GraphDatabase.Name = "memory"
 	if database != "" {
 		config.GraphDatabase.Name = database
+	}
+
+	// Default host, for now is always this
+	if config.GraphDatabase.Host == "" {
+		config.GraphDatabase.Host = "127.0.0.1:50051"
 	}
 	return &config, err
 }

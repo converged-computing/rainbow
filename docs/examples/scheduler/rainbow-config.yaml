@@ -1,0 +1,12 @@
+scheduler:
+    secret: chocolate-cookied
+    name: rainbow-cluster
+graphdatabase:
+    name: memory
+    options:
+      host: "127.0.0.1:50051"
+
+# This is the default cluster generated via the Makefile commands
+clusters:
+  - name: keebler
+    token: rainbow

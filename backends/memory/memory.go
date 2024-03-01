@@ -3,17 +3,24 @@ package memory
 // The rainbow memory backend - vanilla / prototype
 
 import (
+	"context"
+	"encoding/json"
 	"log"
 
+	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 
 	"github.com/converged-computing/rainbow/backends/memory/service"
 	"github.com/converged-computing/rainbow/pkg/graph/backend"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // This is the global, in memory graph handle
-var graphClient *ClusterGraph
+var (
+	memoryHost  = ":50051"
+	graphClient *ClusterGraph
+)
 
 type MemoryGraph struct{}
 
@@ -39,18 +46,6 @@ func (m MemoryGraph) AddCluster(
 	nodes *jgf.JsonGraph,
 	subsystem string,
 ) error {
-
-	// How this might look for an external client
-	/* var opts []grpc.DialOption
-	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	conn, err := grpc.Dial("127.0.0.1:50051", opts...)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-	client := service.NewMemoryGraphClient(conn)
-	ctx := context.Background()
-	client.Register(...) */
 	return graphClient.LoadClusterNodes(name, nodes, subsystem)
 }
 
@@ -73,8 +68,32 @@ func init() {
 }
 
 // Satisfies - determine what clusters satisfy a jobspec request
-func (g MemoryGraph) Satisfies(jobspec string) error {
-	return nil
+// Since this is called from the client function, it's technically
+// running from the client (not from the server)
+func (g MemoryGraph) Satisfies(jobspec *js.Jobspec) ([]string, error) {
+
+	matches := []string{}
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(memoryHost, opts...)
+	if err != nil {
+		return matches, err
+	}
+	defer conn.Close()
+	client := service.NewMemoryGraphClient(conn)
+
+	// Prepare a satisfy request, the jobspec needs to be serialized to string
+	out, err := json.Marshal(jobspec)
+	if err != nil {
+		return matches, err
+	}
+	request := service.SatisfyRequest{Payload: string(out)}
+	ctx := context.Background()
+	response, err := client.Satisfy(ctx, &request)
+	if err != nil {
+		return matches, err
+	}
+	return response.Clusters, nil
 }
 
 // Init provides extra initialization functionality, if needed
@@ -83,6 +102,12 @@ func (g MemoryGraph) Init(options map[string]string) error {
 	backupFile, ok := options["backupFile"]
 	if ok {
 		graphClient.backupFile = backupFile
+	}
+
+	// Warning: this assumes one client running with one graph host
+	host, ok := options["host"]
+	if ok {
+		memoryHost = host
 	}
 	return nil
 }

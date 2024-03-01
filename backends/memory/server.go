@@ -18,3 +18,12 @@ func (MemoryServer) Register(c context.Context, req *service.RegisterRequest) (*
 	}
 	return response, nil
 }
+
+// Satisfy determines if the graph can satisfy a request
+func (MemoryServer) Satisfy(c context.Context, req *service.SatisfyRequest) (*service.SatisfyResponse, error) {
+	response, err := graphClient.Satisfies(req.Payload)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}

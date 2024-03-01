@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MemoryGraphClient interface {
+	Satisfy(ctx context.Context, in *SatisfyRequest, opts ...grpc.CallOption) (*SatisfyResponse, error)
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*Response, error)
 }
 
@@ -31,6 +32,15 @@ type memoryGraphClient struct {
 
 func NewMemoryGraphClient(cc grpc.ClientConnInterface) MemoryGraphClient {
 	return &memoryGraphClient{cc}
+}
+
+func (c *memoryGraphClient) Satisfy(ctx context.Context, in *SatisfyRequest, opts ...grpc.CallOption) (*SatisfyResponse, error) {
+	out := new(SatisfyResponse)
+	err := c.cc.Invoke(ctx, "/service.MemoryGraph/Satisfy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *memoryGraphClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*Response, error) {
@@ -46,6 +56,7 @@ func (c *memoryGraphClient) Register(ctx context.Context, in *RegisterRequest, o
 // All implementations must embed UnimplementedMemoryGraphServer
 // for forward compatibility
 type MemoryGraphServer interface {
+	Satisfy(context.Context, *SatisfyRequest) (*SatisfyResponse, error)
 	Register(context.Context, *RegisterRequest) (*Response, error)
 	mustEmbedUnimplementedMemoryGraphServer()
 }
@@ -54,6 +65,9 @@ type MemoryGraphServer interface {
 type UnimplementedMemoryGraphServer struct {
 }
 
+func (UnimplementedMemoryGraphServer) Satisfy(context.Context, *SatisfyRequest) (*SatisfyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Satisfy not implemented")
+}
 func (UnimplementedMemoryGraphServer) Register(context.Context, *RegisterRequest) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
@@ -68,6 +82,24 @@ type UnsafeMemoryGraphServer interface {
 
 func RegisterMemoryGraphServer(s grpc.ServiceRegistrar, srv MemoryGraphServer) {
 	s.RegisterService(&MemoryGraph_ServiceDesc, srv)
+}
+
+func _MemoryGraph_Satisfy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SatisfyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemoryGraphServer).Satisfy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/service.MemoryGraph/Satisfy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemoryGraphServer).Satisfy(ctx, req.(*SatisfyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _MemoryGraph_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -95,6 +127,10 @@ var MemoryGraph_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "service.MemoryGraph",
 	HandlerType: (*MemoryGraphServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Satisfy",
+			Handler:    _MemoryGraph_Satisfy_Handler,
+		},
 		{
 			MethodName: "Register",
 			Handler:    _MemoryGraph_Register_Handler,

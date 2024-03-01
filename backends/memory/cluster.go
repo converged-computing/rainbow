@@ -2,6 +2,7 @@ package memory
 
 import (
 	"encoding/gob"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"sync"
 	"syscall"
 
+	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 	"github.com/converged-computing/rainbow/backends/memory/service"
 	"github.com/converged-computing/rainbow/pkg/graph"
@@ -117,6 +119,50 @@ func (g *ClusterGraph) GetMetrics(subsystem string) Metrics {
 	subsystem = g.getSubsystem(subsystem)
 	ss := g.subsystem[subsystem]
 	return ss.Metrics
+}
+
+// Satisfy should:
+// 1. Read in and populate the payload into a jobspec
+// 2. Determine by way of a depth first search if we can satisfy
+// 3. Return the names of the cluster
+// TODO this needs to have subsystem representation, right now we just
+// choose dominant and assume the payload is a cluster / nodes
+func (g *ClusterGraph) Satisfies(payload string) (*service.SatisfyResponse, error) {
+	response := service.SatisfyResponse{}
+
+	// Get subsystem (will get dominant, this can eventually take a variable)
+	subsystem := g.getSubsystem("")
+
+	// Serialize back into Jobspec
+	jobspec := js.Jobspec{}
+	err := json.Unmarshal([]byte(payload), &jobspec)
+	if err != nil {
+		return &response, err
+	}
+
+	// Assume we are querying the dominant subsystem with nodes
+	ss, ok := g.subsystem[g.dominantSubsystem]
+	if !ok {
+		response.Status = service.SatisfyResponse_RESULT_TYPE_ERROR
+		return &response, fmt.Errorf("the subsystem %s does not exist", subsystem)
+	}
+
+	// Tell the user /logs we are looking for a match
+	fmt.Printf("\n🍇️ Satisfy request to Graph 🍇️\n")
+	fmt.Printf(" jobspec: %s\n", payload)
+
+	// Do depth first search to determine if there is a match.
+	// Right now this is a boolean because I don't know what it should look like
+	matches, err := ss.DFSForMatch(&jobspec)
+	if err != nil {
+		response.Status = service.SatisfyResponse_RESULT_TYPE_ERROR
+		return &response, err
+	}
+
+	// Add the matches to the response
+	response.Clusters = matches
+	response.Status = service.SatisfyResponse_RESULT_TYPE_SUCCESS
+	return &response, nil
 }
 
 // Register cluster should:

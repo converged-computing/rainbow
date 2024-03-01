@@ -3,6 +3,8 @@ package memory
 import (
 	"fmt"
 	"log"
+
+	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
 )
 
 // NewSubsystem generates a new subsystem graph
@@ -18,6 +20,58 @@ func NewSubsystem() *Subsystem {
 	// Question: should the root be above the subsystems?
 	s.AddNode("", "root", "root", 1, "")
 	return &s
+}
+
+// DFSForMatch WILL be a depth first search for matches
+// Right now it's looking at total cluster resources on the top level,
+// which is kind of terrible, but it's a start :)
+func (s *Subsystem) DFSForMatch(jobspec *js.Jobspec) ([]string, error) {
+
+	// Return a list of matching clusters
+	matches := []string{}
+
+	// Do a quick top level count for resource types
+	totals := map[string]int32{}
+	for _, resource := range jobspec.Resources {
+		count, ok := totals[resource.Type]
+		if !ok {
+			count = 0
+		}
+		count += resource.Count
+		totals[resource.Type] = count
+	}
+
+	// Compare against each cluster we know about
+	for cluster, summary := range s.Metrics.ResourceSummary {
+		isMatch := true
+		for resourceType, needed := range totals {
+			actual, ok := summary.Counts[resourceType]
+
+			// We don't know. Assume we can't schedule
+			if !ok {
+				fmt.Printf("cluster %s is missing resource type %s, assuming cannot schedule\n", cluster, resourceType)
+				isMatch = false
+				break
+			}
+			// We don't have enough resources
+			if int32(actual) < needed {
+				fmt.Printf("cluster %s does not have sufficient resource type %s - actual %d vs needed %d\n", cluster, resourceType, actual, needed)
+				isMatch = false
+				break
+			}
+		}
+		// I don't think we need this, just be pedantic
+		if isMatch {
+			fmt.Printf("  match: 🎯️ cluster %s has enough resources and is a match\n", cluster)
+			matches = append(matches, cluster)
+		}
+	}
+
+	// No matches, womp womp.
+	if len(matches) == 0 {
+		fmt.Println("  match: 😥️ no clusters could satisfy this request. We are sad")
+	}
+	return matches, nil
 }
 
 // AddNode (a physical node) as a vertex, return the vertex id

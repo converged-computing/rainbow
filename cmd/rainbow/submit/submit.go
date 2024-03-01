@@ -7,7 +7,8 @@ import (
 	"strings"
 
 	"github.com/converged-computing/rainbow/pkg/client"
-	"github.com/converged-computing/rainbow/pkg/types"
+	"github.com/converged-computing/rainbow/pkg/config"
+	"github.com/converged-computing/rainbow/pkg/jobspec"
 )
 
 // Run will check a manifest list of artifacts against a host machine
@@ -15,7 +16,8 @@ import (
 func Run(
 	host, jobName, command string,
 	nodes, tasks int,
-	token, clusterName, cfgFile string,
+	token, clusterName,
+	database, cfgFile string,
 ) error {
 
 	c, err := client.NewClient(host)
@@ -34,21 +36,24 @@ func Run(
 		parts := strings.Split(command, " ")
 		jobName = parts[0]
 	}
-	jobspec := types.JobSpec{
-		Name:    jobName,
-		Nodes:   int32(nodes),
-		Tasks:   int32(tasks),
-		Command: command,
+
+	// Convert the simple command / nodes / etc into a JobSpec
+	js, err := jobspec.NewSimpleJobspec(jobName, command, int32(nodes), int32(tasks))
+	if err != nil {
+		return nil
 	}
 
 	// Read in the config, if provided, TODO we need a set of tokens here?
-	//cfg, err := config.NewRainbowClientConfig(cfgFile, clusterName, "")
-	//if err != nil {
-	//	return err
-	//}
+	cfg, err := config.NewRainbowClientConfig(cfgFile, "", "", database)
+	if err != nil {
+		return err
+	}
 
-	// Last argument is secret, empty for now
-	response, err := c.SubmitJob(context.Background(), jobspec, clusterName, token)
+	// The cluster name and token provided here are in reference to a cluster
+	cfg.AddCluster(clusterName, token)
+
+	// Submission is always with a configuration
+	response, err := c.SubmitJob(context.Background(), js, cfg)
 	if err != nil {
 		return err
 	}

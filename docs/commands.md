@@ -154,55 +154,107 @@ and then working on the next interaction, the client submit command, which is go
 
 ## Submit Job
 
-To submit a job, we need the client `token` associated with a cluster.
+To submit a job, we need the client `token` associated with a cluster. We are going to use the following strategy, and allow the following submission types:
+
+- **simple**: for basic users, a command and the most basic of parameters will be provided and converted to a Jobspec.
+- **jobspec**: for advanced users, a Jobspec can be provided directly.
+- **Kubernetes job**: for Kubernetes users, a [batchv1/Job]() can be provided that will be converted to a Jobspec.
+
+We will likely start with the first (simple) and then work on implementations for the latter. The converters will be implemented alongside the [Jobspec](https://github.com/compspec/jobspec-go/issues/1)
+library and used here.
+
 
 ```bash
 # Look at help
 go run ./cmd/rainbow/rainbow.go submit --help
 ```
 ```
-usage: rainbow submit [-h|--help] [-s|--secret "<value>"] [-n|--nodes
-               <integer>] [-t|--tasks <integer>] [-c|--command "<value>"]
-               [--job-name "<value>"] [--host "<value>"] [--cluster-name
-               "<value>"]
+usage: rainbow submit [-h|--help] [--token "<value>"] [-n|--nodes <integer>]
+               [-t|--tasks <integer>] [-c|--command "<value>"] [--job-name
+               "<value>"] [--config-path "<value>"] [--host "<value>"]
+               [--cluster-name "<value>"] [--config "<value>"]
+               [--graph-database "<value>"]
 
                Submit a job to a rainbow scheduler
 
 Arguments:
 
-  -h  --help          Print help information
-      --token         Client token to submit jobs with.. Default:
-                      chocolate-cookies
-  -n  --nodes         Number of nodes to request. Default: 1
-  -t  --tasks         Number of tasks to request (per node? total?)
-  -c  --command       Command to submit. Default: chocolate-cookies
-      --job-name      Name for the job (defaults to first command)
-      --host          Scheduler server address (host:port). Default:
-                      localhost:50051
-      --cluster-name  Name of cluster to register. Default: keebler
+  -h  --help            Print help information
+      --token           Client token to submit jobs with.. Default:
+                        chocolate-cookies
+  -n  --nodes           Number of nodes to request. Default: 1
+  -t  --tasks           Number of tasks to request (per node? total?)
+  -c  --command         Command to submit. Default: chocolate-cookies
+      --job-name        Name for the job (defaults to first command)
+      --config-path     Rainbow config file. Default: rainbow-config.yaml
+      --host            Scheduler server address (host:port). Default:
+                        localhost:50051
+      --cluster-name    Name of cluster to register
+      --config          Configuration file for cluster credentials
+      --graph-database  Graph database backend to use
 ```
 
-Let's try doing that.
+Let's try doing that. Note that since we just created a cluster with a global token `rainbow`, and since we want to submit to rainbow and potentially
+hit one of many clusters, a single command line request won't suffice anymore, e.g.,:
 
 ```bash
-go run ./cmd/rainbow/rainbow.go submit --token "712747b7-b2a9-4bea-b630-056cd64856e6" --command hostname
+go run ./cmd/rainbow/rainbow.go submit --token "712747b7-b2a9-4bea-b630-056cd64856e6" --command hostname --cluster-name keebler
+```
+
+We are instead going to use a config file provided in the examples directory that can have more than one cluster defined. The idea is that you don't
+know where the work will best run, and are querying rainbow. Note that for a more final design, we would want the interaction to go through another service
+that connects to the same database (to check the clusters you have access to) and then to the graph database directly without touching rainbow.
+However for development, we are going to still interact with the in-memory database grpc to keep things simple, since the authentication (token)
+is known there (and we have not [sent it to a truly external graph database](https://dgraph.io/docs/v21.03/graphql/authorization/authorization-overview/)). 
+Note that the flow (for searching the cluster graph) is going to go directly from the client to the graph, e.g.,:
+
+```bash
+rainbow submit -> graph database GRPC or query -> response
+```
+
+And where the middle step is provided from will depend on the graph - the in-memory database will be GRPC from rainbow, for example.
+Assuming that rainbow is running with the in-memory database and we've registered (and our config file has the correct token), 
+here is how we ask for a simple job:
+
+```bash
+go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/scheduler/rainbow-config.yaml --nodes 2 --tasks 24 --command "echo hello world"
 ```
 ```console
-2024/02/11 21:43:17 🌈️ starting client (localhost:50051)...
-2024/02/11 21:43:17 submit job: hostname
-2024/02/11 21:43:17 status:SUBMIT_SUCCESS
+2024/02/29 21:04:11 🌈️ starting client (localhost:50051)...
+2024/02/29 21:04:11 submit job: echo hello world
+2024/02/29 21:04:11 🎯️ We found 1 matches! [keebler]
+2024/02/29 21:04:11 
 ```
 
-Hooray! On the server log side we see...
+On the server side, we see that it also registers a match! Note that this is coming from rainbow because the in-memory database GRPC hits there, but doesn't necessarily have to.
+```console
+🍇️ Satisfy request to Graph 🍇️
+ jobspec: {"version":1,"resources":[{"type":"node","count":2,"with":[{"type":"slot","count":1,"with":[{"type":"core","count":24}],"label":"echo"}]}],"tasks":[{"command":["echo","hello","world"],"slot":"echo","count":{"per_slot":1}}],"attributes":{"system":{}}}
+  match: 🎯️ cluster keebler has enough resources and is a match
+```
+
+Now let's ask for a request we know cannot be satisfied. Here is the client:
+
+```bash
+go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/scheduler/rainbow-config.yaml --nodes 100 --tasks 24 --command "echo hello world"
+```
+```console
+2024/02/29 21:05:44 🌈️ starting client (localhost:50051)...
+2024/02/29 21:05:44 submit job: echo hello world
+2024/02/29 21:05:44 😥️ There were no matches for this job
+2024/02/29 21:05:44 
+```
+On the server side, we see it cannot be satisfied. We just don't have that many nodes!
 
 ```console
-SELECT * from clusters WHERE name LIKE "keebler" LIMIT 1: keebler
-2024/02/11 21:43:17 📝️ received job hostname for cluster keebler
+🍇️ Satisfy request to Graph 🍇️
+ jobspec: {"version":1,"resources":[{"type":"node","count":100,"with":[{"type":"slot","count":1,"with":[{"type":"core","count":24}],"label":"echo"}]}],"tasks":[{"command":["echo","hello","world"],"slot":"echo","count":{"per_slot":1}}],"attributes":{"system":{}}}
+cluster keebler does not have sufficient resource type node - actual 3 vs needed 100
+  match: 😥️ no clusters could satisfy this request. We are sad
 ```
 
-Now we have a job in the database, and it's oriented for a specific cluster.
-We can next (as the cluster) request to receive some number of max jobs. Let's
-emulate that.
+Note that the above is not technically a graph search yet - we are just checking the global resources of each cluster. I need to perform the DFS when I better
+understand / think about a good strategy for that, likely reading Fluxion code.
 
 ## Request Jobs
 

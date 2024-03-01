@@ -38,6 +38,7 @@ type Server struct {
 	secret      string
 	globalToken string
 	db          *database.Database
+	host        string
 
 	// graph database handle
 	graph backend.GraphBackend
@@ -49,7 +50,7 @@ func NewServer(
 	cfg *config.RainbowConfig,
 	version, sqliteFile string,
 	cleanup bool,
-	globalToken string,
+	globalToken, host string,
 ) (*Server, error) {
 
 	if cfg.Scheduler.Secret == "" {
@@ -84,6 +85,7 @@ func NewServer(
 		version:     version,
 		secret:      cfg.Scheduler.Secret,
 		globalToken: globalToken,
+		host:        host,
 	}, nil
 }
 

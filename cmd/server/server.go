@@ -43,7 +43,7 @@ func main() {
 
 	// create server
 	log.Print("creating 🌈️ server...")
-	s, err := server.NewServer(cfg, types.Version, sqliteFile, cleanup, globalToken)
+	s, err := server.NewServer(cfg, types.Version, sqliteFile, cleanup, globalToken, host)
 	if err != nil {
 		log.Fatalf("error while creating server: %v", err)
 	}
