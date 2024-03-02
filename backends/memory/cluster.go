@@ -151,7 +151,7 @@ func (g *ClusterGraph) Satisfies(payload string) (*service.SatisfyResponse, erro
 	fmt.Printf("\n🍇️ Satisfy request to Graph 🍇️\n")
 	fmt.Printf(" jobspec: %s\n", payload)
 
-	// Do depth first search to determine if there is a match.
+	// Do depth rst search to determine if there is a match.
 	// Right now this is a boolean because I don't know what it should look like
 	matches, err := ss.DFSForMatch(&jobspec)
 	if err != nil {
@@ -233,18 +233,8 @@ func (g *ClusterGraph) LoadClusterNodes(
 	// Create an empty resource counter for the cluster
 	ss.Metrics.NewResource(name)
 
-	// Add a cluster root to it, and connect to the top root. We can add metadata/weight here too
-	clusterRoot := ss.AddNode("", name, "cluster", 1, "")
-	err := ss.AddEdge(root, clusterRoot, 0, "")
-	if err != nil {
-		return err
-	}
-
 	// Now loop through the nodes and add them, keeping a temporary lookup
-	lookup := map[string]int{"root": root, name: clusterRoot}
-
-	// This is pretty dumb because we don't add metadata yet, oh well
-	// we will!
+	lookup := map[string]int{"root": root}
 	for nid, node := range nodes.Graph.Nodes {
 
 		// Currently we are saving the type, size, and unit
@@ -253,7 +243,15 @@ func (g *ClusterGraph) LoadClusterNodes(
 		// levelName (cluster)
 		// name for lookup/cache (if we want to keep it there)
 		// resource type, size, and unit
-		id := ss.AddNode(name, "", resource.Type, resource.Size, resource.Unit)
+		var id int
+		if resource.Type == "cluster" {
+
+			// If it's the cluster, we save the named identifier for it
+			id = ss.AddNode("", name, resource.Type, resource.Size, resource.Unit)
+			lookup[name] = id
+		} else {
+			id = ss.AddNode(name, "", resource.Type, resource.Size, resource.Unit)
+		}
 		lookup[nid] = id
 	}
 
@@ -269,6 +267,7 @@ func (g *ClusterGraph) LoadClusterNodes(
 		if !ok {
 			return fmt.Errorf("destination %s is defined as an edge, but missing as node in graph", edge.Label)
 		}
+		fmt.Printf("Adding edge from %s -%s-> %s\n", ss.Vertices[src].Type, edge.Relation, ss.Vertices[dest].Type)
 		err := ss.AddEdge(src, dest, 0, edge.Relation)
 		if err != nil {
 			return err
