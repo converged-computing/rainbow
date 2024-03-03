@@ -55,28 +55,38 @@ func (c *RainbowClient) SubmitJob(
 	if err != nil {
 		return response, err
 	}
+
+	// Cut out early (without contacting rainbow) if there are no matches
 	if len(matches) > 0 {
 		log.Printf("🎯️ We found %d matches! %s\b", len(matches), matches)
 	} else {
-		log.Println("😥️ There were no matches for this job")
+		return response, fmt.Errorf("😥️ There were no matches for this job")
 	}
 	// Now contact the rainbow server with clusters...
-	// ctx, cancel := context.WithTimeout(ctx, time.Second)
-	// defer cancel()
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
 
+	// Prepare clusters for submit jobs request
+	clusters := make([]*pb.SubmitJobRequest_Cluster, len(cfg.Clusters))
+	for i, cluster := range cfg.Clusters {
+		clusters[i] = &pb.SubmitJobRequest_Cluster{Token: cluster.Token, Name: cluster.Name}
+	}
+
+	// Jobspec gets converted back to string for easier serialization
+	out, err := job.JobspecToYaml()
+	if err != nil {
+		return response, err
+	}
 	// Validate that the cluster exists, and we have the right token.
 	// The response is the same either way - not found does not reveal
 	// additional information to the client trying to find it
-	/*	response, err := c.service.SubmitJob(ctx, &pb.SubmitJobRequest{
-		Name:    job.Name,
-		Token:   token,
-		Nodes:   job.Nodes,
-		Tasks:   job.Tasks,
-		Cluster: cluster,
-		Command: job.Command,
-		Sent:    ts.Now(),
-	})*/
-	return response, nil
+	response, err = c.service.SubmitJob(ctx, &pb.SubmitJobRequest{
+		Name:     job.GetJobName(),
+		Clusters: clusters,
+		Jobspec:  string(out),
+		Sent:     ts.Now(),
+	})
+	return response, err
 }
 
 // RequestJobs requests jobs for a specific cluster

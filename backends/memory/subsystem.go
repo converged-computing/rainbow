@@ -26,6 +26,8 @@ func NewSubsystem() *Subsystem {
 // DFSForMatch WILL is a depth first search for matches
 // It starts by looking at total cluster resources on the top level,
 // and then traverses into those that match the first check
+// THIS IS EXPERIMENTAL and likely wrong, or missing details,
+// which is OK as we will only be using it for prototyping.
 func (s *Subsystem) DFSForMatch(jobspec *js.Jobspec) ([]string, error) {
 
 	// Return a list of matching clusters
@@ -252,7 +254,7 @@ func (s *Subsystem) depthFirstSearch(matches []string, jobspec *js.Jobspec) ([]s
 					fmt.Printf("    ❌️ %s not a match, %s\n", cluster, reason)
 					return false
 				} else {
-					reason := fmt.Sprintf("%d of needed %s satisfied", foundMatches, resource.Type)
+					reason := fmt.Sprintf("%d/%d of needed %s satisfied", foundMatches, resource.Count, resource.Type)
 					fmt.Printf("     ⏳️ %s still contender, %s\n", cluster, reason)
 				}
 			}

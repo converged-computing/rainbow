@@ -6,9 +6,9 @@ import (
 	"log"
 	"strings"
 
+	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
 	"github.com/converged-computing/rainbow/pkg/client"
 	"github.com/converged-computing/rainbow/pkg/config"
-	"github.com/converged-computing/rainbow/pkg/jobspec"
 )
 
 // Run will check a manifest list of artifacts against a host machine
@@ -38,7 +38,7 @@ func Run(
 	}
 
 	// Convert the simple command / nodes / etc into a JobSpec
-	js, err := jobspec.NewSimpleJobspec(jobName, command, int32(nodes), int32(tasks))
+	js, err := js.NewSimpleJobspec(jobName, command, int32(nodes), int32(tasks))
 	if err != nil {
 		return nil
 	}

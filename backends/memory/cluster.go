@@ -267,7 +267,7 @@ func (g *ClusterGraph) LoadClusterNodes(
 		if !ok {
 			return fmt.Errorf("destination %s is defined as an edge, but missing as node in graph", edge.Label)
 		}
-		fmt.Printf("Adding edge from %s -%s-> %s\n", ss.Vertices[src].Type, edge.Relation, ss.Vertices[dest].Type)
+		// fmt.Printf("Adding edge from %s -%s-> %s\n", ss.Vertices[src].Type, edge.Relation, ss.Vertices[dest].Type)
 		err := ss.AddEdge(src, dest, 0, edge.Relation)
 		if err != nil {
 			return err

@@ -4,9 +4,8 @@ go 1.20
 
 require (
 	github.com/akamensky/argparse v1.4.0
-	github.com/compspec/jobspec-go v0.0.0-20240226213125-007327866207
+	github.com/compspec/jobspec-go v0.0.0-20240302201731-e7fb2bf2627f
 	github.com/converged-computing/jsongraph-go v0.0.0-20240229082022-c6887a5a00fe
-	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/pkg/errors v0.9.1
@@ -17,8 +16,10 @@ require (
 
 require (
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
+	sigs.k8s.io/yaml v1.4.0 // indirect
 )

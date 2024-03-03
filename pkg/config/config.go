@@ -105,6 +105,13 @@ func NewRainbowClientConfig(
 	return &config, err
 }
 
+// NewRainbowServerConfig creates a default empty config for a server
+func NewRainbowServerConfig(name string) *RainbowConfig {
+	config := RainbowConfig{Scheduler: RainbowScheduler{Name: name}}
+	config.Clusters = make([]ClusterCredential, 0)
+	return &config
+}
+
 // Load a filename into the rainbow config
 func (cfg *RainbowConfig) Load(filename string) error {
 

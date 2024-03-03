@@ -154,6 +154,11 @@ and then working on the next interaction, the client submit command, which is go
 
 ## Submit Job
 
+Submission has two steps that are discussed below.
+
+### 1. Satisfy Request
+
+The satisfy request interacts with the graph database and determines if any clusters can satisfy the jobspec.
 To submit a job, we need the client `token` associated with a cluster. We are going to use the following strategy, and allow the following submission types:
 
 - **simple**: for basic users, a command and the most basic of parameters will be provided and converted to a Jobspec.
@@ -253,8 +258,22 @@ cluster keebler does not have sufficient resource type node - actual 3 vs needed
   match: 😥️ no clusters could satisfy this request. We are sad
 ```
 
-Note that the above is not technically a graph search yet - we are just checking the global resources of each cluster. I need to perform the DFS when I better
-understand / think about a good strategy for that, likely reading Fluxion code.
+Note that the above has a two step process:
+
+- A quick check against clusters in the graph database if total resources can be satisfied.
+- For that set, a (Vanessa written and janky) "DFS" that likely has bugs that traverses the graph
+
+This will be improved upon with Fluxion and actual graph databases, but this is OK for the prototype. 
+
+### 2. Pre-Assignment
+
+When the initial satisfy resquest is done (the step above) and we have a list of clusters, we can then tell rainbow about them.
+This means that a list of clusters is returned that is passed from the same client request to rainbow
+to do assignment, and logically, if there are no clusters that can sastify, that response is returned to the client.
+
+
+## Request Jobs
+
 
 ## Request Jobs
 

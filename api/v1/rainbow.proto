@@ -39,12 +39,15 @@ message RegisterRequest {
 // we currently accept nodes, tasks, and the command
 message SubmitJobRequest {
   string name = 1;
-  string cluster = 2;
-  string token = 3;
-  int32 nodes = 4;
-  int32 tasks = 5;
-  string command = 6;
-  google.protobuf.Timestamp sent = 7;
+  repeated Cluster clusters = 2;
+  string jobspec = 3;
+  google.protobuf.Timestamp sent = 4;
+
+  message Cluster {
+    string name = 1;
+    string token = 2;
+  }
+
 }
 
 // RequestJobsRequest is used by a cluster (or other entity that can run jobs)

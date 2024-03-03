@@ -28,52 +28,103 @@ func (j *Job) ToJson() (string, error) {
 	return string(b), nil
 }
 
-// SubmitJob adds the job to the database
-func (db *Database) SubmitJob(
-	job *pb.SubmitJobRequest,
-	cluster *Cluster,
-) (*pb.SubmitJobResponse, error) {
+// addJob adds a job to the jobs table
+func (db *Database) addJob(job *pb.SubmitJobRequest) (*Job, error) {
 
-	response := &pb.SubmitJobResponse{}
+	j := Job{}
 	conn, err := db.connect()
 	if err != nil {
-		return response, err
+		return &j, err
 	}
 	defer conn.Close()
 
-	// Prepare the sql to insert the job
-	fields := "(cluster, name, nodes, tasks, command)"
-	values := fmt.Sprintf(
-		"(\"%s\", \"%s\",\"%d\",\"%d\",\"%s\")",
-		cluster.Name, job.Name, job.Nodes, job.Tasks, job.Command,
-	)
+	// The jobspec is added once to the database, first without assignment
+	fields := "(name, jobspec)"
+	values := fmt.Sprintf("(\"%s\", \"%s\")", job.Name, job.Jobspec)
 
 	// Submit the query to get the global id (jobid, not submit yet)
 	query := fmt.Sprintf("INSERT into jobs %s VALUES %s", fields, values)
 
-	// From this point on (until the end) any early return is an error
-	response.Status = pb.SubmitJobResponse_SUBMIT_ERROR
-
 	// Since we want to get a result back, we use query
 	statement, err := conn.Prepare(query)
 	if err != nil {
-		return response, err
+		return &j, err
 	}
 	defer statement.Close()
 
 	// We expect only one job
 	rows, err := statement.Query()
 	if err != nil {
-		return response, err
+		return &j, err
 	}
 
 	// Unwrap into job
-	j := Job{}
 	for rows.Next() {
 		err := rows.Scan(&j.Id, &j.Cluster, &j.Name, &j.Nodes, &j.Tasks, &j.Command)
 		if err != nil {
-			return response, err
+			return &j, err
 		}
+	}
+	return &j, nil
+}
+
+// addAssignments add jobs and clsuters (not assigned) to the assignment database
+func (db *Database) addAssignments(job *Job, clusters []*Cluster) error {
+	conn, err := db.connect()
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	// The jobspec is added once to the database, first without assignment
+	fields := "(cluster, job, status)"
+
+	// Assemble values, one set for each cluster
+	values := ""
+	for _, cluster := range clusters {
+		if values == "" {
+			// Status of 0 means unassigned (we don't know)
+			values = fmt.Sprintf("(\"%s\", \"%d\", \"%d\")", cluster.Name, job.Id, 0)
+		} else {
+			values += fmt.Sprintf(",(\"%s\", \"%d\",\"%d\")", cluster.Name, job.Id, 0)
+		}
+	}
+
+	// Submit the query to get the global id (jobid, not submit yet)
+	query := fmt.Sprintf("INSERT into assign %s VALUES %s", fields, values)
+
+	// Since we want to get a result back, we use query
+	statement, err := conn.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+	_, err = statement.Query()
+	return err
+}
+
+// SubmitJob adds the job to the database
+func (db *Database) SubmitJob(
+	job *pb.SubmitJobRequest,
+	clusters []*Cluster,
+) (*pb.SubmitJobResponse, error) {
+
+	response := &pb.SubmitJobResponse{}
+
+	// Add the job to the database
+	// TODO: should we do a check to see if we have the job already?
+	// could create a hash / use the jobspec. Do we allow that?
+	j, err := db.addJob(job)
+	if err != nil {
+		response.Status = pb.SubmitJobResponse_SUBMIT_ERROR
+		return response, err
+	}
+
+	// Now that the job is added to the database, add to the assignment table
+	err = db.addAssignments(j, clusters)
+	if err != nil {
+		response.Status = pb.SubmitJobResponse_SUBMIT_ERROR
+		return response, err
 	}
 
 	// Success!

@@ -218,6 +218,7 @@ func (db *Database) createTables() error {
 	}
 	defer conn.Close()
 
+	// TODO none of these have logic for what to do on delete
 	// Create the clusters table, where we store the name and secret
 	// obviously the secret should not be stored in plain text - it's fine for now
 	createClusterTableSQL := `
@@ -228,30 +229,41 @@ func (db *Database) createTables() error {
 	  );
 	`
 
+	// Contender assignments of jobs to clusters
+	// Assignment is an integer identifier (this can be changed / extended)
+	// 0: unassigned
+	// -1: rejected
+	// 1: assigned
+	createAssignTableSQL := `
+	  CREATE TABLE assign (
+		  assignId integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
+		  cluster TEXT,
+		  job integer,
+		  status integer,
+		  FOREIGN KEY(job) REFERENCES jobs(idJob),
+		  FOREIGN KEY(cluster) REFERENCES clusters(name)
+		);`
+
+	// A job has a unique id and (when assigned) a cluster
 	createJobsTableSQL := `
 	  CREATE TABLE jobs (
 		  idJob integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
 		  cluster TEXT,
 		  name TEXT,
-		  nodes integer,
-		  tasks integer,
-		  command TEXT,
+		  jobspec string,
 		  FOREIGN KEY(cluster) REFERENCES clusters(name)
 		);`
 
-	for table, statement := range map[string]string{"cluster": createClusterTableSQL, "jobs": createJobsTableSQL} {
-		log.Printf("   create %s table...\n", table)
-		query, err := conn.Prepare(statement) // Prepare SQL Statement
-		if err != nil {
-			return err
-		}
-		// Execute SQL query
-		_, err = query.Exec()
-		if err != nil {
-			return err
-		}
-		log.Printf("   %s table created\n", table)
+	// Create single query for tables
+	createSQL := createClusterTableSQL + "\n" + createAssignTableSQL + "\n" + createJobsTableSQL
+	log.Println("   🏓️ creating tables...")
+
+	// Execute SQL query
+	_, err = conn.Exec(createSQL)
+	if err != nil {
+		return err
 	}
+	log.Println("   🏓️ tables created")
 	return nil
 }
 
@@ -276,6 +288,9 @@ func InitDatabase(filepath string, cleanup bool) (*Database, error) {
 			return nil, err
 		}
 		err = db.createTables()
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &db, err
 }

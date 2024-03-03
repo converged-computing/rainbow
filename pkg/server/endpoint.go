@@ -5,6 +5,7 @@ import (
 	"log"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
+	"github.com/converged-computing/rainbow/pkg/database"
 	"github.com/converged-computing/rainbow/pkg/graph"
 
 	"github.com/pkg/errors"
@@ -51,18 +52,40 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 		return nil, errors.New("request is required")
 	}
 
-	// Nogo without a token
-	if in.Token == "" {
-		return nil, errors.New("a cluster token is required")
+	// Keep a list of clusters to send to the database
+	clusters := []*database.Cluster{}
+
+	// We submit work to one or more clusters, which must be validated via token
+	// This is a very simple auth setup that needs to be improved upon, but
+	// should work for a prototype
+	for _, cluster := range in.Clusters {
+
+		// No good if no name
+		if cluster.Name == "" {
+			log.Println("warning: cluster in request is missing a name and cannot be considered")
+			continue
+		}
+		// No good if no token
+		if cluster.Token == "" {
+			log.Printf("warning: cluster %s does not have a token and cannot be considered\n", cluster.Name)
+			continue
+		}
+
+		// Validate the token for the named cluster (if it exists)
+		cluster, err := s.db.ValidateClusterToken(cluster.Name, cluster.Token)
+		if err != nil {
+			return nil, err
+		}
+		clusters = append(clusters, cluster)
 	}
 
-	// Validate the token for the cluster (if it exists)
-	cluster, err := s.db.ValidateClusterToken(in.Cluster, in.Token)
-	if err != nil {
-		return nil, err
+	// Only proceed if we can consider at least one cluster
+	if len(clusters) == 0 {
+		return nil, errors.New("one or more authenticated clusters are required")
 	}
-	log.Printf("📝️ received job %s for cluster %s", in.Name, cluster.Name)
-	return s.db.SubmitJob(in, cluster)
+
+	log.Printf("📝️ received job %s for %d contender clusters", in.Name, len(clusters))
+	return s.db.SubmitJob(in, clusters)
 }
 
 // RequestJobs receives a cluster / instance / other receiving entity request for jobs
