@@ -38,7 +38,7 @@ go run cmd/server/server.go
 2024/02/12 19:38:58 server listening: [::]:50051
 ```
 
-Note that we also provide [containers](https://github.com/orgs/converged-computing/packages?repo_name=rainbow) for running the scheduler, or a client with Flux. For more advanced examples, continue reading commands below or check out our [examples](https://github.com/converged-computing/rainbow/tree/main/docs/examples). 
+Note that we also provide [containers](https://github.com/orgs/converged-computing/packages?repo_name=rainbow) for running the scheduler, or a client with Flux. For more advanced examples, continue reading commands below or check out our [examples](https://github.com/converged-computing/rainbow/tree/main/docs/examples).
 
 ## Commands
 

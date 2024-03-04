@@ -35,7 +35,7 @@ docker-flux:
 	docker build --build-arg base=fluxrm/flux-sched:jammy -t $(REGISTRY)/rainbow-flux:latest .
 
 .PHONY: docker-ubuntu
-docker-ubuntu: 
+docker-ubuntu:
 	docker build -t $(REGISTRY)/rainbow-scheduler:latest .
 
 .PHONY: proto
@@ -46,12 +46,15 @@ proto: protoc ## Generates the API code and documentation
 
 .PHONY: python
 python: python ## Generate python proto files in python
+	# pip install grpcio-tools
 	# pip freeze | grep grpcio-tools
+    # We will put rainbow plus the memory protos here
 	mkdir -p python/v1/rainbow/protos
 	cd python/v1/rainbow/protos
 	python -m grpc_tools.protoc -I./api/v1 --python_out=./python/v1/rainbow/protos --pyi_out=./python/v1/rainbow/protos --grpc_python_out=./python/v1/rainbow/protos ./api/v1/rainbow.proto
-	# Not great, but gets the job done
 	sed -i 's/import rainbow_pb2 as rainbow__pb2/from . import rainbow_pb2 as rainbow__pb2/' ./python/v1/rainbow/protos/rainbow_pb2_grpc.py
+	python -m grpc_tools.protoc -I./backends/memory/service --python_out=./python/v1/rainbow/protos --pyi_out=./python/v1/rainbow/protos --grpc_python_out=./python/v1/rainbow/protos ./backends/memory/service/memory.proto
+	sed -i 's/import memory_pb2 as memory__pb2/from . import memory_pb2 as memory__pb2/' ./python/v1/rainbow/protos/memory_pb2_grpc.py
 
 .PHONY: version
 version: ## Prints the current version
@@ -85,12 +88,12 @@ register: ## Run mock registration
 	go run cmd/rainbow/rainbow.go register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json
 
 .PHONY: tag
-tag: ## Creates release tag 
+tag: ## Creates release tag
 	git tag -s -m "version bump to $(VERSION)" $(VERSION)
 	git push origin $(VERSION)
 
 .PHONY: tagless
-tagless: ## Delete the current release tag 
+tagless: ## Delete the current release tag
 	git tag -d $(VERSION)
 	git push --delete origin $(VERSION)
 

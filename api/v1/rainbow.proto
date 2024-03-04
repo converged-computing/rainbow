@@ -22,7 +22,7 @@ service RainbowScheduler {
    rpc AcceptJobs(AcceptJobsRequest) returns (AcceptJobsResponse);
 }
 
-// RegisterRequest registers a cluster to the scheduler service 
+// RegisterRequest registers a cluster to the scheduler service
 // The shared secret is required to validate the request
 message RegisterRequest {
   string name = 1;
@@ -57,7 +57,7 @@ message SubmitJobRequest {
 message RequestJobsRequest {
   string cluster = 1;
 
-  // cluster secret given on registration 
+  // cluster secret given on registration
   // No other cluster or user can take a cluster's jobs!
   string secret = 2;
 

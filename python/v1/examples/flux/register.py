@@ -1,11 +1,16 @@
-from __future__ import print_function
-
-import logging
-
 import argparse
-import grpc
+import os
+
 from rainbow.protos import rainbow_pb2
-from rainbow.protos import rainbow_pb2_grpc
+from rainbow.client import RainbowClient
+
+# Config file from a few directories up
+here = os.path.abspath(os.path.dirname(__file__))
+root = here
+
+# rainbow root directory
+for iter in range(4):
+    root = os.path.dirname(root)
 
 
 def get_parser():
@@ -19,35 +24,32 @@ def get_parser():
         help="Rainbow cluster registration secret",
         default="chocolate-cookies",
     )
+    parser.add_argument(
+        "--cluster-nodes",
+        help="Nodes to provide for registration",
+        default=os.path.join(
+            root, "docs", "examples", "scheduler", "cluster-nodes.json"
+        ),
+    )
     return parser
 
 
 def main():
-
     parser = get_parser()
     args, _ = parser.parse_known_args()
-
-    # These are the variables for our cluster - name for now
-    registerRequest = rainbow_pb2.RegisterRequest(name=args.cluster, secret=args.secret)
-
-    # NOTE(gRPC Python Team): .close() is possible on a channel and should be
-    # used in circumstances in which the with statement does not fit the needs
-    # of the code.
-    with grpc.insecure_channel(args.host) as channel:
-        stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
-        response = stub.Register(registerRequest)
-        print(response)
-        if response.status == rainbow_pb2.RegisterResponse.ResultType.REGISTER_EXISTS:
-            print(f"The cluster {args.cluster} already exists.")
-        else:
-            print(
-                f"🤫️ The token you will need to submit jobs to this cluster is {response.token}",
-            )
-            print(
-                f"🔐️ The secret you will need to accept jobs is {response.secret}",
-            )
+    cli = RainbowClient(host=args.host)
+    response = cli.register(
+        args.cluster, secret=args.secret, cluster_nodes=args.cluster_nodes
+    )
+    print(response)
+    if response.status == rainbow_pb2.RegisterResponse.ResultType.REGISTER_EXISTS:
+        print(f"The cluster {args.cluster} already exists.")
+    else:
+        print(
+            f"🤫️ The token you will need to submit jobs to this cluster is {response.token}"
+        )
+        print(f"🔐️ The secret you will need to accept jobs is {response.secret}")
 
 
 if __name__ == "__main__":
-    logging.basicConfig()
     main()

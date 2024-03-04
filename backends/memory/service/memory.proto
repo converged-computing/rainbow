@@ -10,13 +10,13 @@ service MemoryGraph {
 }
 
 message RegisterRequest {
-    string name = 1; 
-    string payload = 2; 
+    string name = 1;
+    string payload = 2;
     string subsystem = 3;
 }
 
 message SatisfyRequest {
-  string payload = 1; 
+  string payload = 1;
 }
 
 message SatisfyResponse {
@@ -27,7 +27,7 @@ message SatisfyResponse {
     RESULT_TYPE_ERROR = 2;
   }
 
-  repeated string clusters = 1; 
+  repeated string clusters = 1;
   ResultType status = 2;
 }
 
@@ -40,6 +40,6 @@ message Response {
       RESULT_TYPE_UNSPECIFIED = 0;
       RESULT_TYPE_SUCCESS = 1;
       RESULT_TYPE_ERROR = 2;
-    }  
+    }
     ResultType status = 1;
 }

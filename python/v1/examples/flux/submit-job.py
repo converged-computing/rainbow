@@ -2,16 +2,15 @@ from __future__ import print_function
 
 import logging
 
+import json
 import argparse
-import grpc
-import sys
-from rainbow.protos import rainbow_pb2
-from rainbow.protos import rainbow_pb2_grpc
-
+from rainbow.client import RainbowClient
+import rainbow.jobspec.converter as converter
+import rainbow.jobspec as js
 
 def get_parser():
     parser = argparse.ArgumentParser(description="🌈️ Rainbow scheduler submit")
-    parser.add_argument("--cluster", help="cluster name to register", default="keebler")
+    parser.add_argument("--config-path", help="config path with cluster names")
     parser.add_argument(
         "--host", help="host of rainbow cluster", default="localhost:50051"
     )
@@ -25,37 +24,28 @@ def get_parser():
     return parser
 
 
+# Note that if you are running in a flux instance, you can use flux to provide
+# this parsing of the jobspec. Here we just manully generate it.
+
+# TODO look to see if flux has a validator for the job spec, if not, add here.
+
 def main():
 
     parser = get_parser()
-    args, _ = parser.parse_known_args()
+    args = parser.parse_args()
 
-    if not args.command:
-        sys.exit("A command (positional arguments) is required")
-    command = " ".join(args.command)
-    print(f"⭐️ Submitting job: {command}")
+    # The config path (with clusters) will be required for submit
+    cli = RainbowClient(host=args.host, config_file=args.config_path)
 
-    # These are submit variables. A more substantial submit script would have argparse, etc.
-    submitRequest = rainbow_pb2.SubmitJobRequest(
-        token=args.token, nodes=args.nodes, cluster=args.cluster, command=command
-    )
+    # Generate the jobspec here so we can json dump it for the user
+    # Note that this can be done with cli.submit_job(command, nodes, tasks)
+    raw = converter.new_simple_jobspec(nodes=args.nodes, command=args.command)
+    print(json.dumps(raw, indent=4))
 
-    # These are the variables currently allowed:
-    #  string name = 1;
-    #  string cluster = 2;
-    #  string token = 3;
-    #  int32 nodes = 4;
-    #  int32 tasks = 5;
-    #  string command = 6;
-    #  google.protobuf.Timestamp sent = 7;
-
-    # NOTE(gRPC Python Team): .close() is possible on a channel and should be
-    # used in circumstances in which the with statement does not fit the needs
-    # of the code.
-    with grpc.insecure_channel(args.host) as channel:
-        stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
-        response = stub.SubmitJob(submitRequest)
-        print(response)
+    # This loads and validates
+    jobspec = js.Jobspec(raw)
+    response = cli.submit_jobspec(jobspec)
+    print(response)
 
 
 if __name__ == "__main__":

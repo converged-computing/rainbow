@@ -1,4 +1,4 @@
-# Mac 
+# Mac
 .DS_Store
 
 # Go
@@ -13,7 +13,7 @@ tmp
 __pycache__
 rainbow_scheduler.egg-info
 .eggs
-env 
+env
 python/v1/build
 python/v1/dist
 
@@ -24,11 +24,11 @@ python/v1/dist
 bin
 dist
 
-# Keys 
+# Keys
 cosign.*
 *.pem
 
-# ko 
+# ko
 /.digest
 
 # Terraform

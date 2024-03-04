@@ -1,6 +1,6 @@
 # Developer Guide
 
-This is a short guide to help with development. 
+This is a short guide to help with development.
 
 ### Documentation
 
@@ -9,7 +9,7 @@ javascript. You can edit the markdown files there to update the documentation.
 
 ### Protobuf
 
-We are using [Protocol Buffers](https://developers.google.com/protocol-buffers/)  "Protobuf" to define the API (how the payloads are shared and the methods for communication between client and server). These are defined in [api/v1/sample.proto](api/v1/sample.proto). 
+We are using [Protocol Buffers](https://developers.google.com/protocol-buffers/)  "Protobuf" to define the API (how the payloads are shared and the methods for communication between client and server). These are defined in [api/v1/sample.proto](api/v1/sample.proto).
 You can read more about Protobuf [here](https://github.com/golang/protobuf), I first saw / used them with fluence and am still pretty new.
 
 ```shell

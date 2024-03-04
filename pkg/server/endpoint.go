@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
@@ -30,7 +31,7 @@ func (s *Server) Register(_ context.Context, in *pb.RegisterRequest) (*pb.Regist
 	// That can be read in...
 	nodes, err := graph.ReadNodeJsonGraphString(in.Nodes)
 	if err != nil {
-		return nil, errors.New("cluster nodes are invalid")
+		return nil, errors.New(fmt.Sprintf("cluster nodes are invalid: %s", err))
 	}
 
 	log.Printf("📝️ received register: %s", in.Name)

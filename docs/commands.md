@@ -47,7 +47,7 @@ graphdatabase:
 clusters: []
 ```
 
-Note that the name of the database corresponds to your choice of graph database. For each, you should read about [databases](databases.md) to 
+Note that the name of the database corresponds to your choice of graph database. For each, you should read about [databases](databases.md) to
 run a corresponding databaset that your application can interact with.
 
 ## Register
@@ -74,7 +74,7 @@ rainbow register --cluster-name keebler --cluster-nodes ./docs/examples/schedule
 ```
 
 If you are watching the server, you'll see that the registration happens (token, secret, etc) and then the nodes are sent over
-to rainbow. 
+to rainbow.
 
 ```console
 2024/02/28 23:26:17 creating 🌈️ server...
@@ -210,7 +210,7 @@ We are instead going to use a config file provided in the examples directory tha
 know where the work will best run, and are querying rainbow. Note that for a more final design, we would want the interaction to go through another service
 that connects to the same database (to check the clusters you have access to) and then to the graph database directly without touching rainbow.
 However for development, we are going to still interact with the in-memory database grpc to keep things simple, since the authentication (token)
-is known there (and we have not [sent it to a truly external graph database](https://dgraph.io/docs/v21.03/graphql/authorization/authorization-overview/)). 
+is known there (and we have not [sent it to a truly external graph database](https://dgraph.io/docs/v21.03/graphql/authorization/authorization-overview/)).
 Note that the flow (for searching the cluster graph) is going to go directly from the client to the graph, e.g.,:
 
 ```bash
@@ -218,7 +218,7 @@ rainbow submit -> graph database GRPC or query -> response
 ```
 
 And where the middle step is provided from will depend on the graph - the in-memory database will be GRPC from rainbow, for example.
-Assuming that rainbow is running with the in-memory database and we've registered (and our config file has the correct token), 
+Assuming that rainbow is running with the in-memory database and we've registered (and our config file has the correct token),
 here is how we ask for a simple job:
 
 ```bash
@@ -228,7 +228,7 @@ go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/scheduler/r
 2024/02/29 21:04:11 🌈️ starting client (localhost:50051)...
 2024/02/29 21:04:11 submit job: echo hello world
 2024/02/29 21:04:11 🎯️ We found 1 matches! [keebler]
-2024/02/29 21:04:11 
+2024/02/29 21:04:11
 ```
 
 On the server side, we see that it also registers a match! Note that this is coming from rainbow because the in-memory database GRPC hits there, but doesn't necessarily have to.
@@ -247,7 +247,7 @@ go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/scheduler/r
 2024/02/29 21:05:44 🌈️ starting client (localhost:50051)...
 2024/02/29 21:05:44 submit job: echo hello world
 2024/02/29 21:05:44 😥️ There were no matches for this job
-2024/02/29 21:05:44 
+2024/02/29 21:05:44
 ```
 On the server side, we see it cannot be satisfied. We just don't have that many nodes!
 
@@ -263,11 +263,11 @@ Note that the above has a two step process:
 - A quick check against clusters in the graph database if total resources can be satisfied.
 - For that set, a (Vanessa written and janky) "DFS" that likely has bugs that traverses the graph
 
-This will be improved upon with Fluxion and actual graph databases, but this is OK for the prototype. 
+This will be improved upon with Fluxion and actual graph databases, but this is OK for the prototype.
 
 ### 2. Pre-Assignment
 
-When the initial satisfy resquest is done (the step above) and we have a list of clusters, we can then tell rainbow about them.
+When the initial satisfy request is done (the step above) and we have a list of clusters, we can then tell rainbow about them.
 This means that a list of clusters is returned that is passed from the same client request to rainbow
 to do assignment, and logically, if there are no clusters that can sastify, that response is returned to the client.
 

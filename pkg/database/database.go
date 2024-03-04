@@ -223,7 +223,7 @@ func (db *Database) createTables() error {
 	// obviously the secret should not be stored in plain text - it's fine for now
 	createClusterTableSQL := `
 	CREATE TABLE clusters (
-		name TEXT NOT NULL PRIMARY KEY,		
+		name TEXT NOT NULL PRIMARY KEY,
 		token TEXT,
 		secret TEXT
 	  );
@@ -236,7 +236,7 @@ func (db *Database) createTables() error {
 	// 1: assigned
 	createAssignTableSQL := `
 	  CREATE TABLE assign (
-		  assignId integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
+		  assignId integer NOT NULL PRIMARY KEY AUTOINCREMENT,
 		  cluster TEXT,
 		  job integer,
 		  status integer,
@@ -247,7 +247,7 @@ func (db *Database) createTables() error {
 	// A job has a unique id and (when assigned) a cluster
 	createJobsTableSQL := `
 	  CREATE TABLE jobs (
-		  idJob integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
+		  idJob integer NOT NULL PRIMARY KEY AUTOINCREMENT,
 		  cluster TEXT,
 		  name TEXT,
 		  jobspec string,

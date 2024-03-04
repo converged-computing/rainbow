@@ -17,10 +17,10 @@ import (
 )
 
 var (
-	Header = `              
-    •  ┓      
+	Header = `
+    •  ┓
 ┏┓┏┓┓┏┓┣┓┏┓┓┏┏
-┛ ┗┻┗┛┗┗┛┗┛┗┻┛              
+┛ ┗┻┗┛┗┗┛┗┛┗┻┛
 `
 
 	defaultSecret = "chocolate-cookies"
