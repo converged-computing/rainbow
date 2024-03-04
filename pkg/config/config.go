@@ -7,6 +7,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	defaultSelectionAlgorithm = "random"
+	defaultGraphDatabase      = "memory"
+)
+
 // RainbowConfig is a static file that holds configuration parameteres
 // for a client to access one or more clusters. We can eventually explore
 // a logical grouping of clusters to have one access credential, but this
@@ -27,8 +32,14 @@ type RainbowScheduler struct {
 
 	// Secret to register with the cluster
 	// Absolutely should come from environment
-	Secret string `json:"secret" yaml:"secret" envconfig:"RAINBOW_SECRET"`
-	Name   string `json:"name" yaml:"name" envconfig:"RAINBOW_CLUSTER_NAME"`
+	Secret    string             `json:"secret" yaml:"secret" envconfig:"RAINBOW_SECRET"`
+	Name      string             `json:"name" yaml:"name" envconfig:"RAINBOW_SCHEDULER_NAME"`
+	Algorithm SelectionAlgorithm `json:"algorithm" yaml:"algorithm"`
+}
+
+type SelectionAlgorithm struct {
+	Name    string            `json:"name" yaml:"name" envconfig:"RAINBOW_SCHDULER_ALGORITHM"`
+	Options map[string]string `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
 // ClusterCredential holds a name and access token for a cluster
@@ -70,7 +81,8 @@ func NewRainbowClientConfig(
 	filename,
 	clusterName,
 	secret,
-	database string,
+	database,
+	selectionAlgorithm string,
 ) (*RainbowConfig, error) {
 
 	config := RainbowConfig{}
@@ -93,9 +105,16 @@ func NewRainbowClientConfig(
 	}
 
 	// By default we use the in-memory (vanilla, simple) database
-	config.GraphDatabase.Name = "memory"
+	config.GraphDatabase.Name = defaultGraphDatabase
 	if database != "" {
 		config.GraphDatabase.Name = database
+	}
+
+	// Scheduling algorithm defaults to random selection
+	algo := SelectionAlgorithm{Name: defaultSelectionAlgorithm, Options: map[string]string{}}
+	config.Scheduler.Algorithm = algo
+	if selectionAlgorithm == "" {
+		config.Scheduler.Algorithm.Name = selectionAlgorithm
 	}
 
 	// Default host, for now is always this

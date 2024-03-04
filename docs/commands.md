@@ -163,7 +163,7 @@ To submit a job, we need the client `token` associated with a cluster. We are go
 
 - **simple**: for basic users, a command and the most basic of parameters will be provided and converted to a Jobspec.
 - **jobspec**: for advanced users, a Jobspec can be provided directly.
-- **Kubernetes job**: for Kubernetes users, a [batchv1/Job]() can be provided that will be converted to a Jobspec.
+- **Kubernetes job**: for Kubernetes users, a [batchv1/Job](https://kubernetes.io/docs/concepts/workloads/controllers/job/) can be provided that will be converted to a Jobspec.
 
 We will likely start with the first (simple) and then work on implementations for the latter. The converters will be implemented alongside the [Jobspec](https://github.com/compspec/jobspec-go/issues/1)
 library and used here.
@@ -265,17 +265,42 @@ Note that the above has a two step process:
 
 This will be improved upon with Fluxion and actual graph databases, but this is OK for the prototype.
 
-### 2. Pre-Assignment
+### 2. Assignment
 
 When the initial satisfy request is done (the step above) and we have a list of clusters, we can then tell rainbow about them.
-This means that a list of clusters is returned that is passed from the same client request to rainbow
-to do assignment, and logically, if there are no clusters that can sastify, that response is returned to the client.
+Rainbow then uses higher level metadata about each cluster (that reflects state) along with a selection algorithm
+to assign to a specific cluster. The cluster assignment is added to the database to be picked up by the cluster
+on it's next pass for jobs. Although this is a pull model (the assigned cluster is pulling work) the assignment and
+decision is done - the cluster is going to accept the job. The selection algorithm can be provided on the command line,
+or more likely is defined in the rainbow cluster configuration file. As an example:
+
+```yaml
+scheduler:
+    secret: chocolate-cookies
+    name: rainbow-cluster
+    algorithm:
+      name: randon
+      options:
+         key: value
+
+graphdatabase:
+    name: memory
+    options:
+      host: "127.0.0.1:50051"
+
+clusters:
+  - name: keebler
+    token: rainbow
+```
+
+In the above, we see the default algorithm (if it were not provided) that is random, meaning that the list of clusters
+is selected from randomly. We will likely have some representation of state provided in the graph or rainbow, and combined with
+this ability to customize algorithms, a more intelligent assignment to clusters.
 
 
 ## Request Jobs
 
-
-## Request Jobs
+**NOTE: this endpoint is deprecated and will be updated to be receive jobs**
 
 > Also List Jobs
 

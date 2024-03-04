@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/converged-computing/rainbow/pkg/client"
+	"github.com/converged-computing/rainbow/pkg/config"
 	"github.com/converged-computing/rainbow/pkg/utils"
 )
 
@@ -15,6 +16,7 @@ func Run(
 	maxJobs int,
 	acceptJobs int,
 	cfgFile string,
+	selectionAlgorithm string,
 ) error {
 
 	c, err := client.NewClient(host)
@@ -27,15 +29,14 @@ func Run(
 		log.Printf("request jobs: %d", maxJobs)
 	}
 
-	// TODO this needs to handle submission to multiple clusters
-	// Read in the config, if provided, command line takes preference
-	//cfg, err := config.NewRainbowClientConfig(cfgFile, clusterName, secret)
-	//if err != nil {
-	//	return err
-	//}
+	// Read in the config, if provided, TODO we need a set of tokens here?
+	cfg, err := config.NewRainbowClientConfig(cfgFile, cluster, secret, "", selectionAlgorithm)
+	if err != nil {
+		return err
+	}
 
 	// Last argument is secret, empty for now
-	response, err := c.RequestJobs(context.Background(), cluster, secret, int32(maxJobs))
+	response, err := c.RequestJobs(context.Background(), cfg.Scheduler.Name, cfg.Scheduler.Secret, int32(maxJobs))
 	if err != nil {
 		return err
 	}

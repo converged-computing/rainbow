@@ -21,7 +21,7 @@ func RunInit(path string) error {
 
 	// Generate an empty config - providing an empty filename ensures we don't read an existing one
 	// This defaults to an in-memory vanilla database
-	cfg, err := config.NewRainbowClientConfig("", "rainbow-cluster", "chocolate-cookies", "")
+	cfg, err := config.NewRainbowClientConfig("", "rainbow-cluster", "chocolate-cookies", "", "random")
 	if err != nil {
 		return err
 	}

@@ -42,7 +42,7 @@ docker-ubuntu:
 proto: protoc ## Generates the API code and documentation
 	mkdir -p pkg/api/v1
 	PATH=$(LOCALBIN):${PATH} protoc --proto_path=api/v1 --go_out=pkg/api/v1 --go_opt=paths=source_relative --go-grpc_out=pkg/api/v1 --go-grpc_opt=paths=source_relative rainbow.proto
-	PATH=$(LOCALBIN):${PATH} protoc --proto_path=backends/memory/service --go_out=backends/memory/service --go_opt=paths=source_relative --go-grpc_out=backends/memory/service --go-grpc_opt=paths=source_relative memory.proto
+	PATH=$(LOCALBIN):${PATH} protoc --proto_path=plugins/backends/memory/service --go_out=plugins/backends/memory/service --go_opt=paths=source_relative --go-grpc_out=plugins/backends/memory/service --go-grpc_opt=paths=source_relative memory.proto
 
 .PHONY: python
 python: python ## Generate python proto files in python
@@ -53,7 +53,7 @@ python: python ## Generate python proto files in python
 	cd python/v1/rainbow/protos
 	python -m grpc_tools.protoc -I./api/v1 --python_out=./python/v1/rainbow/protos --pyi_out=./python/v1/rainbow/protos --grpc_python_out=./python/v1/rainbow/protos ./api/v1/rainbow.proto
 	sed -i 's/import rainbow_pb2 as rainbow__pb2/from . import rainbow_pb2 as rainbow__pb2/' ./python/v1/rainbow/protos/rainbow_pb2_grpc.py
-	python -m grpc_tools.protoc -I./backends/memory/service --python_out=./python/v1/rainbow/protos --pyi_out=./python/v1/rainbow/protos --grpc_python_out=./python/v1/rainbow/protos ./backends/memory/service/memory.proto
+	python -m grpc_tools.protoc -I./plugins/backends/memory/service --python_out=./python/v1/rainbow/protos --pyi_out=./python/v1/rainbow/protos --grpc_python_out=./python/v1/rainbow/protos ./backends/memory/service/memory.proto
 	sed -i 's/import memory_pb2 as memory__pb2/from . import memory_pb2 as memory__pb2/' ./python/v1/rainbow/protos/memory_pb2_grpc.py
 
 .PHONY: version

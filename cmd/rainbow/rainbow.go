@@ -12,8 +12,9 @@ import (
 	submit "github.com/converged-computing/rainbow/cmd/rainbow/submit"
 	"github.com/converged-computing/rainbow/pkg/types"
 
-	// Register database backends
-	_ "github.com/converged-computing/rainbow/backends/memory"
+	// Register database backends and selection algorithms
+	_ "github.com/converged-computing/rainbow/plugins/algorithms/random"
+	_ "github.com/converged-computing/rainbow/plugins/backends/memory"
 )
 
 var (
@@ -47,6 +48,7 @@ func main() {
 	host := parser.String("", "host", &argparse.Options{Default: "localhost:50051", Help: "Scheduler server address (host:port)"})
 	clusterName := parser.String("", "cluster-name", &argparse.Options{Help: "Name of cluster to register"})
 	graphDatabase := parser.String("", "graph-database", &argparse.Options{Help: "Graph database backend to use"})
+	selectionAlgorithm := parser.String("", "select-algorithm", &argparse.Options{Default: "random", Help: "Selection algorithm for graph database (defaults to random)"})
 
 	// Request Jobs
 	clusterSecret := requestCmd.String("", "request-secret", &argparse.Options{Help: "Cluster 'secret' to retrieve jobs"})
@@ -80,17 +82,45 @@ func main() {
 		}
 
 	} else if registerCmd.Happened() {
-		err := register.Run(*host, *clusterName, *clusterNodes, *secret, *cfg, *graphDatabase, *subsystem)
+		err := register.Run(
+			*host,
+			*clusterName,
+			*clusterNodes,
+			*secret,
+			*cfg,
+			*graphDatabase,
+			*subsystem,
+			*selectionAlgorithm,
+		)
 		if err != nil {
 			log.Fatalf("Issue with register: %s\n", err)
 		}
 	} else if requestCmd.Happened() {
-		err := request.Run(*host, *clusterName, *clusterSecret, *maxJobs, *acceptJobs, *cfg)
+		err := request.Run(
+			*host,
+			*clusterName,
+			*clusterSecret,
+			*maxJobs,
+			*acceptJobs,
+			*cfg,
+			*selectionAlgorithm,
+		)
 		if err != nil {
 			log.Fatalf("Issue with request jobs: %s\n", err)
 		}
 	} else if submitCmd.Happened() {
-		err := submit.Run(*host, *jobName, *command, *nodes, *tasks, *token, *clusterName, *graphDatabase, *cfg)
+		err := submit.Run(
+			*host,
+			*jobName,
+			*command,
+			*nodes,
+			*tasks,
+			*token,
+			*clusterName,
+			*graphDatabase,
+			*cfg,
+			*selectionAlgorithm,
+		)
 		if err != nil {
 			log.Fatal(err.Error())
 		}

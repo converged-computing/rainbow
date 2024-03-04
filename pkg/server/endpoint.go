@@ -54,7 +54,8 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 	}
 
 	// Keep a list of clusters to send to the database
-	clusters := []*database.Cluster{}
+	lookup := map[string]*database.Cluster{}
+	clusters := []string{}
 
 	// We submit work to one or more clusters, which must be validated via token
 	// This is a very simple auth setup that needs to be improved upon, but
@@ -77,7 +78,8 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 		if err != nil {
 			return nil, err
 		}
-		clusters = append(clusters, cluster)
+		clusters = append(clusters, cluster.Name)
+		lookup[cluster.Name] = cluster
 	}
 
 	// Only proceed if we can consider at least one cluster
@@ -86,7 +88,17 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 	}
 
 	log.Printf("📝️ received job %s for %d contender clusters", in.Name, len(clusters))
-	return s.db.SubmitJob(in, clusters)
+
+	// Use the algorithm to select a final cluster
+	selected, err := s.algorithm.Select(clusters)
+	if err != nil {
+		return nil, err
+	}
+	response, err := s.db.SubmitJob(in, lookup[selected])
+	if err == nil {
+		log.Printf("📝️ job %s is assigned to cluster %s", in.Name, selected)
+	}
+	return response, err
 }
 
 // RequestJobs receives a cluster / instance / other receiving entity request for jobs

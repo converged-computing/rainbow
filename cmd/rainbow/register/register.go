@@ -16,7 +16,8 @@ func Run(
 	secret,
 	cfgFile,
 	graphDatabase,
-	subsystem string,
+	subsystem,
+	selectionAlgorithm string,
 ) error {
 
 	c, err := client.NewClient(host)
@@ -25,7 +26,13 @@ func Run(
 	}
 
 	// Read in the config, if provided, command line takes preference
-	cfg, err := config.NewRainbowClientConfig(cfgFile, clusterName, secret, graphDatabase)
+	cfg, err := config.NewRainbowClientConfig(
+		cfgFile,
+		clusterName,
+		secret,
+		graphDatabase,
+		selectionAlgorithm,
+	)
 	if err != nil {
 		return err
 	}

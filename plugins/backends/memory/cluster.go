@@ -13,9 +13,9 @@ import (
 
 	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
-	"github.com/converged-computing/rainbow/backends/memory/service"
 	"github.com/converged-computing/rainbow/pkg/graph"
 	"github.com/converged-computing/rainbow/pkg/utils"
+	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 )
 
 // A ClusterGraph holds one or more subsystems

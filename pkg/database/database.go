@@ -229,22 +229,7 @@ func (db *Database) createTables() error {
 	  );
 	`
 
-	// Contender assignments of jobs to clusters
-	// Assignment is an integer identifier (this can be changed / extended)
-	// 0: unassigned
-	// -1: rejected
-	// 1: assigned
-	createAssignTableSQL := `
-	  CREATE TABLE assign (
-		  assignId integer NOT NULL PRIMARY KEY AUTOINCREMENT,
-		  cluster TEXT,
-		  job integer,
-		  status integer,
-		  FOREIGN KEY(job) REFERENCES jobs(idJob),
-		  FOREIGN KEY(cluster) REFERENCES clusters(name)
-		);`
-
-	// A job has a unique id and (when assigned) a cluster
+	// A job has a unique id and is assigned a cluster
 	createJobsTableSQL := `
 	  CREATE TABLE jobs (
 		  idJob integer NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -255,7 +240,7 @@ func (db *Database) createTables() error {
 		);`
 
 	// Create single query for tables
-	createSQL := createClusterTableSQL + "\n" + createAssignTableSQL + "\n" + createJobsTableSQL
+	createSQL := createClusterTableSQL + "\n" + createJobsTableSQL
 	log.Println("   🏓️ creating tables...")
 
 	// Execute SQL query

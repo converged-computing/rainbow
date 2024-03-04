@@ -10,8 +10,8 @@ import (
 	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 
-	"github.com/converged-computing/rainbow/backends/memory/service"
 	"github.com/converged-computing/rainbow/pkg/graph/backend"
+	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -60,7 +60,7 @@ func (m MemoryGraph) RegisterService(s *grpc.Server) error {
 	return nil
 }
 
-// Add the backend to be known to libpak
+// Add the backend to be known to rainbow
 func init() {
 
 	graph := MemoryGraph{}

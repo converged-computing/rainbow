@@ -103,10 +103,10 @@ func (db *Database) addAssignments(job *Job, clusters []*Cluster) error {
 	return err
 }
 
-// SubmitJob adds the job to the database
+// SubmitJob adds the assigned job to the database
 func (db *Database) SubmitJob(
 	job *pb.SubmitJobRequest,
-	clusters []*Cluster,
+	cluster *Cluster,
 ) (*pb.SubmitJobResponse, error) {
 
 	response := &pb.SubmitJobResponse{}
@@ -115,13 +115,6 @@ func (db *Database) SubmitJob(
 	// TODO: should we do a check to see if we have the job already?
 	// could create a hash / use the jobspec. Do we allow that?
 	j, err := db.addJob(job)
-	if err != nil {
-		response.Status = pb.SubmitJobResponse_SUBMIT_ERROR
-		return response, err
-	}
-
-	// Now that the job is added to the database, add to the assignment table
-	err = db.addAssignments(j, clusters)
 	if err != nil {
 		response.Status = pb.SubmitJobResponse_SUBMIT_ERROR
 		return response, err

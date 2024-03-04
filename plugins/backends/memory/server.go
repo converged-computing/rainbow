@@ -3,7 +3,7 @@ package memory
 import (
 	"context"
 
-	"github.com/converged-computing/rainbow/backends/memory/service"
+	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 )
 
 type MemoryServer struct {
