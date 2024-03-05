@@ -101,8 +101,8 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 	return response, err
 }
 
-// RequestJobs receives a cluster / instance / other receiving entity request for jobs
-func (s *Server) RequestJobs(_ context.Context, in *pb.RequestJobsRequest) (*pb.RequestJobsResponse, error) {
+// ReceiveJobs receives a cluster / instance / other receiving entity request for jobs
+func (s *Server) ReceiveJobs(_ context.Context, in *pb.ReceiveJobsRequest) (*pb.ReceiveJobsResponse, error) {
 	if in == nil {
 		return nil, errors.New("request is required")
 	}
@@ -117,8 +117,8 @@ func (s *Server) RequestJobs(_ context.Context, in *pb.RequestJobsRequest) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("🌀️ requesting %d max jobs for cluster %s", in.MaxJobs, cluster.Name)
-	return s.db.RequestJobs(in, cluster)
+	log.Printf("🌀️ requesting %d jobs for cluster %s", in.MaxJobs, cluster.Name)
+	return s.db.ReceiveJobs(in, cluster)
 }
 
 // RequestJobs receives a cluster / instance / other receiving entity request for jobs

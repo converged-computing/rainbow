@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -20,6 +21,9 @@ type RainbowConfig struct {
 
 	// Configuration section for Rainbow
 	Scheduler RainbowScheduler `json:"scheduler"`
+
+	// A "self" credential, saved on register / used to request (receive)
+	Cluster ClusterCredential `json:"cluster,omitempty"`
 
 	// Graph database selected
 	GraphDatabase GraphDatabase `json:"graph"`
@@ -43,9 +47,12 @@ type SelectionAlgorithm struct {
 }
 
 // ClusterCredential holds a name and access token for a cluster
+// When used for a "self" cluster, we have a name and secret
+// When used for a "submit to" cluster, we have a name and token
 type ClusterCredential struct {
-	Name  string `json:"name" yaml:"name"`
-	Token string `json:"token" yaml:"token"`
+	Name   string `json:"name" yaml:"name"`
+	Token  string `json:"token,omitempty" yaml:"token,omitempty"`
+	Secret string `json:"secret,omitempty" yaml:"secret,omitempty"`
 }
 
 // A Graph Database Backend takes a name and can handle options
@@ -53,6 +60,24 @@ type GraphDatabase struct {
 	Name    string            `json:"name,omitempty" yaml:"name,omitempty"`
 	Host    string            `json:"host,omitempty" yaml:"host,omitempty"`
 	Options map[string]string `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
+// ToYaml serializes to yaml
+func (c *RainbowConfig) ToYaml() (string, error) {
+	out, err := yaml.Marshal(c)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
+// ToJson serializes to json
+func (c *RainbowConfig) ToJson() (string, error) {
+	out, err := json.MarshalIndent(c, "", " ")
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
 }
 
 // AddCluster adds a cluster on the fly to a config, likely for a one-off submit

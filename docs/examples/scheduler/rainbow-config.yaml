@@ -1,12 +1,17 @@
 scheduler:
-    secret: chocolate-cookied
-    name: rainbow-cluster
+    secret: chocolate-cookies
+    name: keebler
+    algorithm:
+        name: random
+cluster:
+    name: keebler
+    token: ""
+    secret: 7e345adf-da4b-412b-a3f8-8992dc9d0b1c
 graphdatabase:
     name: memory
+    host: 127.0.0.1:50051
     options:
-      host: "127.0.0.1:50051"
-
-# This is the default cluster generated via the Makefile commands
+        host: 127.0.0.1:50051
 clusters:
-  - name: keebler
-    token: rainbow
+    - name: keebler
+      token: rainbow

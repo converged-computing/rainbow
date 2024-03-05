@@ -24,10 +24,10 @@ class RainbowSchedulerStub(object):
             request_serializer=rainbow__pb2.SubmitJobRequest.SerializeToString,
             response_deserializer=rainbow__pb2.SubmitJobResponse.FromString,
         )
-        self.RequestJobs = channel.unary_unary(
-            "/convergedcomputing.org.grpc.v1.RainbowScheduler/RequestJobs",
-            request_serializer=rainbow__pb2.RequestJobsRequest.SerializeToString,
-            response_deserializer=rainbow__pb2.RequestJobsResponse.FromString,
+        self.ReceiveJobs = channel.unary_unary(
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/ReceiveJobs",
+            request_serializer=rainbow__pb2.ReceiveJobsRequest.SerializeToString,
+            response_deserializer=rainbow__pb2.ReceiveJobsResponse.FromString,
         )
         self.AcceptJobs = channel.unary_unary(
             "/convergedcomputing.org.grpc.v1.RainbowScheduler/AcceptJobs",
@@ -51,7 +51,7 @@ class RainbowSchedulerServicer(object):
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
 
-    def RequestJobs(self, request, context):
+    def ReceiveJobs(self, request, context):
         """Request Job - ask the rainbow scheduler for up to max jobs"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
@@ -76,10 +76,10 @@ def add_RainbowSchedulerServicer_to_server(servicer, server):
             request_deserializer=rainbow__pb2.SubmitJobRequest.FromString,
             response_serializer=rainbow__pb2.SubmitJobResponse.SerializeToString,
         ),
-        "RequestJobs": grpc.unary_unary_rpc_method_handler(
-            servicer.RequestJobs,
-            request_deserializer=rainbow__pb2.RequestJobsRequest.FromString,
-            response_serializer=rainbow__pb2.RequestJobsResponse.SerializeToString,
+        "ReceiveJobs": grpc.unary_unary_rpc_method_handler(
+            servicer.ReceiveJobs,
+            request_deserializer=rainbow__pb2.ReceiveJobsRequest.FromString,
+            response_serializer=rainbow__pb2.ReceiveJobsResponse.SerializeToString,
         ),
         "AcceptJobs": grpc.unary_unary_rpc_method_handler(
             servicer.AcceptJobs,
@@ -156,7 +156,7 @@ class RainbowScheduler(object):
         )
 
     @staticmethod
-    def RequestJobs(
+    def ReceiveJobs(
         request,
         target,
         options=(),
@@ -171,9 +171,9 @@ class RainbowScheduler(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            "/convergedcomputing.org.grpc.v1.RainbowScheduler/RequestJobs",
-            rainbow__pb2.RequestJobsRequest.SerializeToString,
-            rainbow__pb2.RequestJobsResponse.FromString,
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/ReceiveJobs",
+            rainbow__pb2.ReceiveJobsRequest.SerializeToString,
+            rainbow__pb2.ReceiveJobsResponse.FromString,
             options,
             channel_credentials,
             insecure,

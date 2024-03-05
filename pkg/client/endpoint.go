@@ -89,15 +89,14 @@ func (c *RainbowClient) SubmitJob(
 	return response, err
 }
 
-// RequestJobs requests jobs for a specific cluster
-func (c *RainbowClient) RequestJobs(
+// ReceiveJobs (request them) for a specific clusters
+func (c *RainbowClient) ReceiveJobs(
 	ctx context.Context,
 	cluster string,
 	secret string,
 	maxJobs int32,
-) (*pb.RequestJobsResponse, error) {
-
-	response := &pb.RequestJobsResponse{}
+) (*pb.ReceiveJobsResponse, error) {
+	response := &pb.ReceiveJobsResponse{}
 	if !c.Connected() {
 		return response, errors.New("client is not connected")
 	}
@@ -108,10 +107,9 @@ func (c *RainbowClient) RequestJobs(
 		return response, errors.New("cluster secret is required")
 	}
 
-	// Contact the server...
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
-	response, err := c.service.RequestJobs(ctx, &pb.RequestJobsRequest{
+	response, err := c.service.ReceiveJobs(ctx, &pb.ReceiveJobsRequest{
 		Cluster: cluster,
 		Secret:  secret,
 		MaxJobs: maxJobs,

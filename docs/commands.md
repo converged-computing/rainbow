@@ -59,51 +59,48 @@ You should also be running a server with a database selected (e.g., `make server
 make register
 ```
 ```console
-go run cmd/rainbow/rainbow.go register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json
-2024/02/12 22:17:43 🌈️ starting client (localhost:50051)...
-2024/02/12 22:17:43 registering cluster: keebler
-2024/02/12 22:17:43 status: REGISTER_SUCCESS
-2024/02/12 22:17:43 secret: 54c4568a-14f2-465f-aa1e-5e6e0e3efd33
-2024/02/12 22:17:43  token: 67e0f258-96c3-4d88-8253-287a95653138
+2024/03/05 01:18:59 🌈️ starting client (localhost:50051)...
+2024/03/05 01:18:59 registering cluster: keebler
+2024/03/05 01:18:59 status: REGISTER_SUCCESS
+2024/03/05 01:18:59 secret: e6794098-b209-463d-b761-98d2d418b26f
+2024/03/05 01:18:59  token: rainbow
+2024/03/05 01:18:59 Saving cluster secret to ./docs/examples/scheduler/rainbow-config.yaml
 ```
 
 If you ran this using the rainbow client you would do:
 
 ```bash
-rainbow register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json
+rainbow register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/scheduler/rainbow-config.yaml --save
 ```
 
-If you are watching the server, you'll see that the registration happens (token, secret, etc) and then the nodes are sent over
-to rainbow.
+Note in the above we are providing a config file path and `--save` so our cluster secret gets saved there. Be careful always about overwriting any configuration file.
+The new secret will be provided in the console as a more conservative approach. If you are watching the server, you'll see that the registration happens (token, secret, etc) and then the nodes are sent over to rainbow.
 
 ```console
-2024/02/28 23:26:17 creating 🌈️ server...
-2024/02/28 23:26:17 ✨️ creating rainbow.db...
-2024/02/28 23:26:17    rainbow.db file created
-2024/02/28 23:26:17    create cluster table...
-2024/02/28 23:26:17    cluster table created
-2024/02/28 23:26:17    create jobs table...
-2024/02/28 23:26:17    jobs table created
-2024/02/28 23:26:17 ⚠️ WARNING: global-token is set, use with caution.
-2024/02/28 23:26:17 starting scheduler server: rainbow v0.1.1-draft
-2024/02/28 23:26:17 🧠️ Registering memory graph database...
-2024/02/28 23:26:17 Adding special vertex root at index 0
-2024/02/28 23:26:17 server listening: [::]:50051
-2024/02/28 23:26:19 📝️ received register: keebler
-2024/02/28 23:26:19 Received cluster graph with 44 nodes and 86 edges
-2024/02/28 23:26:19 SELECT count(*) from clusters WHERE name = 'keebler': (0)
-2024/02/28 23:26:19 INSERT into clusters (name, token, secret) VALUES ("keebler", "rainbow", "3f78d433-f24b-4664-858c-0577971e259e"): (1)
-2024/02/28 23:26:19 Preparing to load 44 nodes and 86 edges
-2024/02/28 23:26:19 Adding special vertex keebler at index 1
-2024/02/28 23:26:19 We have made an in memory graph (subsystem nodes) with 46 vertices!
-2024/02/29 01:17:37 Preparing to load 44 nodes and 86 edges
-2024/02/29 01:17:37 Adding special vertex keebler at index 1
-2024/02/29 01:17:37 We have made an in memory graph (subsystem nodes) with 46 vertices!
+go run cmd/server/server.go --global-token rainbow
+2024/03/05 01:18:54 creating 🌈️ server...
+2024/03/05 01:18:54 🧩️ selection algorithm: random
+2024/03/05 01:18:54 🧩️ graph database: memory
+2024/03/05 01:18:54 ✨️ creating rainbow.db...
+2024/03/05 01:18:54    rainbow.db file created
+2024/03/05 01:18:54    🏓️ creating tables...
+2024/03/05 01:18:54    🏓️ tables created
+2024/03/05 01:18:54 ⚠️ WARNING: global-token is set, use with caution.
+2024/03/05 01:18:54 starting scheduler server: rainbow v0.1.1-draft
+2024/03/05 01:18:54 🧠️ Registering memory graph database...
+2024/03/05 01:18:54 Adding special vertex root at index 0
+2024/03/05 01:18:54 server listening: [::]:50051
+2024/03/05 01:18:59 📝️ received register: keebler
+2024/03/05 01:18:59 Received cluster graph with 44 nodes and 86 edges
+2024/03/05 01:18:59 SELECT count(*) from clusters WHERE name = 'keebler': (0)
+2024/03/05 01:18:59 INSERT into clusters (name, token, secret) VALUES ("keebler", "rainbow", "e6794098-b209-463d-b761-98d2d418b26f"): (1)
+2024/03/05 01:18:59 Preparing to load 44 nodes and 86 edges
+2024/03/05 01:18:59 Adding special vertex keebler at index 12
+2024/03/05 01:18:59 We have made an in memory graph (subsystem nodes) with 45 vertices!
 {
  "keebler": {
   "Name": "keebler",
   "Counts": {
-   "cluster": 1,
    "core": 36,
    "node": 3,
    "rack": 1,
@@ -297,37 +294,35 @@ In the above, we see the default algorithm (if it were not provided) that is ran
 is selected from randomly. We will likely have some representation of state provided in the graph or rainbow, and combined with
 this ability to customize algorithms, a more intelligent assignment to clusters.
 
+## Receive Jobs
 
-## Request Jobs
+> Receive: Request and Accept jobs
 
-**NOTE: this endpoint is deprecated and will be updated to be receive jobs**
+The next endpoint is to receive jobs, and although this is a pull design (assuming most clusters will not expose services but can pull from them) there has to be a contract between rainbow and the cluster to honor doing this at some frequency, and some number to accept. Assuming that we have registered and submit a job (that will be assigned to cluster keebler) we can then receive the job to run. The above assumes that you have used `--save` on the registration step to save the cluster secret into your configuration file. If you haven't, you can provide it with `--request-secret` on the command line.
 
-> Also List Jobs
-
-We now are pretending to be the cluster that originally registered, and we want to request some number of max jobs
-to look at. This doesn't mean we have to run them, but we want to ask for some small set to consider for running.
-Right now this just does a query for the count, but in the future we can have actual filters / query parameters
-for the jobs (nodes, time, etc.) that we want to ask for. Have some fun and submit a few jobs above, and then request
-to see them:
-
+```bash
+$ go run ./cmd/rainbow/rainbow.go receive --config-path ./docs/examples/scheduler/rainbow-config.yaml --max-jobs 3
+```
 ```console
-$ go run ./cmd/rainbow/rainbow.go request --request-secret 3cc06871-0990-4dc2-94d5-eec653c5d7a0 --cluster-name keebler --max-jobs 3
-2024/02/12 23:29:59 🌈️ starting client (localhost:50051)...
-2024/02/12 23:29:59 request jobs: 3
-2024/02/12 23:29:59 🌀️ Found 3 jobs!
-2024/02/12 23:29:59 1 : {"id":1,"cluster":"keebler","name":"hostname","nodes":1,"tasks":0,"command":"hostname"}
-2024/02/12 23:29:59 2 : {"id":2,"cluster":"keebler","name":"sleep","nodes":1,"tasks":0,"command":"sleep 10"}
-2024/02/12 23:29:59 3 : {"id":3,"cluster":"keebler","name":"dinosaur","nodes":1,"tasks":0,"command":"dinosaur things"}
+2024/03/05 01:45:58 🌈️ starting client (localhost:50051)...
+2024/03/05 01:45:58 receive jobs: 10
+2024/03/05 01:45:58 🌀️ Received 3 jobs!
+2024/03/05 01:45:58 2 : {"id":2,"cluster":"keebler","name":"echo","jobspec":"attributes:\n  system: {}\nresources:\n- count: 1\n  type: node\n  with:\n  - count: 1\n    label: echo\n    type: slot\n    with:\n    - count: 24\n      type: core\ntasks:\n- command:\n  - echo\n  - hello\n  - moon\n  count:\n    per_slot: 1\n  slot: echo\nversion: 1\n","command":""}
+2024/03/05 01:45:58 3 : {"id":3,"cluster":"keebler","name":"echo","jobspec":"attributes:\n  system: {}\nresources:\n- count: 1\n  type: node\n  with:\n  - count: 1\n    label: echo\n    type: slot\n    with:\n    - count: 24\n      type: core\ntasks:\n- command:\n  - echo\n  - hello\n  - moon\n  count:\n    per_slot: 1\n  slot: echo\nversion: 1\n","command":""}
+2024/03/05 01:45:58 1 : {"id":1,"cluster":"keebler","name":"echo","jobspec":"attributes:\n  system: {}\nresources:\n- count: 1\n  type: node\n  with:\n  - count: 1\n    label: echo\n    type: slot\n    with:\n    - count: 24\n      type: core\ntasks:\n- command:\n  - echo\n  - hello\n  - moon\n  count:\n    per_slot: 1\n  slot: echo\nversion: 1\n","command":""}
+2024/03/05 01:45:58 ✅️ Accepting 3 jobs!
+2024/03/05 01:45:58 status:RESULT_TYPE_SUCCESS
 ```
 
-And on the server side:
+The above can be prettier printed, especially since the jobspec is sent back now! And on the server side:
 
 ```console
-2024/02/12 23:27:29 SELECT * from clusters WHERE name LIKE "keebler" LIMIT 1: keebler
-2024/02/12 23:27:29 🌀️ requesting 3 max jobs for cluster keebler
+024/03/05 01:45:58 SELECT * from clusters WHERE name LIKE "keebler" LIMIT 1: keebler
+2024/03/05 01:45:58 🌀️ accepting 3 for cluster keebler
+2024/03/05 01:45:58 DELETE FROM jobs WHERE cluster = 'keebler' AND idJob in (2,3,1): (3)
 ```
 
-Note that if you don't define the max jobs (so it is essentially 0) you will get all jobs. This is akin to listing jobs.
+Note that if you don't define the max jobs (so it is essentially 0) you will get all jobs.
 Awesome! Next we can put that logic in a flux instance (from the Python grpc to start) and then have Flux
 accept some number of them. The response back to the rainbow scheduler will be those to accept, which will then be removed from the database. For another day.
 

@@ -1,8 +1,9 @@
-package extract
+package register
 
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/converged-computing/rainbow/pkg/client"
 	"github.com/converged-computing/rainbow/pkg/config"
@@ -13,7 +14,8 @@ func Run(
 	host,
 	clusterName,
 	clusterNodes,
-	secret,
+	secret string,
+	saveSecret bool,
 	cfgFile,
 	graphDatabase,
 	subsystem,
@@ -55,5 +57,19 @@ func Run(
 	log.Printf("status: %s", response.Status)
 	log.Printf("secret: %s", response.Secret)
 	log.Printf(" token: %s", response.Token)
+
+	// If we have a config file and flag is provided to save secret, do it.
+	if saveSecret && cfgFile != "" {
+		log.Printf("Saving cluster secret to %s\n", cfgFile)
+		cfg.Cluster = config.ClusterCredential{Secret: response.Secret, Name: clusterName}
+		yaml, err := cfg.ToYaml()
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(cfgFile, []byte(yaml), 0644)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

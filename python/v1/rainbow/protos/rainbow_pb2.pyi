@@ -40,7 +40,7 @@ class SubmitJobRequest(_message.Message):
     sent: _timestamp_pb2.Timestamp
     def __init__(self, name: _Optional[str] = ..., clusters: _Optional[_Iterable[_Union[SubmitJobRequest.Cluster, _Mapping]]] = ..., jobspec: _Optional[str] = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
-class RequestJobsRequest(_message.Message):
+class ReceiveJobsRequest(_message.Message):
     __slots__ = ("cluster", "secret", "maxJobs", "sent")
     CLUSTER_FIELD_NUMBER: _ClassVar[int]
     SECRET_FIELD_NUMBER: _ClassVar[int]
@@ -108,18 +108,18 @@ class SubmitJobResponse(_message.Message):
     status: SubmitJobResponse.ResultType
     def __init__(self, request_id: _Optional[str] = ..., jobid: _Optional[int] = ..., status: _Optional[_Union[SubmitJobResponse.ResultType, str]] = ...) -> None: ...
 
-class RequestJobsResponse(_message.Message):
+class ReceiveJobsResponse(_message.Message):
     __slots__ = ("request_id", "jobs", "status")
     class ResultType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = ()
-        REQUEST_JOBS_NORESULTS: _ClassVar[RequestJobsResponse.ResultType]
-        REQUEST_JOBS_SUCCESS: _ClassVar[RequestJobsResponse.ResultType]
-        REQUEST_JOBS_ERROR: _ClassVar[RequestJobsResponse.ResultType]
-        REQUEST_JOBS_DENIED: _ClassVar[RequestJobsResponse.ResultType]
-    REQUEST_JOBS_NORESULTS: RequestJobsResponse.ResultType
-    REQUEST_JOBS_SUCCESS: RequestJobsResponse.ResultType
-    REQUEST_JOBS_ERROR: RequestJobsResponse.ResultType
-    REQUEST_JOBS_DENIED: RequestJobsResponse.ResultType
+        REQUEST_JOBS_NORESULTS: _ClassVar[ReceiveJobsResponse.ResultType]
+        REQUEST_JOBS_SUCCESS: _ClassVar[ReceiveJobsResponse.ResultType]
+        REQUEST_JOBS_ERROR: _ClassVar[ReceiveJobsResponse.ResultType]
+        REQUEST_JOBS_DENIED: _ClassVar[ReceiveJobsResponse.ResultType]
+    REQUEST_JOBS_NORESULTS: ReceiveJobsResponse.ResultType
+    REQUEST_JOBS_SUCCESS: ReceiveJobsResponse.ResultType
+    REQUEST_JOBS_ERROR: ReceiveJobsResponse.ResultType
+    REQUEST_JOBS_DENIED: ReceiveJobsResponse.ResultType
     class JobsEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -132,8 +132,8 @@ class RequestJobsResponse(_message.Message):
     STATUS_FIELD_NUMBER: _ClassVar[int]
     request_id: str
     jobs: _containers.ScalarMap[int, str]
-    status: RequestJobsResponse.ResultType
-    def __init__(self, request_id: _Optional[str] = ..., jobs: _Optional[_Mapping[int, str]] = ..., status: _Optional[_Union[RequestJobsResponse.ResultType, str]] = ...) -> None: ...
+    status: ReceiveJobsResponse.ResultType
+    def __init__(self, request_id: _Optional[str] = ..., jobs: _Optional[_Mapping[int, str]] = ..., status: _Optional[_Union[ReceiveJobsResponse.ResultType, str]] = ...) -> None: ...
 
 class AcceptJobsResponse(_message.Message):
     __slots__ = ("status",)

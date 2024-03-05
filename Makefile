@@ -53,7 +53,7 @@ python: python ## Generate python proto files in python
 	cd python/v1/rainbow/protos
 	python -m grpc_tools.protoc -I./api/v1 --python_out=./python/v1/rainbow/protos --pyi_out=./python/v1/rainbow/protos --grpc_python_out=./python/v1/rainbow/protos ./api/v1/rainbow.proto
 	sed -i 's/import rainbow_pb2 as rainbow__pb2/from . import rainbow_pb2 as rainbow__pb2/' ./python/v1/rainbow/protos/rainbow_pb2_grpc.py
-	python -m grpc_tools.protoc -I./plugins/backends/memory/service --python_out=./python/v1/rainbow/protos --pyi_out=./python/v1/rainbow/protos --grpc_python_out=./python/v1/rainbow/protos ./backends/memory/service/memory.proto
+	python -m grpc_tools.protoc -I./plugins/backends/memory/service --python_out=./python/v1/rainbow/protos --pyi_out=./python/v1/rainbow/protos --grpc_python_out=./python/v1/rainbow/protos ./plugins/backends/memory/service/memory.proto
 	sed -i 's/import memory_pb2 as memory__pb2/from . import memory_pb2 as memory__pb2/' ./python/v1/rainbow/protos/memory_pb2_grpc.py
 
 .PHONY: version
@@ -85,7 +85,7 @@ stream: ## Runs the interface client
 
 .PHONY: register
 register: ## Run mock registration
-	go run cmd/rainbow/rainbow.go register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json
+	go run cmd/rainbow/rainbow.go register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/scheduler/rainbow-config.yaml --save
 
 .PHONY: tag
 tag: ## Creates release tag

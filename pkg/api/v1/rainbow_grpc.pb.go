@@ -27,7 +27,7 @@ type RainbowSchedulerClient interface {
 	// Job Submission - request for submitting a job to a named cluster
 	SubmitJob(ctx context.Context, in *SubmitJobRequest, opts ...grpc.CallOption) (*SubmitJobResponse, error)
 	// Request Job - ask the rainbow scheduler for up to max jobs
-	RequestJobs(ctx context.Context, in *RequestJobsRequest, opts ...grpc.CallOption) (*RequestJobsResponse, error)
+	ReceiveJobs(ctx context.Context, in *ReceiveJobsRequest, opts ...grpc.CallOption) (*ReceiveJobsResponse, error)
 	// Accept Jobs - accept some number of jobs
 	AcceptJobs(ctx context.Context, in *AcceptJobsRequest, opts ...grpc.CallOption) (*AcceptJobsResponse, error)
 }
@@ -58,9 +58,9 @@ func (c *rainbowSchedulerClient) SubmitJob(ctx context.Context, in *SubmitJobReq
 	return out, nil
 }
 
-func (c *rainbowSchedulerClient) RequestJobs(ctx context.Context, in *RequestJobsRequest, opts ...grpc.CallOption) (*RequestJobsResponse, error) {
-	out := new(RequestJobsResponse)
-	err := c.cc.Invoke(ctx, "/convergedcomputing.org.grpc.v1.RainbowScheduler/RequestJobs", in, out, opts...)
+func (c *rainbowSchedulerClient) ReceiveJobs(ctx context.Context, in *ReceiveJobsRequest, opts ...grpc.CallOption) (*ReceiveJobsResponse, error) {
+	out := new(ReceiveJobsResponse)
+	err := c.cc.Invoke(ctx, "/convergedcomputing.org.grpc.v1.RainbowScheduler/ReceiveJobs", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ type RainbowSchedulerServer interface {
 	// Job Submission - request for submitting a job to a named cluster
 	SubmitJob(context.Context, *SubmitJobRequest) (*SubmitJobResponse, error)
 	// Request Job - ask the rainbow scheduler for up to max jobs
-	RequestJobs(context.Context, *RequestJobsRequest) (*RequestJobsResponse, error)
+	ReceiveJobs(context.Context, *ReceiveJobsRequest) (*ReceiveJobsResponse, error)
 	// Accept Jobs - accept some number of jobs
 	AcceptJobs(context.Context, *AcceptJobsRequest) (*AcceptJobsResponse, error)
 	mustEmbedUnimplementedRainbowSchedulerServer()
@@ -101,8 +101,8 @@ func (UnimplementedRainbowSchedulerServer) Register(context.Context, *RegisterRe
 func (UnimplementedRainbowSchedulerServer) SubmitJob(context.Context, *SubmitJobRequest) (*SubmitJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitJob not implemented")
 }
-func (UnimplementedRainbowSchedulerServer) RequestJobs(context.Context, *RequestJobsRequest) (*RequestJobsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RequestJobs not implemented")
+func (UnimplementedRainbowSchedulerServer) ReceiveJobs(context.Context, *ReceiveJobsRequest) (*ReceiveJobsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReceiveJobs not implemented")
 }
 func (UnimplementedRainbowSchedulerServer) AcceptJobs(context.Context, *AcceptJobsRequest) (*AcceptJobsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AcceptJobs not implemented")
@@ -156,20 +156,20 @@ func _RainbowScheduler_SubmitJob_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RainbowScheduler_RequestJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RequestJobsRequest)
+func _RainbowScheduler_ReceiveJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReceiveJobsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RainbowSchedulerServer).RequestJobs(ctx, in)
+		return srv.(RainbowSchedulerServer).ReceiveJobs(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/convergedcomputing.org.grpc.v1.RainbowScheduler/RequestJobs",
+		FullMethod: "/convergedcomputing.org.grpc.v1.RainbowScheduler/ReceiveJobs",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RainbowSchedulerServer).RequestJobs(ctx, req.(*RequestJobsRequest))
+		return srv.(RainbowSchedulerServer).ReceiveJobs(ctx, req.(*ReceiveJobsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -208,8 +208,8 @@ var RainbowScheduler_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RainbowScheduler_SubmitJob_Handler,
 		},
 		{
-			MethodName: "RequestJobs",
-			Handler:    _RainbowScheduler_RequestJobs_Handler,
+			MethodName: "ReceiveJobs",
+			Handler:    _RainbowScheduler_ReceiveJobs_Handler,
 		},
 		{
 			MethodName: "AcceptJobs",

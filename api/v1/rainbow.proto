@@ -16,7 +16,7 @@ service RainbowScheduler {
   rpc SubmitJob(SubmitJobRequest) returns (SubmitJobResponse);
 
   // Request Job - ask the rainbow scheduler for up to max jobs
-  rpc RequestJobs(RequestJobsRequest) returns (RequestJobsResponse);
+  rpc ReceiveJobs(ReceiveJobsRequest) returns (ReceiveJobsResponse);
 
    // Accept Jobs - accept some number of jobs
    rpc AcceptJobs(AcceptJobsRequest) returns (AcceptJobsResponse);
@@ -54,7 +54,7 @@ message SubmitJobRequest {
 // to get back a maximum of N jobs. This will (and should) eventually
 // support filters / sorting criteria, but now we just take the top
 // N from a query. The response includes the ids that are accepted
-message RequestJobsRequest {
+message ReceiveJobsRequest {
   string cluster = 1;
 
   // cluster secret given on registration
@@ -112,7 +112,7 @@ message SubmitJobResponse {
 }
 
 // RequestJobsResponse
-message RequestJobsResponse {
+message ReceiveJobsResponse {
 
   // Enum to represent the result types of the operation.
   enum ResultType {

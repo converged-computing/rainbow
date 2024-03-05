@@ -16,7 +16,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
-    b'\n\rrainbow.proto\x12\x1e\x63onvergedcomputing.org.grpc.v1\x1a\x1fgoogle/protobuf/timestamp.proto"{\n\x0fRegisterRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06secret\x18\x02 \x01(\t\x12\r\n\x05nodes\x18\x03 \x01(\t\x12\x11\n\tsubsystem\x18\x04 \x01(\t\x12(\n\x04sent\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"\xcf\x01\n\x10SubmitJobRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12J\n\x08\x63lusters\x18\x02 \x03(\x0b\x32\x38.convergedcomputing.org.grpc.v1.SubmitJobRequest.Cluster\x12\x0f\n\x07jobspec\x18\x03 \x01(\t\x12(\n\x04sent\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x1a&\n\x07\x43luster\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05token\x18\x02 \x01(\t"p\n\x12RequestJobsRequest\x12\x0f\n\x07\x63luster\x18\x01 \x01(\t\x12\x0e\n\x06secret\x18\x02 \x01(\t\x12\x0f\n\x07maxJobs\x18\x03 \x01(\x05\x12(\n\x04sent\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"n\n\x11\x41\x63\x63\x65ptJobsRequest\x12\x0f\n\x07\x63luster\x18\x01 \x01(\t\x12\x0e\n\x06secret\x18\x02 \x01(\t\x12\x0e\n\x06jobids\x18\x03 \x03(\x05\x12(\n\x04sent\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"\x8e\x02\n\x10RegisterResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\r\n\x05token\x18\x02 \x01(\t\x12\x0e\n\x06secret\x18\x03 \x01(\t\x12K\n\x06status\x18\x04 \x01(\x0e\x32;.convergedcomputing.org.grpc.v1.RegisterResponse.ResultType"z\n\nResultType\x12\x18\n\x14REGISTER_UNSPECIFIED\x10\x00\x12\x14\n\x10REGISTER_SUCCESS\x10\x01\x12\x12\n\x0eREGISTER_ERROR\x10\x02\x12\x13\n\x0fREGISTER_DENIED\x10\x03\x12\x13\n\x0fREGISTER_EXISTS\x10\x04"\xe3\x01\n\x11SubmitJobResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\r\n\x05jobid\x18\x02 \x01(\x05\x12L\n\x06status\x18\x03 \x01(\x0e\x32<.convergedcomputing.org.grpc.v1.SubmitJobResponse.ResultType"]\n\nResultType\x12\x16\n\x12SUBMIT_UNSPECIFIED\x10\x00\x12\x12\n\x0eSUBMIT_SUCCESS\x10\x01\x12\x10\n\x0cSUBMIT_ERROR\x10\x02\x12\x11\n\rSUBMIT_DENIED\x10\x03"\xe8\x02\n\x13RequestJobsResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12K\n\x04jobs\x18\x02 \x03(\x0b\x32=.convergedcomputing.org.grpc.v1.RequestJobsResponse.JobsEntry\x12N\n\x06status\x18\x03 \x01(\x0e\x32>.convergedcomputing.org.grpc.v1.RequestJobsResponse.ResultType\x1a+\n\tJobsEntry\x12\x0b\n\x03key\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01"s\n\nResultType\x12\x1a\n\x16REQUEST_JOBS_NORESULTS\x10\x00\x12\x18\n\x14REQUEST_JOBS_SUCCESS\x10\x01\x12\x16\n\x12REQUEST_JOBS_ERROR\x10\x02\x12\x17\n\x13REQUEST_JOBS_DENIED\x10\x03"\xd7\x01\n\x12\x41\x63\x63\x65ptJobsResponse\x12M\n\x06status\x18\x01 \x01(\x0e\x32=.convergedcomputing.org.grpc.v1.AcceptJobsResponse.ResultType"r\n\nResultType\x12\x1b\n\x17RESULT_TYPE_UNSPECIFIED\x10\x00\x12\x17\n\x13RESULT_TYPE_PARTIAL\x10\x01\x12\x17\n\x13RESULT_TYPE_SUCCESS\x10\x02\x12\x15\n\x11RESULT_TYPE_ERROR\x10\x03\x32\xe0\x03\n\x10RainbowScheduler\x12m\n\x08Register\x12/.convergedcomputing.org.grpc.v1.RegisterRequest\x1a\x30.convergedcomputing.org.grpc.v1.RegisterResponse\x12p\n\tSubmitJob\x12\x30.convergedcomputing.org.grpc.v1.SubmitJobRequest\x1a\x31.convergedcomputing.org.grpc.v1.SubmitJobResponse\x12v\n\x0bRequestJobs\x12\x32.convergedcomputing.org.grpc.v1.RequestJobsRequest\x1a\x33.convergedcomputing.org.grpc.v1.RequestJobsResponse\x12s\n\nAcceptJobs\x12\x31.convergedcomputing.org.grpc.v1.AcceptJobsRequest\x1a\x32.convergedcomputing.org.grpc.v1.AcceptJobsResponseB3Z1github.com/converged-computing/rainbow/pkg/api/v1b\x06proto3'
+    b'\n\rrainbow.proto\x12\x1e\x63onvergedcomputing.org.grpc.v1\x1a\x1fgoogle/protobuf/timestamp.proto"{\n\x0fRegisterRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06secret\x18\x02 \x01(\t\x12\r\n\x05nodes\x18\x03 \x01(\t\x12\x11\n\tsubsystem\x18\x04 \x01(\t\x12(\n\x04sent\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"\xcf\x01\n\x10SubmitJobRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12J\n\x08\x63lusters\x18\x02 \x03(\x0b\x32\x38.convergedcomputing.org.grpc.v1.SubmitJobRequest.Cluster\x12\x0f\n\x07jobspec\x18\x03 \x01(\t\x12(\n\x04sent\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x1a&\n\x07\x43luster\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05token\x18\x02 \x01(\t"p\n\x12ReceiveJobsRequest\x12\x0f\n\x07\x63luster\x18\x01 \x01(\t\x12\x0e\n\x06secret\x18\x02 \x01(\t\x12\x0f\n\x07maxJobs\x18\x03 \x01(\x05\x12(\n\x04sent\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"n\n\x11\x41\x63\x63\x65ptJobsRequest\x12\x0f\n\x07\x63luster\x18\x01 \x01(\t\x12\x0e\n\x06secret\x18\x02 \x01(\t\x12\x0e\n\x06jobids\x18\x03 \x03(\x05\x12(\n\x04sent\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"\x8e\x02\n\x10RegisterResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\r\n\x05token\x18\x02 \x01(\t\x12\x0e\n\x06secret\x18\x03 \x01(\t\x12K\n\x06status\x18\x04 \x01(\x0e\x32;.convergedcomputing.org.grpc.v1.RegisterResponse.ResultType"z\n\nResultType\x12\x18\n\x14REGISTER_UNSPECIFIED\x10\x00\x12\x14\n\x10REGISTER_SUCCESS\x10\x01\x12\x12\n\x0eREGISTER_ERROR\x10\x02\x12\x13\n\x0fREGISTER_DENIED\x10\x03\x12\x13\n\x0fREGISTER_EXISTS\x10\x04"\xe3\x01\n\x11SubmitJobResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\r\n\x05jobid\x18\x02 \x01(\x05\x12L\n\x06status\x18\x03 \x01(\x0e\x32<.convergedcomputing.org.grpc.v1.SubmitJobResponse.ResultType"]\n\nResultType\x12\x16\n\x12SUBMIT_UNSPECIFIED\x10\x00\x12\x12\n\x0eSUBMIT_SUCCESS\x10\x01\x12\x10\n\x0cSUBMIT_ERROR\x10\x02\x12\x11\n\rSUBMIT_DENIED\x10\x03"\xe8\x02\n\x13ReceiveJobsResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12K\n\x04jobs\x18\x02 \x03(\x0b\x32=.convergedcomputing.org.grpc.v1.ReceiveJobsResponse.JobsEntry\x12N\n\x06status\x18\x03 \x01(\x0e\x32>.convergedcomputing.org.grpc.v1.ReceiveJobsResponse.ResultType\x1a+\n\tJobsEntry\x12\x0b\n\x03key\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01"s\n\nResultType\x12\x1a\n\x16REQUEST_JOBS_NORESULTS\x10\x00\x12\x18\n\x14REQUEST_JOBS_SUCCESS\x10\x01\x12\x16\n\x12REQUEST_JOBS_ERROR\x10\x02\x12\x17\n\x13REQUEST_JOBS_DENIED\x10\x03"\xd7\x01\n\x12\x41\x63\x63\x65ptJobsResponse\x12M\n\x06status\x18\x01 \x01(\x0e\x32=.convergedcomputing.org.grpc.v1.AcceptJobsResponse.ResultType"r\n\nResultType\x12\x1b\n\x17RESULT_TYPE_UNSPECIFIED\x10\x00\x12\x17\n\x13RESULT_TYPE_PARTIAL\x10\x01\x12\x17\n\x13RESULT_TYPE_SUCCESS\x10\x02\x12\x15\n\x11RESULT_TYPE_ERROR\x10\x03\x32\xe0\x03\n\x10RainbowScheduler\x12m\n\x08Register\x12/.convergedcomputing.org.grpc.v1.RegisterRequest\x1a\x30.convergedcomputing.org.grpc.v1.RegisterResponse\x12p\n\tSubmitJob\x12\x30.convergedcomputing.org.grpc.v1.SubmitJobRequest\x1a\x31.convergedcomputing.org.grpc.v1.SubmitJobResponse\x12v\n\x0bReceiveJobs\x12\x32.convergedcomputing.org.grpc.v1.ReceiveJobsRequest\x1a\x33.convergedcomputing.org.grpc.v1.ReceiveJobsResponse\x12s\n\nAcceptJobs\x12\x31.convergedcomputing.org.grpc.v1.AcceptJobsRequest\x1a\x32.convergedcomputing.org.grpc.v1.AcceptJobsResponseB3Z1github.com/converged-computing/rainbow/pkg/api/v1b\x06proto3'
 )
 
 _globals = globals()
@@ -27,16 +27,16 @@ if _descriptor._USE_C_DESCRIPTORS == False:
     _globals[
         "DESCRIPTOR"
     ]._serialized_options = b"Z1github.com/converged-computing/rainbow/pkg/api/v1"
-    _globals["_REQUESTJOBSRESPONSE_JOBSENTRY"]._options = None
-    _globals["_REQUESTJOBSRESPONSE_JOBSENTRY"]._serialized_options = b"8\001"
+    _globals["_RECEIVEJOBSRESPONSE_JOBSENTRY"]._options = None
+    _globals["_RECEIVEJOBSRESPONSE_JOBSENTRY"]._serialized_options = b"8\001"
     _globals["_REGISTERREQUEST"]._serialized_start = 82
     _globals["_REGISTERREQUEST"]._serialized_end = 205
     _globals["_SUBMITJOBREQUEST"]._serialized_start = 208
     _globals["_SUBMITJOBREQUEST"]._serialized_end = 415
     _globals["_SUBMITJOBREQUEST_CLUSTER"]._serialized_start = 377
     _globals["_SUBMITJOBREQUEST_CLUSTER"]._serialized_end = 415
-    _globals["_REQUESTJOBSREQUEST"]._serialized_start = 417
-    _globals["_REQUESTJOBSREQUEST"]._serialized_end = 529
+    _globals["_RECEIVEJOBSREQUEST"]._serialized_start = 417
+    _globals["_RECEIVEJOBSREQUEST"]._serialized_end = 529
     _globals["_ACCEPTJOBSREQUEST"]._serialized_start = 531
     _globals["_ACCEPTJOBSREQUEST"]._serialized_end = 641
     _globals["_REGISTERRESPONSE"]._serialized_start = 644
@@ -47,12 +47,12 @@ if _descriptor._USE_C_DESCRIPTORS == False:
     _globals["_SUBMITJOBRESPONSE"]._serialized_end = 1144
     _globals["_SUBMITJOBRESPONSE_RESULTTYPE"]._serialized_start = 1051
     _globals["_SUBMITJOBRESPONSE_RESULTTYPE"]._serialized_end = 1144
-    _globals["_REQUESTJOBSRESPONSE"]._serialized_start = 1147
-    _globals["_REQUESTJOBSRESPONSE"]._serialized_end = 1507
-    _globals["_REQUESTJOBSRESPONSE_JOBSENTRY"]._serialized_start = 1347
-    _globals["_REQUESTJOBSRESPONSE_JOBSENTRY"]._serialized_end = 1390
-    _globals["_REQUESTJOBSRESPONSE_RESULTTYPE"]._serialized_start = 1392
-    _globals["_REQUESTJOBSRESPONSE_RESULTTYPE"]._serialized_end = 1507
+    _globals["_RECEIVEJOBSRESPONSE"]._serialized_start = 1147
+    _globals["_RECEIVEJOBSRESPONSE"]._serialized_end = 1507
+    _globals["_RECEIVEJOBSRESPONSE_JOBSENTRY"]._serialized_start = 1347
+    _globals["_RECEIVEJOBSRESPONSE_JOBSENTRY"]._serialized_end = 1390
+    _globals["_RECEIVEJOBSRESPONSE_RESULTTYPE"]._serialized_start = 1392
+    _globals["_RECEIVEJOBSRESPONSE_RESULTTYPE"]._serialized_end = 1507
     _globals["_ACCEPTJOBSRESPONSE"]._serialized_start = 1510
     _globals["_ACCEPTJOBSRESPONSE"]._serialized_end = 1725
     _globals["_ACCEPTJOBSRESPONSE_RESULTTYPE"]._serialized_start = 1611

@@ -131,24 +131,24 @@ func (SubmitJobResponse_ResultType) EnumDescriptor() ([]byte, []int) {
 }
 
 // Enum to represent the result types of the operation.
-type RequestJobsResponse_ResultType int32
+type ReceiveJobsResponse_ResultType int32
 
 const (
-	RequestJobsResponse_REQUEST_JOBS_NORESULTS RequestJobsResponse_ResultType = 0
-	RequestJobsResponse_REQUEST_JOBS_SUCCESS   RequestJobsResponse_ResultType = 1
-	RequestJobsResponse_REQUEST_JOBS_ERROR     RequestJobsResponse_ResultType = 2
-	RequestJobsResponse_REQUEST_JOBS_DENIED    RequestJobsResponse_ResultType = 3
+	ReceiveJobsResponse_REQUEST_JOBS_NORESULTS ReceiveJobsResponse_ResultType = 0
+	ReceiveJobsResponse_REQUEST_JOBS_SUCCESS   ReceiveJobsResponse_ResultType = 1
+	ReceiveJobsResponse_REQUEST_JOBS_ERROR     ReceiveJobsResponse_ResultType = 2
+	ReceiveJobsResponse_REQUEST_JOBS_DENIED    ReceiveJobsResponse_ResultType = 3
 )
 
-// Enum value maps for RequestJobsResponse_ResultType.
+// Enum value maps for ReceiveJobsResponse_ResultType.
 var (
-	RequestJobsResponse_ResultType_name = map[int32]string{
+	ReceiveJobsResponse_ResultType_name = map[int32]string{
 		0: "REQUEST_JOBS_NORESULTS",
 		1: "REQUEST_JOBS_SUCCESS",
 		2: "REQUEST_JOBS_ERROR",
 		3: "REQUEST_JOBS_DENIED",
 	}
-	RequestJobsResponse_ResultType_value = map[string]int32{
+	ReceiveJobsResponse_ResultType_value = map[string]int32{
 		"REQUEST_JOBS_NORESULTS": 0,
 		"REQUEST_JOBS_SUCCESS":   1,
 		"REQUEST_JOBS_ERROR":     2,
@@ -156,30 +156,30 @@ var (
 	}
 )
 
-func (x RequestJobsResponse_ResultType) Enum() *RequestJobsResponse_ResultType {
-	p := new(RequestJobsResponse_ResultType)
+func (x ReceiveJobsResponse_ResultType) Enum() *ReceiveJobsResponse_ResultType {
+	p := new(ReceiveJobsResponse_ResultType)
 	*p = x
 	return p
 }
 
-func (x RequestJobsResponse_ResultType) String() string {
+func (x ReceiveJobsResponse_ResultType) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (RequestJobsResponse_ResultType) Descriptor() protoreflect.EnumDescriptor {
+func (ReceiveJobsResponse_ResultType) Descriptor() protoreflect.EnumDescriptor {
 	return file_rainbow_proto_enumTypes[2].Descriptor()
 }
 
-func (RequestJobsResponse_ResultType) Type() protoreflect.EnumType {
+func (ReceiveJobsResponse_ResultType) Type() protoreflect.EnumType {
 	return &file_rainbow_proto_enumTypes[2]
 }
 
-func (x RequestJobsResponse_ResultType) Number() protoreflect.EnumNumber {
+func (x ReceiveJobsResponse_ResultType) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use RequestJobsResponse_ResultType.Descriptor instead.
-func (RequestJobsResponse_ResultType) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use ReceiveJobsResponse_ResultType.Descriptor instead.
+func (ReceiveJobsResponse_ResultType) EnumDescriptor() ([]byte, []int) {
 	return file_rainbow_proto_rawDescGZIP(), []int{6, 0}
 }
 
@@ -395,7 +395,7 @@ func (x *SubmitJobRequest) GetSent() *timestamppb.Timestamp {
 // to get back a maximum of N jobs. This will (and should) eventually
 // support filters / sorting criteria, but now we just take the top
 // N from a query. The response includes the ids that are accepted
-type RequestJobsRequest struct {
+type ReceiveJobsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -409,8 +409,8 @@ type RequestJobsRequest struct {
 	Sent    *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=sent,proto3" json:"sent,omitempty"`
 }
 
-func (x *RequestJobsRequest) Reset() {
-	*x = RequestJobsRequest{}
+func (x *ReceiveJobsRequest) Reset() {
+	*x = ReceiveJobsRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_rainbow_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -418,13 +418,13 @@ func (x *RequestJobsRequest) Reset() {
 	}
 }
 
-func (x *RequestJobsRequest) String() string {
+func (x *ReceiveJobsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RequestJobsRequest) ProtoMessage() {}
+func (*ReceiveJobsRequest) ProtoMessage() {}
 
-func (x *RequestJobsRequest) ProtoReflect() protoreflect.Message {
+func (x *ReceiveJobsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_rainbow_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -436,33 +436,33 @@ func (x *RequestJobsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RequestJobsRequest.ProtoReflect.Descriptor instead.
-func (*RequestJobsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ReceiveJobsRequest.ProtoReflect.Descriptor instead.
+func (*ReceiveJobsRequest) Descriptor() ([]byte, []int) {
 	return file_rainbow_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *RequestJobsRequest) GetCluster() string {
+func (x *ReceiveJobsRequest) GetCluster() string {
 	if x != nil {
 		return x.Cluster
 	}
 	return ""
 }
 
-func (x *RequestJobsRequest) GetSecret() string {
+func (x *ReceiveJobsRequest) GetSecret() string {
 	if x != nil {
 		return x.Secret
 	}
 	return ""
 }
 
-func (x *RequestJobsRequest) GetMaxJobs() int32 {
+func (x *ReceiveJobsRequest) GetMaxJobs() int32 {
 	if x != nil {
 		return x.MaxJobs
 	}
 	return 0
 }
 
-func (x *RequestJobsRequest) GetSent() *timestamppb.Timestamp {
+func (x *ReceiveJobsRequest) GetSent() *timestamppb.Timestamp {
 	if x != nil {
 		return x.Sent
 	}
@@ -681,7 +681,7 @@ func (x *SubmitJobResponse) GetStatus() SubmitJobResponse_ResultType {
 }
 
 // RequestJobsResponse
-type RequestJobsResponse struct {
+type ReceiveJobsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -689,11 +689,11 @@ type RequestJobsResponse struct {
 	RequestId string           `protobuf:"bytes,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	Jobs      map[int32]string `protobuf:"bytes,2,rep,name=jobs,proto3" json:"jobs,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	// repeated int32 accepted_jobids = 2;
-	Status RequestJobsResponse_ResultType `protobuf:"varint,3,opt,name=status,proto3,enum=convergedcomputing.org.grpc.v1.RequestJobsResponse_ResultType" json:"status,omitempty"`
+	Status ReceiveJobsResponse_ResultType `protobuf:"varint,3,opt,name=status,proto3,enum=convergedcomputing.org.grpc.v1.ReceiveJobsResponse_ResultType" json:"status,omitempty"`
 }
 
-func (x *RequestJobsResponse) Reset() {
-	*x = RequestJobsResponse{}
+func (x *ReceiveJobsResponse) Reset() {
+	*x = ReceiveJobsResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_rainbow_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -701,13 +701,13 @@ func (x *RequestJobsResponse) Reset() {
 	}
 }
 
-func (x *RequestJobsResponse) String() string {
+func (x *ReceiveJobsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RequestJobsResponse) ProtoMessage() {}
+func (*ReceiveJobsResponse) ProtoMessage() {}
 
-func (x *RequestJobsResponse) ProtoReflect() protoreflect.Message {
+func (x *ReceiveJobsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_rainbow_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -719,30 +719,30 @@ func (x *RequestJobsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RequestJobsResponse.ProtoReflect.Descriptor instead.
-func (*RequestJobsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ReceiveJobsResponse.ProtoReflect.Descriptor instead.
+func (*ReceiveJobsResponse) Descriptor() ([]byte, []int) {
 	return file_rainbow_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *RequestJobsResponse) GetRequestId() string {
+func (x *ReceiveJobsResponse) GetRequestId() string {
 	if x != nil {
 		return x.RequestId
 	}
 	return ""
 }
 
-func (x *RequestJobsResponse) GetJobs() map[int32]string {
+func (x *ReceiveJobsResponse) GetJobs() map[int32]string {
 	if x != nil {
 		return x.Jobs
 	}
 	return nil
 }
 
-func (x *RequestJobsResponse) GetStatus() RequestJobsResponse_ResultType {
+func (x *ReceiveJobsResponse) GetStatus() ReceiveJobsResponse_ResultType {
 	if x != nil {
 		return x.Status
 	}
-	return RequestJobsResponse_REQUEST_JOBS_NORESULTS
+	return ReceiveJobsResponse_REQUEST_JOBS_NORESULTS
 }
 
 // Accept Jobs Response
@@ -882,7 +882,7 @@ var file_rainbow_proto_rawDesc = []byte{
 	0x07, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x14, 0x0a, 0x05,
 	0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x6f, 0x6b,
-	0x65, 0x6e, 0x22, 0x90, 0x01, 0x0a, 0x12, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x4a, 0x6f,
+	0x65, 0x6e, 0x22, 0x90, 0x01, 0x0a, 0x12, 0x52, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x4a, 0x6f,
 	0x62, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x6c, 0x75,
 	0x73, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x6c, 0x75, 0x73,
 	0x74, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x18, 0x02, 0x20,
@@ -935,19 +935,19 @@ var file_rainbow_proto_rawDesc = []byte{
 	0x12, 0x0a, 0x0e, 0x53, 0x55, 0x42, 0x4d, 0x49, 0x54, 0x5f, 0x53, 0x55, 0x43, 0x43, 0x45, 0x53,
 	0x53, 0x10, 0x01, 0x12, 0x10, 0x0a, 0x0c, 0x53, 0x55, 0x42, 0x4d, 0x49, 0x54, 0x5f, 0x45, 0x52,
 	0x52, 0x4f, 0x52, 0x10, 0x02, 0x12, 0x11, 0x0a, 0x0d, 0x53, 0x55, 0x42, 0x4d, 0x49, 0x54, 0x5f,
-	0x44, 0x45, 0x4e, 0x49, 0x45, 0x44, 0x10, 0x03, 0x22, 0x8d, 0x03, 0x0a, 0x13, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x44, 0x45, 0x4e, 0x49, 0x45, 0x44, 0x10, 0x03, 0x22, 0x8d, 0x03, 0x0a, 0x13, 0x52, 0x65, 0x63,
+	0x65, 0x69, 0x76, 0x65, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
 	0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x12,
 	0x51, 0x0a, 0x04, 0x6a, 0x6f, 0x62, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x3d, 0x2e,
 	0x63, 0x6f, 0x6e, 0x76, 0x65, 0x72, 0x67, 0x65, 0x64, 0x63, 0x6f, 0x6d, 0x70, 0x75, 0x74, 0x69,
 	0x6e, 0x67, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x76, 0x31, 0x2e, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
 	0x73, 0x65, 0x2e, 0x4a, 0x6f, 0x62, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x04, 0x6a, 0x6f,
 	0x62, 0x73, 0x12, 0x56, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x03, 0x20, 0x01,
 	0x28, 0x0e, 0x32, 0x3e, 0x2e, 0x63, 0x6f, 0x6e, 0x76, 0x65, 0x72, 0x67, 0x65, 0x64, 0x63, 0x6f,
 	0x6d, 0x70, 0x75, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x67, 0x72, 0x70, 0x63,
-	0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x52,
+	0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x4a, 0x6f, 0x62, 0x73, 0x52,
 	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2e, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x54, 0x79,
 	0x70, 0x65, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x1a, 0x37, 0x0a, 0x09, 0x4a, 0x6f,
 	0x62, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01,
@@ -990,13 +990,13 @@ var file_rainbow_proto_rawDesc = []byte{
 	0x63, 0x6f, 0x6e, 0x76, 0x65, 0x72, 0x67, 0x65, 0x64, 0x63, 0x6f, 0x6d, 0x70, 0x75, 0x74, 0x69,
 	0x6e, 0x67, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x76, 0x31, 0x2e, 0x53,
 	0x75, 0x62, 0x6d, 0x69, 0x74, 0x4a, 0x6f, 0x62, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x76, 0x0a, 0x0b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x12,
+	0x12, 0x76, 0x0a, 0x0b, 0x52, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x4a, 0x6f, 0x62, 0x73, 0x12,
 	0x32, 0x2e, 0x63, 0x6f, 0x6e, 0x76, 0x65, 0x72, 0x67, 0x65, 0x64, 0x63, 0x6f, 0x6d, 0x70, 0x75,
 	0x74, 0x69, 0x6e, 0x67, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x76, 0x31,
-	0x2e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x2e, 0x52, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x6e, 0x76, 0x65, 0x72, 0x67, 0x65, 0x64, 0x63,
 	0x6f, 0x6d, 0x70, 0x75, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x67, 0x72, 0x70,
-	0x63, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x4a, 0x6f, 0x62, 0x73,
+	0x63, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x4a, 0x6f, 0x62, 0x73,
 	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x73, 0x0a, 0x0a, 0x41, 0x63, 0x63, 0x65,
 	0x70, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x12, 0x31, 0x2e, 0x63, 0x6f, 0x6e, 0x76, 0x65, 0x72, 0x67,
 	0x65, 0x64, 0x63, 0x6f, 0x6d, 0x70, 0x75, 0x74, 0x69, 0x6e, 0x67, 0x2e, 0x6f, 0x72, 0x67, 0x2e,
@@ -1028,38 +1028,38 @@ var file_rainbow_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_rainbow_proto_goTypes = []interface{}{
 	(RegisterResponse_ResultType)(0),    // 0: convergedcomputing.org.grpc.v1.RegisterResponse.ResultType
 	(SubmitJobResponse_ResultType)(0),   // 1: convergedcomputing.org.grpc.v1.SubmitJobResponse.ResultType
-	(RequestJobsResponse_ResultType)(0), // 2: convergedcomputing.org.grpc.v1.RequestJobsResponse.ResultType
+	(ReceiveJobsResponse_ResultType)(0), // 2: convergedcomputing.org.grpc.v1.ReceiveJobsResponse.ResultType
 	(AcceptJobsResponse_ResultType)(0),  // 3: convergedcomputing.org.grpc.v1.AcceptJobsResponse.ResultType
 	(*RegisterRequest)(nil),             // 4: convergedcomputing.org.grpc.v1.RegisterRequest
 	(*SubmitJobRequest)(nil),            // 5: convergedcomputing.org.grpc.v1.SubmitJobRequest
-	(*RequestJobsRequest)(nil),          // 6: convergedcomputing.org.grpc.v1.RequestJobsRequest
+	(*ReceiveJobsRequest)(nil),          // 6: convergedcomputing.org.grpc.v1.ReceiveJobsRequest
 	(*AcceptJobsRequest)(nil),           // 7: convergedcomputing.org.grpc.v1.AcceptJobsRequest
 	(*RegisterResponse)(nil),            // 8: convergedcomputing.org.grpc.v1.RegisterResponse
 	(*SubmitJobResponse)(nil),           // 9: convergedcomputing.org.grpc.v1.SubmitJobResponse
-	(*RequestJobsResponse)(nil),         // 10: convergedcomputing.org.grpc.v1.RequestJobsResponse
+	(*ReceiveJobsResponse)(nil),         // 10: convergedcomputing.org.grpc.v1.ReceiveJobsResponse
 	(*AcceptJobsResponse)(nil),          // 11: convergedcomputing.org.grpc.v1.AcceptJobsResponse
 	(*SubmitJobRequest_Cluster)(nil),    // 12: convergedcomputing.org.grpc.v1.SubmitJobRequest.Cluster
-	nil,                                 // 13: convergedcomputing.org.grpc.v1.RequestJobsResponse.JobsEntry
+	nil,                                 // 13: convergedcomputing.org.grpc.v1.ReceiveJobsResponse.JobsEntry
 	(*timestamppb.Timestamp)(nil),       // 14: google.protobuf.Timestamp
 }
 var file_rainbow_proto_depIdxs = []int32{
 	14, // 0: convergedcomputing.org.grpc.v1.RegisterRequest.sent:type_name -> google.protobuf.Timestamp
 	12, // 1: convergedcomputing.org.grpc.v1.SubmitJobRequest.clusters:type_name -> convergedcomputing.org.grpc.v1.SubmitJobRequest.Cluster
 	14, // 2: convergedcomputing.org.grpc.v1.SubmitJobRequest.sent:type_name -> google.protobuf.Timestamp
-	14, // 3: convergedcomputing.org.grpc.v1.RequestJobsRequest.sent:type_name -> google.protobuf.Timestamp
+	14, // 3: convergedcomputing.org.grpc.v1.ReceiveJobsRequest.sent:type_name -> google.protobuf.Timestamp
 	14, // 4: convergedcomputing.org.grpc.v1.AcceptJobsRequest.sent:type_name -> google.protobuf.Timestamp
 	0,  // 5: convergedcomputing.org.grpc.v1.RegisterResponse.status:type_name -> convergedcomputing.org.grpc.v1.RegisterResponse.ResultType
 	1,  // 6: convergedcomputing.org.grpc.v1.SubmitJobResponse.status:type_name -> convergedcomputing.org.grpc.v1.SubmitJobResponse.ResultType
-	13, // 7: convergedcomputing.org.grpc.v1.RequestJobsResponse.jobs:type_name -> convergedcomputing.org.grpc.v1.RequestJobsResponse.JobsEntry
-	2,  // 8: convergedcomputing.org.grpc.v1.RequestJobsResponse.status:type_name -> convergedcomputing.org.grpc.v1.RequestJobsResponse.ResultType
+	13, // 7: convergedcomputing.org.grpc.v1.ReceiveJobsResponse.jobs:type_name -> convergedcomputing.org.grpc.v1.ReceiveJobsResponse.JobsEntry
+	2,  // 8: convergedcomputing.org.grpc.v1.ReceiveJobsResponse.status:type_name -> convergedcomputing.org.grpc.v1.ReceiveJobsResponse.ResultType
 	3,  // 9: convergedcomputing.org.grpc.v1.AcceptJobsResponse.status:type_name -> convergedcomputing.org.grpc.v1.AcceptJobsResponse.ResultType
 	4,  // 10: convergedcomputing.org.grpc.v1.RainbowScheduler.Register:input_type -> convergedcomputing.org.grpc.v1.RegisterRequest
 	5,  // 11: convergedcomputing.org.grpc.v1.RainbowScheduler.SubmitJob:input_type -> convergedcomputing.org.grpc.v1.SubmitJobRequest
-	6,  // 12: convergedcomputing.org.grpc.v1.RainbowScheduler.RequestJobs:input_type -> convergedcomputing.org.grpc.v1.RequestJobsRequest
+	6,  // 12: convergedcomputing.org.grpc.v1.RainbowScheduler.ReceiveJobs:input_type -> convergedcomputing.org.grpc.v1.ReceiveJobsRequest
 	7,  // 13: convergedcomputing.org.grpc.v1.RainbowScheduler.AcceptJobs:input_type -> convergedcomputing.org.grpc.v1.AcceptJobsRequest
 	8,  // 14: convergedcomputing.org.grpc.v1.RainbowScheduler.Register:output_type -> convergedcomputing.org.grpc.v1.RegisterResponse
 	9,  // 15: convergedcomputing.org.grpc.v1.RainbowScheduler.SubmitJob:output_type -> convergedcomputing.org.grpc.v1.SubmitJobResponse
-	10, // 16: convergedcomputing.org.grpc.v1.RainbowScheduler.RequestJobs:output_type -> convergedcomputing.org.grpc.v1.RequestJobsResponse
+	10, // 16: convergedcomputing.org.grpc.v1.RainbowScheduler.ReceiveJobs:output_type -> convergedcomputing.org.grpc.v1.ReceiveJobsResponse
 	11, // 17: convergedcomputing.org.grpc.v1.RainbowScheduler.AcceptJobs:output_type -> convergedcomputing.org.grpc.v1.AcceptJobsResponse
 	14, // [14:18] is the sub-list for method output_type
 	10, // [10:14] is the sub-list for method input_type
@@ -1099,7 +1099,7 @@ func file_rainbow_proto_init() {
 			}
 		}
 		file_rainbow_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RequestJobsRequest); i {
+			switch v := v.(*ReceiveJobsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1147,7 +1147,7 @@ func file_rainbow_proto_init() {
 			}
 		}
 		file_rainbow_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RequestJobsResponse); i {
+			switch v := v.(*ReceiveJobsResponse); i {
 			case 0:
 				return &v.state
 			case 1:

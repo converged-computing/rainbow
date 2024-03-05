@@ -13,9 +13,12 @@ For more information:
 
 ## TODO
 
-- satisfies
- - the function needs to actually do DFS (look at what fluxion does) and then address each resource
- - add print statements to debug checks at different levels / types
+- submit
+ - need strategy to add summary state data to top of graph (to provide to selection algorithms)
+ - need more selection algorithms!
+- receive
+ - implement python examples next, then prototype alongside flux to submit
+ - after that, think about adding subsystem register (and rest of points below)
 - clusters
  - implement function to add a subsystem to an existing cluster (e.g., add I/O)
 - subsystems
@@ -23,10 +26,8 @@ For more information:
     - right now we assume a node resources request going to the dominant subsystem
   - we will want a function to add a new subsystem, right now we have one dominant for nodes
   - make also a function to delete subsystems
-- we can have top level metrics for quick assessment if cluster is OK
-- subsystems should allow for multiple (with keys) and references across to dominant subsystem
+  - subsystems should allow for multiple (with keys) and references across to dominant subsystem
 - is there a way to unify into one graph?
-- (advanced) request jobs should accept way to filter or specify criteria for request
 - ephemeral case - actual nodes don't exist, but instead rules for requests and limits. Need to develop this and means to authenticate to use it.
 
 

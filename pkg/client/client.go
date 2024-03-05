@@ -32,7 +32,7 @@ type Client interface {
 	// Job Client Interactions
 	AcceptJobs(ctx context.Context, cluster, secret string, jobids []int32) (*pb.AcceptJobsResponse, error)
 	SubmitJob(ctx context.Context, job *js.Jobspec, cfg *config.RainbowConfig) (*pb.SubmitJobResponse, error)
-	RequestJobs(ctx context.Context, cluster, token string, maxJobs int32) (*pb.RequestJobsResponse, error)
+	ReceiveJobs(ctx context.Context, cluster, token string, maxJobs int32) (*pb.ReceiveJobsResponse, error)
 }
 
 // NewClient creates a new RainbowClient
