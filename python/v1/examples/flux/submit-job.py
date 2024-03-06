@@ -10,13 +10,7 @@ import rainbow.jobspec as js
 
 def get_parser():
     parser = argparse.ArgumentParser(description="🌈️ Rainbow scheduler submit")
-    parser.add_argument("--config-path", help="config path with cluster names")
-    parser.add_argument(
-        "--host", help="host of rainbow cluster", default="localhost:50051"
-    )
-    parser.add_argument(
-        "--token", help="Cluster token for permission to submit jobs", required=True
-    )
+    parser.add_argument("--config-path", help="config path with cluster metadata")
     parser.add_argument(
         "--nodes", help="Nodes for job (defaults to 1)", default=1, type=int
     )
@@ -27,15 +21,13 @@ def get_parser():
 # Note that if you are running in a flux instance, you can use flux to provide
 # this parsing of the jobspec. Here we just manully generate it.
 
-# TODO look to see if flux has a validator for the job spec, if not, add here.
-
 def main():
 
     parser = get_parser()
     args = parser.parse_args()
 
     # The config path (with clusters) will be required for submit
-    cli = RainbowClient(host=args.host, config_file=args.config_path)
+    cli = RainbowClient(config_file=args.config_path)
 
     # Generate the jobspec here so we can json dump it for the user
     # Note that this can be done with cli.submit_job(command, nodes, tasks)

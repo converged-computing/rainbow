@@ -26,3 +26,11 @@ def read_yaml(filename):
     with open(filename, "r") as fd:
         content = yaml.safe_load(fd)
     return content
+
+
+def write_yaml(obj, filename):
+    """
+    Read yaml to file
+    """
+    with open(filename, "w") as fd:
+        yaml.dump(obj, fd)

@@ -1,3 +1,4 @@
+import json
 import os
 
 import grpc
@@ -23,13 +24,58 @@ class RainbowClient:
         Create a new rainbow client to interact with a rainbow cluster.
         """
         self.cfg = config.RainbowConfig(config_file)
-
-        # Default database is in memory
-        self.host = host
+        self.host = host or self.cfg.get("scheduler", {}).get("host")
 
         # load the graph database backend
         self.set_database(database)
         self.load_backend()
+
+    def receive_jobs(self, max_jobs=None):
+        """
+        Receive jobs (query and send accept response back to rainbow)
+        """
+        jobs = []
+
+        # This requires a cluster to be defined
+        cfg = self.cfg
+        cluster = cfg._cfg.get("cluster")
+        if "name" not in cluster or "secret" not in cluster:
+            raise ValueError("'cluster' defined in the rainbow config needs a name and secret")
+
+        # These are submit variables. A more substantial submit script would have argparse, etc.
+        request = rainbow_pb2.ReceiveJobsRequest(secret=cluster["secret"], cluster=cluster["name"])
+        # This defaults to 0, so only set of non 0 or not None
+        if max_jobs:
+            request.maxJobs = max_jobs
+
+        with grpc.insecure_channel(self.host) as channel:
+            stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
+            response = stub.ReceiveJobs(request)
+
+            # Case 1: no jobs to receive
+            if response.status == 0:
+                print("There are no jobs to receive.")
+                return jobs
+
+            if response.status != 1:
+                print("Issue with requesting jobs:")
+                return jobs
+
+        print("Status: REQUEST_JOBS_SUCCESS")
+        print(f"Received {len(response.jobs)} jobs to accept...")
+        jobs = [json.loads(job) for job in list(response.jobs.values())]
+
+        # Tell rainbow we accepted them
+        jobids = list(response.jobs.keys())
+        request = rainbow_pb2.AcceptJobsRequest(
+            cluster=cluster["name"],
+            secret=cluster["secret"],
+            jobids=jobids,
+        )
+        with grpc.insecure_channel(self.host) as channel:
+            stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
+            response = stub.AcceptJobs(request)
+        return jobs
 
     def register(self, cluster, secret, cluster_nodes):
         """
@@ -87,10 +133,6 @@ class RainbowClient:
         Submit a jobspec directly. This is useful if you want to generate
         it custom with your own special logic.
         """
-        # TODO check if len response clusters is 0...
-        # TODO need a way to validate clusters we have permission to access here,
-        # ideally via the backend graph...
-
         # Ask the database backend if our jobspec can be satisfied
         response = self.backend.satisfies(jobspec)
         matches = response.clusters
@@ -101,7 +143,9 @@ class RainbowClient:
             print("No clusters match the request")
             return response
 
-        # These need to have (again) the token and name
+        # TODO these need to have (again) the token and name checked
+        # This is backwards because we check the token AFTER getting it, and it needs
+        # to go to the graph (request above). I haven't implemented this yet.
         matches = self.cfg.get_clusters(matches)
         clusters = []
         for match in matches:
