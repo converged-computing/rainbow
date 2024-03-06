@@ -6,18 +6,22 @@ import (
 	"os"
 
 	"github.com/akamensky/argparse"
-	config "github.com/converged-computing/rainbow/cmd/rainbow/config"
-	register "github.com/converged-computing/rainbow/cmd/rainbow/register"
-	request "github.com/converged-computing/rainbow/cmd/rainbow/request"
-	submit "github.com/converged-computing/rainbow/cmd/rainbow/submit"
+	"github.com/converged-computing/rainbow/cmd/rainbow/config"
+	"github.com/converged-computing/rainbow/cmd/rainbow/receive"
+	"github.com/converged-computing/rainbow/cmd/rainbow/register"
+	"github.com/converged-computing/rainbow/cmd/rainbow/submit"
 	"github.com/converged-computing/rainbow/pkg/types"
+
+	// Register database backends and selection algorithms
+	_ "github.com/converged-computing/rainbow/plugins/algorithms/random"
+	_ "github.com/converged-computing/rainbow/plugins/backends/memory"
 )
 
 var (
-	Header = `              
-    •  ┓      
+	Header = `
+    •  ┓
 ┏┓┏┓┓┏┓┣┓┏┓┓┏┏
-┛ ┗┻┗┛┗┗┛┗┛┗┻┛              
+┛ ┗┻┗┛┗┗┛┗┛┗┻┛
 `
 
 	defaultSecret = "chocolate-cookies"
@@ -33,28 +37,28 @@ func main() {
 	versionCmd := parser.NewCommand("version", "See the version of rainbow")
 	registerCmd := parser.NewCommand("register", "Register a new cluster")
 	submitCmd := parser.NewCommand("submit", "Submit a job to a rainbow scheduler")
-	requestCmd := parser.NewCommand("request", "Request to inspect some max jobs assigned to a cluster")
+	receiveCmd := parser.NewCommand("receive", "Receive and accept jobs")
 
 	// Configuration
 	configCmd := parser.NewCommand("config", "Interact with rainbow configs")
 	configInitCmd := configCmd.NewCommand("init", "Create a new configuration file")
-	configPath := parser.String("", "config-path", &argparse.Options{Default: "rainbow-config.yaml", Help: "Rainbow config file"})
+	cfg := parser.String("", "config-path", &argparse.Options{Help: "Configuration file for cluster credentials"})
 
 	// Shared values
 	host := parser.String("", "host", &argparse.Options{Default: "localhost:50051", Help: "Scheduler server address (host:port)"})
 	clusterName := parser.String("", "cluster-name", &argparse.Options{Help: "Name of cluster to register"})
-	cfg := parser.String("", "config", &argparse.Options{Help: "Configuration file for cluster credentials"})
 	graphDatabase := parser.String("", "graph-database", &argparse.Options{Help: "Graph database backend to use"})
+	selectionAlgorithm := parser.String("", "select-algorithm", &argparse.Options{Default: "random", Help: "Selection algorithm for graph database (defaults to random)"})
 
-	// Request Jobs
-	clusterSecret := requestCmd.String("", "request-secret", &argparse.Options{Help: "Cluster 'secret' to retrieve jobs"})
-	maxJobs := requestCmd.Int("j", "max-jobs", &argparse.Options{Help: "Maximum number of jobs to request"})
-	acceptJobs := requestCmd.Int("", "accept-jobs", &argparse.Options{Default: 0, Help: "Jobs to accept from the set"})
+	// Receive Jobs
+	clusterSecret := receiveCmd.String("", "request-secret", &argparse.Options{Help: "Cluster 'secret' to retrieve jobs"})
+	maxJobs := receiveCmd.Int("j", "max-jobs", &argparse.Options{Help: "Maximum number of jobs to accept"})
 
 	// Register
 	secret := registerCmd.String("s", "secret", &argparse.Options{Default: defaultSecret, Help: "Registration 'secret'"})
 	clusterNodes := registerCmd.String("", "cluster-nodes", &argparse.Options{Help: "Cluster nodes json (JGF v2)"})
 	subsystem := registerCmd.String("", "subsystem", &argparse.Options{Help: "Subsystem to register cluster to (defaults to dominant, nodes)"})
+	saveSecret := registerCmd.Flag("", "save", &argparse.Options{Help: "Save cluster secret to config file, if provided"})
 
 	// Submit (note that command for now needs to be in quotes to get the whole thing)
 	token := submitCmd.String("", "token", &argparse.Options{Default: defaultSecret, Help: "Client token to submit jobs with."})
@@ -72,23 +76,50 @@ func main() {
 	}
 
 	if configCmd.Happened() && configInitCmd.Happened() {
-		err := config.RunInit(*configPath)
+		err := config.RunInit(*cfg)
 		if err != nil {
 			log.Fatalf("Issue with config: %s\n", err)
 		}
 
 	} else if registerCmd.Happened() {
-		err := register.Run(*host, *clusterName, *clusterNodes, *secret, *cfg, *graphDatabase, *subsystem)
+		err := register.Run(
+			*host,
+			*clusterName,
+			*clusterNodes,
+			*secret,
+			*saveSecret,
+			*cfg,
+			*graphDatabase,
+			*subsystem,
+			*selectionAlgorithm,
+		)
 		if err != nil {
 			log.Fatalf("Issue with register: %s\n", err)
 		}
-	} else if requestCmd.Happened() {
-		err := request.Run(*host, *clusterName, *clusterSecret, *maxJobs, *acceptJobs, *cfg)
+	} else if receiveCmd.Happened() {
+		err := receive.Run(
+			*host,
+			*clusterName,
+			*clusterSecret,
+			*maxJobs,
+			*cfg,
+		)
 		if err != nil {
 			log.Fatalf("Issue with request jobs: %s\n", err)
 		}
 	} else if submitCmd.Happened() {
-		err := submit.Run(*host, *jobName, *command, *nodes, *tasks, *token, *clusterName, *cfg)
+		err := submit.Run(
+			*host,
+			*jobName,
+			*command,
+			*nodes,
+			*tasks,
+			*token,
+			*clusterName,
+			*graphDatabase,
+			*cfg,
+			*selectionAlgorithm,
+		)
 		if err != nil {
 			log.Fatal(err.Error())
 		}

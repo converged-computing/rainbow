@@ -14,8 +14,7 @@ type Job struct {
 	Id      int32  `json:"id"`
 	Cluster string `json:"cluster"`
 	Name    string `json:"name"`
-	Nodes   int32  `json:"nodes"`
-	Tasks   int32  `json:"tasks"`
+	Jobspec string `json:"jobspec"`
 	Command string `json:"command"`
 }
 
@@ -28,52 +27,61 @@ func (j *Job) ToJson() (string, error) {
 	return string(b), nil
 }
 
-// SubmitJob adds the job to the database
-func (db *Database) SubmitJob(
-	job *pb.SubmitJobRequest,
-	cluster *Cluster,
-) (*pb.SubmitJobResponse, error) {
+// addJob adds a job to the jobs table
+func (db *Database) addJob(job *pb.SubmitJobRequest, cluster string) (*Job, error) {
 
-	response := &pb.SubmitJobResponse{}
+	j := Job{}
 	conn, err := db.connect()
 	if err != nil {
-		return response, err
+		return &j, err
 	}
 	defer conn.Close()
 
-	// Prepare the sql to insert the job
-	fields := "(cluster, name, nodes, tasks, command)"
-	values := fmt.Sprintf(
-		"(\"%s\", \"%s\",\"%d\",\"%d\",\"%s\")",
-		cluster.Name, job.Name, job.Nodes, job.Tasks, job.Command,
-	)
+	// The jobspec is added once to the database, first without assignment
+	fields := "(name, cluster, jobspec)"
+	values := fmt.Sprintf("(\"%s\", \"%s\", \"%s\")", job.Name, cluster, job.Jobspec)
 
 	// Submit the query to get the global id (jobid, not submit yet)
 	query := fmt.Sprintf("INSERT into jobs %s VALUES %s", fields, values)
 
-	// From this point on (until the end) any early return is an error
-	response.Status = pb.SubmitJobResponse_SUBMIT_ERROR
-
 	// Since we want to get a result back, we use query
 	statement, err := conn.Prepare(query)
 	if err != nil {
-		return response, err
+		return &j, err
 	}
 	defer statement.Close()
 
 	// We expect only one job
 	rows, err := statement.Query()
 	if err != nil {
-		return response, err
+		return &j, err
 	}
 
 	// Unwrap into job
-	j := Job{}
 	for rows.Next() {
-		err := rows.Scan(&j.Id, &j.Cluster, &j.Name, &j.Nodes, &j.Tasks, &j.Command)
+		err := rows.Scan(&j.Id, &j.Cluster, &j.Name, &j.Jobspec)
 		if err != nil {
-			return response, err
+			return &j, err
 		}
+	}
+	return &j, nil
+}
+
+// SubmitJob adds the assigned job to the database
+func (db *Database) SubmitJob(
+	job *pb.SubmitJobRequest,
+	cluster *Cluster,
+) (*pb.SubmitJobResponse, error) {
+
+	response := &pb.SubmitJobResponse{}
+
+	// Add the job to the database
+	// TODO: should we do a check to see if we have the job already?
+	// could create a hash / use the jobspec. Do we allow that?
+	j, err := db.addJob(job, cluster.Name)
+	if err != nil {
+		response.Status = pb.SubmitJobResponse_SUBMIT_ERROR
+		return response, err
 	}
 
 	// Success!
@@ -83,12 +91,12 @@ func (db *Database) SubmitJob(
 }
 
 // Request MaxJobs for a cluster to receive
-func (db *Database) RequestJobs(
-	request *pb.RequestJobsRequest,
+func (db *Database) ReceiveJobs(
+	request *pb.ReceiveJobsRequest,
 	cluster *Cluster,
-) (*pb.RequestJobsResponse, error) {
+) (*pb.ReceiveJobsResponse, error) {
 
-	response := &pb.RequestJobsResponse{}
+	response := &pb.ReceiveJobsResponse{}
 	conn, err := db.connect()
 	if err != nil {
 		return response, err
@@ -115,13 +123,13 @@ func (db *Database) RequestJobs(
 	}
 
 	// Failures from here until end are error
-	response.Status = pb.RequestJobsResponse_REQUEST_JOBS_ERROR
+	response.Status = pb.ReceiveJobsResponse_REQUEST_JOBS_ERROR
 
 	// Unwrap into list of jobs
 	jobs := map[int32]string{}
 	var j Job
 	for rows.Next() {
-		err := rows.Scan(&j.Id, &j.Cluster, &j.Name, &j.Nodes, &j.Tasks, &j.Command)
+		err := rows.Scan(&j.Id, &j.Cluster, &j.Name, &j.Jobspec)
 		if err != nil {
 			return response, err
 		}
@@ -134,9 +142,9 @@ func (db *Database) RequestJobs(
 
 	// No jobs, a quick check
 	if len(jobs) == 0 {
-		response.Status = pb.RequestJobsResponse_REQUEST_JOBS_NORESULTS
+		response.Status = pb.ReceiveJobsResponse_REQUEST_JOBS_NORESULTS
 	} else {
-		response.Status = pb.RequestJobsResponse_REQUEST_JOBS_SUCCESS
+		response.Status = pb.ReceiveJobsResponse_REQUEST_JOBS_SUCCESS
 	}
 	// Success! This is a lookup of job ids to the serialized string
 	response.Jobs = jobs

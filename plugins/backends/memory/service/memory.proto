@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option go_package = "github.com/converged-computing/rainbow/backends/memory/service";
+
+package service;
+
+service MemoryGraph {
+  rpc Satisfy(SatisfyRequest) returns (SatisfyResponse) {}
+  rpc Register(RegisterRequest) returns (Response) {}
+}
+
+message RegisterRequest {
+    string name = 1;
+    string payload = 2;
+    string subsystem = 3;
+}
+
+message SatisfyRequest {
+  string payload = 1;
+}
+
+message SatisfyResponse {
+
+  enum ResultType {
+    RESULT_TYPE_UNSPECIFIED = 0;
+    RESULT_TYPE_SUCCESS = 1;
+    RESULT_TYPE_ERROR = 2;
+  }
+
+  repeated string clusters = 1;
+  ResultType status = 2;
+}
+
+
+// Testing response - the server's response to a request.
+message Response {
+
+    // Enum to represent the result types of the operation.
+    enum ResultType {
+      RESULT_TYPE_UNSPECIFIED = 0;
+      RESULT_TYPE_SUCCESS = 1;
+      RESULT_TYPE_ERROR = 2;
+    }
+    ResultType status = 1;
+}

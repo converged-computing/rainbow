@@ -10,6 +10,7 @@ import (
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
 	"github.com/converged-computing/rainbow/pkg/config"
 	"github.com/converged-computing/rainbow/pkg/database"
+	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	"github.com/converged-computing/rainbow/pkg/graph/backend"
 
 	"github.com/pkg/errors"
@@ -38,9 +39,11 @@ type Server struct {
 	secret      string
 	globalToken string
 	db          *database.Database
+	host        string
 
 	// graph database handle
-	graph backend.GraphBackend
+	graph     backend.GraphBackend
+	algorithm algorithm.SelectionAlgorithm
 }
 
 // NewServer creates a new "scheduler" server
@@ -49,7 +52,7 @@ func NewServer(
 	cfg *config.RainbowConfig,
 	version, sqliteFile string,
 	cleanup bool,
-	globalToken string,
+	globalToken, host string,
 ) (*Server, error) {
 
 	if cfg.Scheduler.Secret == "" {
@@ -62,6 +65,14 @@ func NewServer(
 		cfg.Scheduler.Name = defaultName
 	}
 
+	// Prepare the selection algorithm
+	algo, err := algorithm.Get(cfg.Scheduler.Algorithm.Name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	algo.Init(cfg.Scheduler.Algorithm.Options)
+	log.Printf("🧩️ selection algorithm: %v", algo.Name())
+
 	// Load the graph backend!
 	graphDB, err := backend.Get(cfg.GraphDatabase.Name)
 	if err != nil {
@@ -70,6 +81,7 @@ func NewServer(
 
 	// Run init with any options from the config
 	graphDB.Init(cfg.GraphDatabase.Options)
+	log.Printf("🧩️ graph database: %v", graphDB.Name())
 
 	// init the database, creating jobs and clusters tables
 	db, err := database.InitDatabase(sqliteFile, cleanup)
@@ -84,6 +96,8 @@ func NewServer(
 		version:     version,
 		secret:      cfg.Scheduler.Secret,
 		globalToken: globalToken,
+		algorithm:   algo,
+		host:        host,
 	}, nil
 }
 

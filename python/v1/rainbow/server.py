@@ -1,8 +1,9 @@
-from concurrent import futures
 import logging
+from concurrent import futures
+
+import grpc
 
 from rainbow.protos import api_pb2_grpc
-import grpc
 
 
 class RainbowSchedulerServicer(api_pb2_grpc.RainbowSchedulerServicer):
@@ -16,9 +17,7 @@ class RainbowSchedulerServicer(api_pb2_grpc.RainbowSchedulerServicer):
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    api_pb2_grpc.add_RainbowSchedulerServicer_to_server(
-        RainbowSchedulerServicer(), server
-    )
+    api_pb2_grpc.add_RainbowSchedulerServicer_to_server(RainbowSchedulerServicer(), server)
     server.add_insecure_port("[::]:50051")
     server.start()
     server.wait_for_termination()

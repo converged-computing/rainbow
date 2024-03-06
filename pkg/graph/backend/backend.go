@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
+
 	"github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 	"google.golang.org/grpc"
 )
@@ -28,7 +30,7 @@ type GraphBackend interface {
 	Init(map[string]string) error
 
 	// TODO we need a jobspec for here
-	Satisfies(string) error
+	Satisfies(*js.Jobspec) ([]string, error)
 
 	// Register an additional grpc server
 	RegisterService(*grpc.Server) error

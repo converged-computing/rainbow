@@ -2,6 +2,7 @@ package memory
 
 import (
 	"encoding/gob"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -10,10 +11,11 @@ import (
 	"sync"
 	"syscall"
 
+	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
-	"github.com/converged-computing/rainbow/backends/memory/service"
 	"github.com/converged-computing/rainbow/pkg/graph"
 	"github.com/converged-computing/rainbow/pkg/utils"
+	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 )
 
 // A ClusterGraph holds one or more subsystems
@@ -119,6 +121,50 @@ func (g *ClusterGraph) GetMetrics(subsystem string) Metrics {
 	return ss.Metrics
 }
 
+// Satisfy should:
+// 1. Read in and populate the payload into a jobspec
+// 2. Determine by way of a depth first search if we can satisfy
+// 3. Return the names of the cluster
+// TODO this needs to have subsystem representation, right now we just
+// choose dominant and assume the payload is a cluster / nodes
+func (g *ClusterGraph) Satisfies(payload string) (*service.SatisfyResponse, error) {
+	response := service.SatisfyResponse{}
+
+	// Get subsystem (will get dominant, this can eventually take a variable)
+	subsystem := g.getSubsystem("")
+
+	// Serialize back into Jobspec
+	jobspec := js.Jobspec{}
+	err := json.Unmarshal([]byte(payload), &jobspec)
+	if err != nil {
+		return &response, err
+	}
+
+	// Assume we are querying the dominant subsystem with nodes
+	ss, ok := g.subsystem[g.dominantSubsystem]
+	if !ok {
+		response.Status = service.SatisfyResponse_RESULT_TYPE_ERROR
+		return &response, fmt.Errorf("the subsystem %s does not exist", subsystem)
+	}
+
+	// Tell the user /logs we are looking for a match
+	fmt.Printf("\n🍇️ Satisfy request to Graph 🍇️\n")
+	fmt.Printf(" jobspec: %s\n", payload)
+
+	// Do depth rst search to determine if there is a match.
+	// Right now this is a boolean because I don't know what it should look like
+	matches, err := ss.DFSForMatch(&jobspec)
+	if err != nil {
+		response.Status = service.SatisfyResponse_RESULT_TYPE_ERROR
+		return &response, err
+	}
+
+	// Add the matches to the response
+	response.Clusters = matches
+	response.Status = service.SatisfyResponse_RESULT_TYPE_SUCCESS
+	return &response, nil
+}
+
 // Register cluster should:
 // 1. Load in json graph of nodes from string
 // 2. Add nodes to the graph, also keep top level metrics?
@@ -187,18 +233,8 @@ func (g *ClusterGraph) LoadClusterNodes(
 	// Create an empty resource counter for the cluster
 	ss.Metrics.NewResource(name)
 
-	// Add a cluster root to it, and connect to the top root. We can add metadata/weight here too
-	clusterRoot := ss.AddNode("", name, "cluster", 1, "")
-	err := ss.AddEdge(root, clusterRoot, 0, "")
-	if err != nil {
-		return err
-	}
-
 	// Now loop through the nodes and add them, keeping a temporary lookup
-	lookup := map[string]int{"root": root, name: clusterRoot}
-
-	// This is pretty dumb because we don't add metadata yet, oh well
-	// we will!
+	lookup := map[string]int{"root": root}
 	for nid, node := range nodes.Graph.Nodes {
 
 		// Currently we are saving the type, size, and unit
@@ -207,7 +243,15 @@ func (g *ClusterGraph) LoadClusterNodes(
 		// levelName (cluster)
 		// name for lookup/cache (if we want to keep it there)
 		// resource type, size, and unit
-		id := ss.AddNode(name, "", resource.Type, resource.Size, resource.Unit)
+		var id int
+		if resource.Type == "cluster" {
+
+			// If it's the cluster, we save the named identifier for it
+			id = ss.AddNode("", name, resource.Type, resource.Size, resource.Unit)
+			lookup[name] = id
+		} else {
+			id = ss.AddNode(name, "", resource.Type, resource.Size, resource.Unit)
+		}
 		lookup[nid] = id
 	}
 
@@ -223,6 +267,7 @@ func (g *ClusterGraph) LoadClusterNodes(
 		if !ok {
 			return fmt.Errorf("destination %s is defined as an edge, but missing as node in graph", edge.Label)
 		}
+		// fmt.Printf("Adding edge from %s -%s-> %s\n", ss.Vertices[src].Type, edge.Relation, ss.Vertices[dest].Type)
 		err := ss.AddEdge(src, dest, 0, edge.Relation)
 		if err != nil {
 			return err

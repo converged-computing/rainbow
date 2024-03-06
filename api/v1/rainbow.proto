@@ -16,13 +16,13 @@ service RainbowScheduler {
   rpc SubmitJob(SubmitJobRequest) returns (SubmitJobResponse);
 
   // Request Job - ask the rainbow scheduler for up to max jobs
-  rpc RequestJobs(RequestJobsRequest) returns (RequestJobsResponse);
+  rpc ReceiveJobs(ReceiveJobsRequest) returns (ReceiveJobsResponse);
 
    // Accept Jobs - accept some number of jobs
    rpc AcceptJobs(AcceptJobsRequest) returns (AcceptJobsResponse);
 }
 
-// RegisterRequest registers a cluster to the scheduler service 
+// RegisterRequest registers a cluster to the scheduler service
 // The shared secret is required to validate the request
 message RegisterRequest {
   string name = 1;
@@ -39,22 +39,25 @@ message RegisterRequest {
 // we currently accept nodes, tasks, and the command
 message SubmitJobRequest {
   string name = 1;
-  string cluster = 2;
-  string token = 3;
-  int32 nodes = 4;
-  int32 tasks = 5;
-  string command = 6;
-  google.protobuf.Timestamp sent = 7;
+  repeated Cluster clusters = 2;
+  string jobspec = 3;
+  google.protobuf.Timestamp sent = 4;
+
+  message Cluster {
+    string name = 1;
+    string token = 2;
+  }
+
 }
 
 // RequestJobsRequest is used by a cluster (or other entity that can run jobs)
 // to get back a maximum of N jobs. This will (and should) eventually
 // support filters / sorting criteria, but now we just take the top
 // N from a query. The response includes the ids that are accepted
-message RequestJobsRequest {
+message ReceiveJobsRequest {
   string cluster = 1;
 
-  // cluster secret given on registration 
+  // cluster secret given on registration
   // No other cluster or user can take a cluster's jobs!
   string secret = 2;
 
@@ -109,7 +112,7 @@ message SubmitJobResponse {
 }
 
 // RequestJobsResponse
-message RequestJobsResponse {
+message ReceiveJobsResponse {
 
   // Enum to represent the result types of the operation.
   enum ResultType {

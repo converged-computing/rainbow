@@ -18,7 +18,7 @@ except Exception:
 if __name__ == "__main__":
     setup(
         name="rainbow-scheduler",
-        version="0.0.1",
+        version="0.0.11",
         author="Vanessasaurus",
         author_email="vsoch@users.noreply.github.com",
         maintainer="Vanessasaurus",
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         long_description_content_type="text/markdown",
         keywords="multi-cluster, scheduler",
         setup_requires=["pytest-runner"],
-        install_requires=["grpcio", "grpcio-tools"],
+        install_requires=["grpcio", "grpcio-tools", "jsonschema", "pyyaml"],
         tests_require=["pytest", "pytest-cov"],
         classifiers=[
             "Intended Audience :: Science/Research",

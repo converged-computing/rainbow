@@ -29,7 +29,7 @@ jobs:
       if: (github.event_name == 'release')
       run: |
         tag=${GITHUB_REF#refs/tags/}
-        echo "Tagging and releasing ${{ env.container}}:${tag}"        
+        echo "Tagging and releasing ${{ env.container}}:${tag}"
         docker tag ${{ env.container }}:latest ${{ env.container }}:${tag}
 
     - name: GHCR Login
@@ -43,7 +43,7 @@ jobs:
     - name: Deploy Container
       if: (github.event_name != 'pull_request')
       run: docker push ${{ env.container }} --all-tags
-      
+
   build-rainbow-scheduler:
     permissions:
       packages: write
@@ -60,7 +60,7 @@ jobs:
       if: (github.event_name == 'release')
       run: |
         tag=${GITHUB_REF#refs/tags/}
-        echo "Tagging and releasing ${{ env.container}}:${tag}"        
+        echo "Tagging and releasing ${{ env.container}}:${tag}"
         docker tag ${{ env.container }}:latest ${{ env.container }}:${tag}
 
     - name: GHCR Login

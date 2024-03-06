@@ -1,4 +1,4 @@
-package match
+package config
 
 import (
 	"log"
@@ -8,12 +8,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	defaultConfigFile = "rainbow-config.yaml"
+)
+
 // Run will init a new config
 func RunInit(path string) error {
 
+	if path == "" {
+		path = defaultConfigFile
+	}
+
 	// Generate an empty config - providing an empty filename ensures we don't read an existing one
 	// This defaults to an in-memory vanilla database
-	cfg, err := config.NewRainbowClientConfig("", "rainbow-cluster", "chocolate-cookied", "")
+	cfg, err := config.NewRainbowClientConfig("", "rainbow-cluster", "chocolate-cookies", "", "random")
 	if err != nil {
 		return err
 	}

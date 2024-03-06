@@ -10,7 +10,8 @@ import (
 	"github.com/converged-computing/rainbow/pkg/types"
 
 	// Register database backends
-	_ "github.com/converged-computing/rainbow/backends/memory"
+	_ "github.com/converged-computing/rainbow/plugins/algorithms/random"
+	_ "github.com/converged-computing/rainbow/plugins/backends/memory"
 )
 
 var (
@@ -18,6 +19,7 @@ var (
 	name        = "rainbow"
 	sqliteFile  = "rainbow.db"
 	configFile  = ""
+	algorithm   = "random"
 	database    = ""
 	cleanup     = false
 	secret      = "chocolate-cookies"
@@ -31,19 +33,20 @@ func main() {
 	flag.StringVar(&globalToken, "global-token", name, "global token for cluster access (not recommended)")
 	flag.StringVar(&secret, "secret", secret, "secret to validate registration (default: chocolate-cookies)")
 	flag.StringVar(&database, "graph-database", database, "graph database backend (defaults to memory)")
+	flag.StringVar(&algorithm, "select-algorithm", algorithm, "selection algorithm for graph (defaults to random)")
 	flag.StringVar(&configFile, "config", configFile, "rainbow config file")
 	flag.BoolVar(&cleanup, "cleanup", cleanup, "cleanup previous sqlite database (default: false)")
 	flag.Parse()
 
 	// Load (or generate a default)  config file here, if provided
-	cfg, err := config.NewRainbowClientConfig(configFile, name, secret, database)
+	cfg, err := config.NewRainbowClientConfig(configFile, name, secret, database, algorithm)
 	if err != nil {
 		log.Fatalf("error while creating server: %v", err)
 	}
 
 	// create server
 	log.Print("creating 🌈️ server...")
-	s, err := server.NewServer(cfg, types.Version, sqliteFile, cleanup, globalToken)
+	s, err := server.NewServer(cfg, types.Version, sqliteFile, cleanup, globalToken, host)
 	if err != nil {
 		log.Fatalf("error while creating server: %v", err)
 	}

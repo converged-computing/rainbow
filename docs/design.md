@@ -26,7 +26,7 @@ We next want to add a simple scheduler, meaning that the new user interaction wo
 
 1. The user submits a job or application specification (e.g., run a container with compatibility information, or an application with the same) to the rainbow scheduler.
 2. The rainbow scheduler then authenticates the user, and can select a best match from a subset of clusters for which the user has access
-  - This requires the user tokens, and eventually something more robust like accounts in a database). - This also requires (finally) a graph in rainbow, making it more of a scheduler 
+  - This requires the user tokens, and eventually something more robust like accounts in a database). - This also requires (finally) a graph in rainbow, making it more of a scheduler
 3. The rainbow scheduler then filters down clusters to those that might match.
   - This requires sending over cluster metadata on the register step
 4. The clusters respond with Yes/No and ETA or cost to choose from.
@@ -53,7 +53,7 @@ What does it mean to request work to run on rainbow?
 1. The first step is seeing if the work can be run on a cluster. E.g, if the total sum of nodes / resources isn't enough, we immediately filter it. We can prune out an entire cluster as a hiuristic.
   - High level idea: look for opportunities to prune.
   - There should be a table that summarizes resources.
-2. The next step is figuring out when it can be run on each cluster. 
+2. The next step is figuring out when it can be run on each cluster.
 
 I think the best thing to do here would be to add a graph interface, and then allow the user to select which graph to use.
 This will allow me to experiment / prototype and switch to Fluxion if needed.

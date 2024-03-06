@@ -3,13 +3,17 @@ package client
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
+	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
+	"github.com/converged-computing/rainbow/pkg/config"
 	"github.com/converged-computing/rainbow/pkg/graph"
-	"github.com/converged-computing/rainbow/pkg/types"
+	"github.com/converged-computing/rainbow/pkg/graph/backend"
 	"github.com/converged-computing/rainbow/pkg/utils"
 	"github.com/pkg/errors"
+
 	ts "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -22,52 +26,77 @@ type RegisterRequest struct {
 // The token specific to the cluster is required
 func (c *RainbowClient) SubmitJob(
 	ctx context.Context,
-	job types.JobSpec,
-	cluster string,
-	token string,
+	job *js.Jobspec,
+	cfg *config.RainbowConfig,
 ) (*pb.SubmitJobResponse, error) {
 
 	response := &pb.SubmitJobResponse{}
-
-	// First validate the job
-	if job.Nodes < 1 {
-		return response, fmt.Errorf("nodes must be greater than 1")
-	}
 	if !c.Connected() {
 		return response, errors.New("client is not connected")
 	}
-	if cluster == "" {
-		return response, errors.New("cluster name is required")
+	if len(cfg.Clusters) == 0 {
+		return response, errors.New("one or more clusters must be defined in the configuration file")
 	}
 
-	// Contact the server...
+	// Request work directly to the database
+	graphDB, err := backend.Get(cfg.GraphDatabase.Name)
+	if err != nil {
+		return response, err
+	}
+
+	// TODO we need to have a check here to see what clusters
+	// the user has permission to do. Either that can be represented in
+	// the graph database (and the call goes directly to it) or it
+	// is checked first in rainbow, and still enforced in the graph
+	// (but we limit our search). Likely the first is preferable.
+	// Ask the graphDB if the jobspec can be satisfied
+	// TODO what does a match look like?
+	matches, err := graphDB.Satisfies(job)
+	if err != nil {
+		return response, err
+	}
+
+	// Cut out early (without contacting rainbow) if there are no matches
+	if len(matches) > 0 {
+		log.Printf("🎯️ We found %d matches! %s\b", len(matches), matches)
+	} else {
+		return response, fmt.Errorf("😥️ There were no matches for this job")
+	}
+	// Now contact the rainbow server with clusters...
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
+	// Prepare clusters for submit jobs request
+	clusters := make([]*pb.SubmitJobRequest_Cluster, len(cfg.Clusters))
+	for i, cluster := range cfg.Clusters {
+		clusters[i] = &pb.SubmitJobRequest_Cluster{Token: cluster.Token, Name: cluster.Name}
+	}
+
+	// Jobspec gets converted back to string for easier serialization
+	out, err := job.JobspecToYaml()
+	if err != nil {
+		return response, err
+	}
 	// Validate that the cluster exists, and we have the right token.
 	// The response is the same either way - not found does not reveal
 	// additional information to the client trying to find it
-	response, err := c.service.SubmitJob(ctx, &pb.SubmitJobRequest{
-		Name:    job.Name,
-		Token:   token,
-		Nodes:   job.Nodes,
-		Tasks:   job.Tasks,
-		Cluster: cluster,
-		Command: job.Command,
-		Sent:    ts.Now(),
+	response, err = c.service.SubmitJob(ctx, &pb.SubmitJobRequest{
+		Name:     job.GetJobName(),
+		Clusters: clusters,
+		Jobspec:  string(out),
+		Sent:     ts.Now(),
 	})
 	return response, err
 }
 
-// RequestJobs requests jobs for a specific cluster
-func (c *RainbowClient) RequestJobs(
+// ReceiveJobs (request them) for a specific clusters
+func (c *RainbowClient) ReceiveJobs(
 	ctx context.Context,
 	cluster string,
 	secret string,
 	maxJobs int32,
-) (*pb.RequestJobsResponse, error) {
-
-	response := &pb.RequestJobsResponse{}
+) (*pb.ReceiveJobsResponse, error) {
+	response := &pb.ReceiveJobsResponse{}
 	if !c.Connected() {
 		return response, errors.New("client is not connected")
 	}
@@ -78,10 +107,9 @@ func (c *RainbowClient) RequestJobs(
 		return response, errors.New("cluster secret is required")
 	}
 
-	// Contact the server...
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
-	response, err := c.service.RequestJobs(ctx, &pb.RequestJobsRequest{
+	response, err := c.service.ReceiveJobs(ctx, &pb.ReceiveJobsRequest{
 		Cluster: cluster,
 		Secret:  secret,
 		MaxJobs: maxJobs,
