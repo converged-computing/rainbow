@@ -1,0 +1,289 @@
+{
+  "graph": {
+    "directed": true,
+    "nodes": {
+      "io0": {
+        "label": "io0",
+        "metadata": {
+          "basename": "io",
+          "exclusive": false,
+          "id": 0,
+          "name": "io0",
+          "paths": {
+            "containment": "/io0"
+          },
+          "size": 1,
+          "type": "io",
+          "uniq_id": 0
+        }
+      },
+      "io1": {
+        "label": "io1",
+        "metadata": {
+          "basename": "shm",
+          "exclusive": true,
+          "id": 1,
+          "name": "shm0",
+          "paths": {
+            "containment": "/io0/shm0"
+          },
+          "size": 1,
+          "type": "shm",
+          "uniq_id": 1,
+          "bw_mbps_min": 4096,
+          "bw_mbps_max": 61440,
+          "byte_addressable": true,
+          "capacity": 1073741824,
+          "latency_min": 100,
+          "latency_max": 100,
+          "mount_point": "/dev/shm",
+          "parallelism": 32
+        }
+      },
+      "io2": {
+        "label": "io2",
+        "metadata": {
+          "basename": "nvme",
+          "exclusive": true,
+          "id": 2,
+          "name": "nvme0",
+          "paths": {
+            "containment": "/io0/nvme0"
+          },
+          "size": 1,
+          "type": "nvme",
+          "uniq_id": 2,
+          "bw_mbps_min": 600,
+          "bw_mbps_max": 4096,
+          "byte_addressable": true,
+          "capacity": 2147483648,
+          "latency_min": 800,
+          "latency_max": 800,
+          "mount_point": "/dev/local/nvme",
+          "parallelism": 8
+        }
+      },
+      "io3": {
+        "label": "io3",
+        "metadata": {
+          "basename": "mtl1unit",
+          "exclusive": true,
+          "id": 3,
+          "name": "mtl1unit0",
+          "paths": {
+            "containment": "/io0/mtl1unit0"
+          },
+          "size": 1,
+          "type": "mtl1unit",
+          "uniq_id": 3,
+          "bw_mbps_min": 200,
+          "bw_mbps_max": 1024,
+          "byte_addressable": false,
+          "capacity": 4294967296,
+          "latency_min": 1000,
+          "latency_max": 2000,
+          "mount_point": "/dev/local/rabbits",
+          "parallelism": 8
+        }
+      },
+      "io4": {
+        "label": "io4",
+        "metadata": {
+          "basename": "mtl2unit",
+          "exclusive": false,
+          "id": 4,
+          "name": "mtl2unit0",
+          "paths": {
+            "containment": "/io0/mtl2unit0"
+          },
+          "size": 4,
+          "type": "mtl2unit",
+          "uniq_id": 4,
+          "bw_mbps_min": 200,
+          "bw_mbps_max": 4094,
+          "byte_addressable": false,
+          "capacity": 4294967296,
+          "latency_min": 1000,
+          "latency_max": 4000,
+          "mount_point": "/dev/shared/rabbits",
+          "parallelism": 16
+        }
+      },
+      "io5": {
+        "label": "io5",
+        "metadata": {
+          "basename": "mtl3unit",
+          "exclusive": false,
+          "id": 5,
+          "name": "mtl3unit0",
+          "paths": {
+            "containment": "/io0/mtl3unit0"
+          },
+          "size": 16,
+          "type": "mtl3unit",
+          "uniq_id": 5,
+          "bw_mbps_min": 200,
+          "bw_mbps_max": 1600,
+          "byte_addressable": false,
+          "capacity": 274877906944,
+          "latency_min": 8000,
+          "latency_max": 8000,
+          "mount_point": "/dev/shared/pfs",
+          "parallelism": -1
+        }
+      }    
+    },
+    "edges": [
+      {
+        "source": "2",
+        "target": "io1",
+        "relation": "contains"
+      },
+      {
+        "source": "io1",
+        "target": "2",
+        "relation": "in"
+      },
+      {
+        "source": "2",
+        "target": "io2",
+        "relation": "contains"
+      },
+      {
+        "source": "io2",
+        "target": "2",
+        "relation": "in"
+      },
+      {
+        "source": "2",
+        "target": "io3",
+        "relation": "contains"
+      },
+      {
+        "source": "io3",
+        "target": "2",
+        "relation": "in"
+      },
+      {
+        "source": "2",
+        "target": "io4",
+        "relation": "contains"
+      },
+      {
+        "source": "io4",
+        "target": "2",
+        "relation": "in"
+      },
+      {
+        "source": "2",
+        "target": "io5",
+        "relation": "contains"
+      },
+      {
+        "source": "io5",
+        "target": "2",
+        "relation": "in"
+      },
+      {
+        "source": "16",
+        "target": "io1",
+        "relation": "contains"
+      },
+      {
+        "source": "io1",
+        "target": "16",
+        "relation": "in"
+      },
+      {
+        "source": "16",
+        "target": "io2",
+        "relation": "contains"
+      },
+      {
+        "source": "io2",
+        "target": "16",
+        "relation": "in"
+      },
+      {
+        "source": "16",
+        "target": "io3",
+        "relation": "contains"
+      },
+      {
+        "source": "io3",
+        "target": "16",
+        "relation": "in"
+      },
+      {
+        "source": "16",
+        "target": "io4",
+        "relation": "contains"
+      },
+      {
+        "source": "io4",
+        "target": "16",
+        "relation": "in"
+      },
+      {
+        "source": "16",
+        "target": "io5",
+        "relation": "contains"
+      },
+      {
+        "source": "io5",
+        "target": "16",
+        "relation": "in"
+      },
+      {
+        "source": "30",
+        "target": "io1",
+        "relation": "contains"
+      },
+      {
+        "source": "io1",
+        "target": "30",
+        "relation": "in"
+      },
+      {
+        "source": "30",
+        "target": "io2",
+        "relation": "contains"
+      },
+      {
+        "source": "io2",
+        "target": "30",
+        "relation": "in"
+      },
+      {
+        "source": "30",
+        "target": "io3",
+        "relation": "contains"
+      },
+      {
+        "source": "io3",
+        "target": "30",
+        "relation": "in"
+      },
+      {
+        "source": "30",
+        "target": "io4",
+        "relation": "contains"
+      },
+      {
+        "source": "io4",
+        "target": "30",
+        "relation": "in"
+      },
+      {
+        "source": "30",
+        "target": "io5",
+        "relation": "contains"
+      },
+      {
+        "source": "io5",
+        "target": "30",
+        "relation": "in"
+      }
+    ]
+  }
+}

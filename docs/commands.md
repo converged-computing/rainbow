@@ -326,31 +326,51 @@ Note that if you don't define the max jobs (so it is essentially 0) you will get
 Awesome! Next we can put that logic in a flux instance (from the Python grpc to start) and then have Flux
 accept some number of them. The response back to the rainbow scheduler will be those to accept, which will then be removed from the database. For another day.
 
-## Accept Jobs
+## Register Subsystem
 
-A derivative of the above is to request and accept jobs. This can be done with the example client above, and adding `--accept N`.
+Adding a subsystem means adding another graph that has nodes with edges that connect (in some meaningful way) to the dominant subsystem.
 
-```console
-$ go run ./cmd/rainbow/rainbow.go request --request-secret 3cc06871-0990-4dc2-94d5-eec653c5d7a0 --cluster-name keebler --max-jobs 3 --accept 1
+### Nodes
+
+While the dominant subsystem nodes have identifiers without a namespace (e.g., "0" through "3" for 4 nodes) a subsystem needs to own a namespace of nodes, so it should have `<subsystem-name>0` through `<subsystem-name>N`, where the subsystem name is also the root of the subsystem graph.
+
+### Edges
+
+The edges should reference a node in the dominant subsystem. For example, given that these nodes have these corresponding vertex identifiers (the label or unique id):
+
+- node0 --> "2"
+- node1 --> "16"
+- node2 --> "30"
+
+We would expect edges for I/O to reference them as follows - in the example below, the I/O node of type io0 (the global identifier) is attached or relevant for node0 above:
+
+```json
+{
+    "edges": [
+      {
+        "source": "2",
+        "target": "io1",
+        "relation": "contains"
+      },
+      {
+        "source": "io1",
+        "target": "2",
+        "relation": "in"
+      }
+    ]
+}
 ```
-```console
-2024/02/13 12:29:29 🌀️ Found 3 jobs!
-2024/02/13 12:29:29 1 : {"id":1,"cluster":"keebler","name":"hostname","nodes":1,"tasks":0,"command":"hostname"}
-2024/02/13 12:29:29 2 : {"id":2,"cluster":"keebler","name":"sleep","nodes":1,"tasks":0,"command":"sleep 10"}
-2024/02/13 12:29:29 3 : {"id":3,"cluster":"keebler","name":"dinosaur","nodes":1,"tasks":0,"command":"dinosaur things"}
-2024/02/13 12:29:29 ✅️ Accepting 1 jobs!
-2024/02/13 12:29:29    1
-2024/02/13 12:29:29 status:RESULT_TYPE_SUCCESS
-```
 
-What this does is randomly select from the set you receive, and send back a response to the server to accept it, meaning the identifier is removed from the database. The server shows the following:
+Note that is only partial json, and validation when adding a subsystem will ensure that:
 
-```console
-2024/02/13 12:29:29 🌀️ accepting 1 for cluster keebler
-2024/02/13 12:29:29 DELETE FROM jobs WHERE cluster = 'keebler' AND idJob in (1): (1)
-```
+- All nodes in the subsystem are linked to the dominant subsystem graph except for the root
+- All edges defined for the subsystem exist in the graph.
 
-The logic you would expect is there - that you can't accept greater than the number available.
-You could try asking for a high level of max jobs again, and see that there is one fewer than before. It was deleted from the database.
+The root exists primarily as a handle to all of the children in the subsyste. You are not allowed to add edges to nodes that don't exist in the dominant subsystem, nor are you allowed to add subsystem nodes that are not being used (and are unlinked or have no edges).
+
+**Question for Hari**
+
+What is a `mtl1unit` vs `mtl2unit` for the rabbit? The first is local (exclusive) and the second shared but I want to understand the names there.
+
 
 [home](/README.md#rainbow-scheduler)

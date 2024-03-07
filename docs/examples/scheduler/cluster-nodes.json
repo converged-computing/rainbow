@@ -25,7 +25,7 @@
           "basename": "rack",
           "exclusive": false,
           "id": "0",
-          "name": "/rack0",
+          "name": "rack0",
           "paths": {
             "containment": "/cluster-red0/rack0"
           },
@@ -42,9 +42,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "6",
-          "name": "rack0/node2/socket3/core6",
+          "name": "core6",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core6"
+            "containment": "/cluster-red0/rack0/node0/socket0/core6"
           },
           "rank": -1,
           "size": 1,
@@ -59,9 +59,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "7",
-          "name": "rack0/node2/socket3/core7",
+          "name": "core7",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core7"
+            "containment": "/cluster-red0/rack0/node0/socket0/core7"
           },
           "rank": -1,
           "size": 1,
@@ -76,9 +76,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "8",
-          "name": "rack0/node2/socket3/core8",
+          "name": "core8",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core8"
+            "containment": "/cluster-red0/rack0/node0/socket0/core8"
           },
           "rank": -1,
           "size": 1,
@@ -93,9 +93,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "9",
-          "name": "rack0/node2/socket3/core9",
+          "name": "core9",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core9"
+            "containment": "/cluster-red0/rack0/node0/socket0/core9"
           },
           "rank": -1,
           "size": 1,
@@ -110,9 +110,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "10",
-          "name": "rack0/node2/socket3/core10",
+          "name": "core10",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core10"
+            "containment": "/cluster-red0/rack0/node0/socket0/core10"
           },
           "rank": -1,
           "size": 1,
@@ -127,9 +127,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "11",
-          "name": "rack0/node2/socket3/core11",
+          "name": "core11",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core11"
+            "containment": "/cluster-red0/rack0/node0/socket0/core11"
           },
           "rank": -1,
           "size": 1,
@@ -144,7 +144,7 @@
           "basename": "node",
           "exclusive": false,
           "id": "1",
-          "name": "rack0/node1",
+          "name": "node1",
           "paths": {
             "containment": "/cluster-red0/rack0/node1"
           },
@@ -161,9 +161,9 @@
           "basename": "socket",
           "exclusive": false,
           "id": "1",
-          "name": "rack0/node16/socket1",
+          "name": "socket1",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket1"
+            "containment": "/cluster-red0/rack0/node1/socket1"
           },
           "rank": -1,
           "size": 1,
@@ -178,9 +178,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "12",
-          "name": "rack0/node16/socket17/core12",
+          "name": "core12",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core12"
+            "containment": "/cluster-red0/rack0/node1/socket1/core12"
           },
           "rank": -1,
           "size": 1,
@@ -195,9 +195,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "13",
-          "name": "rack0/node16/socket17/core13",
+          "name": "core13",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core13"
+            "containment": "/cluster-red0/rack0/node1/socket1/core13"
           },
           "rank": -1,
           "size": 1,
@@ -212,7 +212,7 @@
           "basename": "node",
           "exclusive": false,
           "id": "0",
-          "name": "rack0/node0",
+          "name": "node0",
           "paths": {
             "containment": "/cluster-red0/rack0/node0"
           },
@@ -229,9 +229,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "14",
-          "name": "rack0/node16/socket17/core14",
+          "name": "core14",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core14"
+            "containment": "/cluster-red0/rack0/node1/socket1/core14"
           },
           "rank": -1,
           "size": 1,
@@ -246,9 +246,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "15",
-          "name": "rack0/node16/socket17/core15",
+          "name": "core15",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core15"
+            "containment": "/cluster-red0/rack0/node1/socket1/core15"
           },
           "rank": -1,
           "size": 1,
@@ -263,9 +263,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "16",
-          "name": "rack0/node16/socket17/core16",
+          "name": "core16",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core16"
+            "containment": "/cluster-red0/rack0/node1/socket1/core16"
           },
           "rank": -1,
           "size": 1,
@@ -280,9 +280,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "17",
-          "name": "rack0/node16/socket17/core17",
+          "name": "core17",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core17"
+            "containment": "/cluster-red0/rack0/node1/socket1/core17"
           },
           "rank": -1,
           "size": 1,
@@ -297,9 +297,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "18",
-          "name": "rack0/node16/socket17/core18",
+          "name": "core18",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core18"
+            "containment": "/cluster-red0/rack0/node1/socket1/core18"
           },
           "rank": -1,
           "size": 1,
@@ -314,9 +314,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "19",
-          "name": "rack0/node16/socket17/core19",
+          "name": "core19",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core19"
+            "containment": "/cluster-red0/rack0/node1/socket1/core19"
           },
           "rank": -1,
           "size": 1,
@@ -331,9 +331,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "20",
-          "name": "rack0/node16/socket17/core20",
+          "name": "core20",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core20"
+            "containment": "/cluster-red0/rack0/node1/socket1/core20"
           },
           "rank": -1,
           "size": 1,
@@ -348,9 +348,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "21",
-          "name": "rack0/node16/socket17/core21",
+          "name": "core21",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core21"
+            "containment": "/cluster-red0/rack0/node1/socket1/core21"
           },
           "rank": -1,
           "size": 1,
@@ -365,9 +365,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "22",
-          "name": "rack0/node16/socket17/core22",
+          "name": "core22",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core22"
+            "containment": "/cluster-red0/rack0/node1/socket1/core22"
           },
           "rank": -1,
           "size": 1,
@@ -382,9 +382,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "23",
-          "name": "rack0/node16/socket17/core23",
+          "name": "core23",
           "paths": {
-            "containment": "/cluster-red0/rack0/node16/socket17/core23"
+            "containment": "/cluster-red0/rack0/node1/socket1/core23"
           },
           "rank": -1,
           "size": 1,
@@ -399,9 +399,9 @@
           "basename": "socket",
           "exclusive": false,
           "id": "0",
-          "name": "rack0/node2/socket0",
+          "name": "socket0",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket0"
+            "containment": "/cluster-red0/rack0/node0/socket0"
           },
           "rank": -1,
           "size": 1,
@@ -416,7 +416,7 @@
           "basename": "node",
           "exclusive": false,
           "id": "2",
-          "name": "rack0/node2",
+          "name": "node2",
           "paths": {
             "containment": "/cluster-red0/rack0/node2"
           },
@@ -433,9 +433,9 @@
           "basename": "socket",
           "exclusive": false,
           "id": "2",
-          "name": "rack0/node30/socket2",
+          "name": "socket2",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket2"
+            "containment": "/cluster-red0/rack0/node2/socket2"
           },
           "rank": -1,
           "size": 1,
@@ -450,9 +450,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "24",
-          "name": "rack0/node30/socket31/core24",
+          "name": "core24",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core24"
+            "containment": "/cluster-red0/rack0/node2/socket2/core24"
           },
           "rank": -1,
           "size": 1,
@@ -467,9 +467,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "25",
-          "name": "rack0/node30/socket31/core25",
+          "name": "core25",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core25"
+            "containment": "/cluster-red0/rack0/node2/socket2/core25"
           },
           "rank": -1,
           "size": 1,
@@ -484,9 +484,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "26",
-          "name": "rack0/node30/socket31/core26",
+          "name": "core26",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core26"
+            "containment": "/cluster-red0/rack0/node2/socket2/core26"
           },
           "rank": -1,
           "size": 1,
@@ -501,9 +501,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "27",
-          "name": "rack0/node30/socket31/core27",
+          "name": "core27",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core27"
+            "containment": "/cluster-red0/rack0/node2/socket2/core27"
           },
           "rank": -1,
           "size": 1,
@@ -518,9 +518,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "28",
-          "name": "rack0/node30/socket31/core28",
+          "name": "core28",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core28"
+            "containment": "/cluster-red0/rack0/node2/socket2/core28"
           },
           "rank": -1,
           "size": 1,
@@ -535,9 +535,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "29",
-          "name": "rack0/node30/socket31/core29",
+          "name": "core29",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core29"
+            "containment": "/cluster-red0/rack0/node2/socket2/core29"
           },
           "rank": -1,
           "size": 1,
@@ -552,9 +552,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "30",
-          "name": "rack0/node30/socket31/core30",
+          "name": "core30",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core30"
+            "containment": "/cluster-red0/rack0/node2/socket2/core30"
           },
           "rank": -1,
           "size": 1,
@@ -569,9 +569,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "31",
-          "name": "rack0/node30/socket31/core31",
+          "name": "core31",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core31"
+            "containment": "/cluster-red0/rack0/node2/socket2/core31"
           },
           "rank": -1,
           "size": 1,
@@ -586,9 +586,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "0",
-          "name": "rack0/node2/socket3/core0",
+          "name": "core0",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core0"
+            "containment": "/cluster-red0/rack0/node0/socket0/core0"
           },
           "rank": -1,
           "size": 1,
@@ -603,9 +603,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "32",
-          "name": "rack0/node30/socket31/core32",
+          "name": "core32",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core32"
+            "containment": "/cluster-red0/rack0/node2/socket2/core32"
           },
           "rank": -1,
           "size": 1,
@@ -620,9 +620,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "33",
-          "name": "rack0/node30/socket31/core33",
+          "name": "core33",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core33"
+            "containment": "/cluster-red0/rack0/node2/socket2/core33"
           },
           "rank": -1,
           "size": 1,
@@ -637,9 +637,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "34",
-          "name": "rack0/node30/socket31/core34",
+          "name": "core34",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core34"
+            "containment": "/cluster-red0/rack0/node2/socket2/core34"
           },
           "rank": -1,
           "size": 1,
@@ -654,9 +654,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "35",
-          "name": "rack0/node30/socket31/core35",
+          "name": "core35",
           "paths": {
-            "containment": "/cluster-red0/rack0/node30/socket31/core35"
+            "containment": "/cluster-red0/rack0/node2/socket2/core35"
           },
           "rank": -1,
           "size": 1,
@@ -671,9 +671,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "1",
-          "name": "rack0/node2/socket3/core1",
+          "name": "core1",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core1"
+            "containment": "/cluster-red0/rack0/node0/socket0/core1"
           },
           "rank": -1,
           "size": 1,
@@ -688,9 +688,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "2",
-          "name": "rack0/node2/socket3/core2",
+          "name": "core2",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core2"
+            "containment": "/cluster-red0/rack0/node0/socket0/core2"
           },
           "rank": -1,
           "size": 1,
@@ -705,9 +705,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "3",
-          "name": "rack0/node2/socket3/core3",
+          "name": "core3",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core3"
+            "containment": "/cluster-red0/rack0/node0/socket0/core3"
           },
           "rank": -1,
           "size": 1,
@@ -722,9 +722,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "4",
-          "name": "rack0/node2/socket3/core4",
+          "name": "core4",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core4"
+            "containment": "/cluster-red0/rack0/node0/socket0/core4"
           },
           "rank": -1,
           "size": 1,
@@ -739,9 +739,9 @@
           "basename": "core",
           "exclusive": false,
           "id": "5",
-          "name": "rack0/node2/socket3/core5",
+          "name": "core5",
           "paths": {
-            "containment": "/cluster-red0/rack0/node2/socket3/core5"
+            "containment": "/cluster-red0/rack0/node0/socket0/core5"
           },
           "rank": -1,
           "size": 1,
@@ -1270,5 +1270,5 @@
       }
     ]
   },
-  "Name": "cluster-red"
+  "name": "cluster-red"
 }
