@@ -19,6 +19,11 @@ class RainbowSchedulerStub(object):
             request_serializer=rainbow__pb2.RegisterRequest.SerializeToString,
             response_deserializer=rainbow__pb2.RegisterResponse.FromString,
         )
+        self.RegisterSubsystem = channel.unary_unary(
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/RegisterSubsystem",
+            request_serializer=rainbow__pb2.RegisterRequest.SerializeToString,
+            response_deserializer=rainbow__pb2.RegisterResponse.FromString,
+        )
         self.SubmitJob = channel.unary_unary(
             "/convergedcomputing.org.grpc.v1.RainbowScheduler/SubmitJob",
             request_serializer=rainbow__pb2.SubmitJobRequest.SerializeToString,
@@ -40,6 +45,12 @@ class RainbowSchedulerServicer(object):
     """RainbowSchedulerService provides API endpoints for interacting with the central scheduler service"""
 
     def Register(self, request, context):
+        """Register cluster - request to register a new cluster"""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
+
+    def RegisterSubsystem(self, request, context):
         """Register cluster - request to register a new cluster"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
@@ -68,6 +79,11 @@ def add_RainbowSchedulerServicer_to_server(servicer, server):
     rpc_method_handlers = {
         "Register": grpc.unary_unary_rpc_method_handler(
             servicer.Register,
+            request_deserializer=rainbow__pb2.RegisterRequest.FromString,
+            response_serializer=rainbow__pb2.RegisterResponse.SerializeToString,
+        ),
+        "RegisterSubsystem": grpc.unary_unary_rpc_method_handler(
+            servicer.RegisterSubsystem,
             request_deserializer=rainbow__pb2.RegisterRequest.FromString,
             response_serializer=rainbow__pb2.RegisterResponse.SerializeToString,
         ),
@@ -114,6 +130,35 @@ class RainbowScheduler(object):
             request,
             target,
             "/convergedcomputing.org.grpc.v1.RainbowScheduler/Register",
+            rainbow__pb2.RegisterRequest.SerializeToString,
+            rainbow__pb2.RegisterResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
+
+    @staticmethod
+    def RegisterSubsystem(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/RegisterSubsystem",
             rainbow__pb2.RegisterRequest.SerializeToString,
             rainbow__pb2.RegisterResponse.FromString,
             options,

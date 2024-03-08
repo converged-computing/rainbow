@@ -28,6 +28,7 @@ type Client interface {
 
 	// Cluster interactions
 	Register(ctx context.Context, clusterName, secret, clusterNodes, subsystem string) (*pb.RegisterResponse, error)
+	RegisterSubsystem(ctx context.Context, clusterName, secret, subsystemNodes, subsystem string) (*pb.RegisterResponse, error)
 
 	// Job Client Interactions
 	AcceptJobs(ctx context.Context, cluster, secret string, jobids []int32) (*pb.AcceptJobsResponse, error)

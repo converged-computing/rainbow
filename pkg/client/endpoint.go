@@ -175,7 +175,7 @@ func (c *RainbowClient) Register(
 	}
 	// The cluster nodes file must be defined
 	if clusterNodes == "" {
-		return response, fmt.Errorf("cluster nodes file must be provided with --cluster-nodes")
+		return response, fmt.Errorf("cluster nodes file must be provided with --nodes-json")
 	}
 
 	// and exist
@@ -209,5 +209,62 @@ func (c *RainbowClient) Register(
 	if err != nil {
 		return response, errors.Wrap(err, "could not register cluster")
 	}
+	return response, nil
+}
+
+// Register makes a request to register a new cluster
+func (c *RainbowClient) RegisterSubsystem(
+	ctx context.Context,
+	cluster string,
+	secret string,
+	subsystemNodes string,
+	subsystem string,
+) (*pb.RegisterResponse, error) {
+
+	response := &pb.RegisterResponse{}
+
+	// Unlike register, this is the cluster to add the subsytem for.
+	if cluster == "" {
+		return response, errors.New("cluster is required")
+	}
+	if secret == "" {
+		return response, errors.New("secret is required")
+	}
+	if !c.Connected() {
+		return response, errors.New("client is not connected")
+	}
+	if subsystemNodes == "" {
+		return response, fmt.Errorf("subsystem nodes file must be provided with --subsys-nodes")
+	}
+	_, err := utils.PathExists(subsystemNodes)
+	if err != nil {
+		return response, errors.New(fmt.Sprintf("subsystem nodes file %s does not exist: %s", subsystemNodes, err))
+	}
+
+	// Read in the subsystem nodes - still JGF!
+	_, nodes, err := graph.ReadNodeJsonGraph(subsystemNodes)
+	if err != nil {
+		return response, err
+	}
+
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	// Hit the register subsystem endpoint
+	response, err = c.service.RegisterSubsystem(ctx, &pb.RegisterRequest{
+		Name:      cluster,
+		Secret:    secret,
+		Nodes:     nodes,
+		Subsystem: subsystem,
+		Sent:      ts.Now(),
+	})
+
+	// For now we blindly accept all register, it's a fake endpoint
+
+	if err != nil {
+		return response, errors.Wrap(err, "could not register cluster")
+	}
+
 	return response, nil
 }

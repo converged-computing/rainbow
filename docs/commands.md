@@ -70,7 +70,7 @@ make register
 If you ran this using the rainbow client you would do:
 
 ```bash
-rainbow register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/scheduler/rainbow-config.yaml --save
+rainbow register --cluster-name keebler --nodes-json ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/scheduler/rainbow-config.yaml --save
 ```
 
 Note in the above we are providing a config file path and `--save` so our cluster secret gets saved there. Be careful always about overwriting any configuration file.
@@ -101,6 +101,7 @@ go run cmd/server/server.go --global-token rainbow
  "keebler": {
   "Name": "keebler",
   "Counts": {
+   "cluster": 1,
    "core": 36,
    "node": 3,
    "rack": 1,
@@ -363,14 +364,72 @@ We would expect edges for I/O to reference them as follows - in the example belo
 
 Note that is only partial json, and validation when adding a subsystem will ensure that:
 
-- All nodes in the subsystem are linked to the dominant subsystem graph except for the root
+- All nodes in the subsystem are linked to the dominant subsystem graph or another subsystem node.
 - All edges defined for the subsystem exist in the graph.
 
-The root exists primarily as a handle to all of the children in the subsyste. You are not allowed to add edges to nodes that don't exist in the dominant subsystem, nor are you allowed to add subsystem nodes that are not being used (and are unlinked or have no edges).
+The root exists primarily as a handle to all of the children in the subsystem. You are not allowed to add edges to nodes that don't exist in the dominant subsystem, nor are you allowed to add subsystem nodes that are not being used (and are unlinked or have no edges). When you run the register command, you'll see the following output (e.g, I normally have two terminals and do):
 
-**Question for Hari**
+```bash
+# terminal 1
+rm rainbow.db && make server
 
-What is a `mtl1unit` vs `mtl2unit` for the rabbit? The first is local (exclusive) and the second shared but I want to understand the names there.
+# terminal 2
+make register && make subsystem
+```
+
+And then I'll see the following output in terminal 1:
+
+```console
+...
+2024/03/08 18:34:44 📝️ received register: keebler
+2024/03/08 18:34:44 Received cluster graph with 44 nodes and 86 edges
+2024/03/08 18:34:44 SELECT count(*) from clusters WHERE name = 'keebler': (0)
+2024/03/08 18:34:44 INSERT into clusters (name, token, secret) VALUES ("keebler", "rainbow", "d6aa12a2-cbff-4504-8a0b-1b36e8796ed8"): (1)
+2024/03/08 18:34:44 Preparing to load 44 nodes and 86 edges
+2024/03/08 18:34:44 We have made an in memory graph (subsystem cluster) with 45 vertices!
+{
+ "keebler": {
+  "Name": "keebler",
+  "Counts": {
+   "cluster": 1,
+   "core": 36,
+   "node": 3,
+   "rack": 1,
+   "socket": 3
+  }
+ }
+}
+2024/03/08 18:34:45 SELECT * from clusters WHERE name LIKE "keebler" LIMIT 1: keebler
+2024/03/08 18:34:45 📝️ received subsystem register: keebler
+2024/03/08 18:34:45 Preparing to load 6 nodes and 30 edges
+2024/03/08 18:34:45 We have made an in memory graph (subsystem io) with 7 vertices, with 15 connections to the dominant!
+{
+ "keebler": {
+  "Name": "keebler",
+  "Counts": {
+   "io": 1,
+   "mtl1unit": 1,
+   "mtl2unit": 1,
+   "mtl3unit": 1,
+   "nvme": 1,
+   "shm": 1
+  }
+ }
+}
+```
+And in terminal 2:
+
+```console
+...
+2024/03/08 18:34:44 Saving cluster secret to ./docs/examples/scheduler/rainbow-config.yaml
+go run cmd/rainbow/rainbow.go register subsystem --subsystem io --nodes-json ./docs/examples/scheduler/cluster-io-subsystem.json --config-path ./docs/examples/scheduler/rainbow-config.yaml
+2024/03/08 18:34:45 🌈️ starting client (localhost:50051)...
+2024/03/08 18:34:45 registering subsystem to cluster: keebler
+2024/03/08 18:34:45 status:REGISTER_SUCCESS
+```
+
+Next we need to think about how to add metadata to the jobspec that is relevant to asking for specific subsystem resources (in this case, IO). Hari is calling these intents.
+
 
 
 [home](/README.md#rainbow-scheduler)

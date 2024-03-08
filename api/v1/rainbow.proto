@@ -12,14 +12,17 @@ service RainbowScheduler {
   // Register cluster - request to register a new cluster
   rpc Register(RegisterRequest) returns (RegisterResponse);
 
+  // Register cluster - request to register a new cluster
+  rpc RegisterSubsystem(RegisterRequest) returns (RegisterResponse);
+
   // Job Submission - request for submitting a job to a named cluster
   rpc SubmitJob(SubmitJobRequest) returns (SubmitJobResponse);
 
   // Request Job - ask the rainbow scheduler for up to max jobs
   rpc ReceiveJobs(ReceiveJobsRequest) returns (ReceiveJobsResponse);
 
-   // Accept Jobs - accept some number of jobs
-   rpc AcceptJobs(AcceptJobsRequest) returns (AcceptJobsResponse);
+  // Accept Jobs - accept some number of jobs
+  rpc AcceptJobs(AcceptJobsRequest) returns (AcceptJobsResponse);
 }
 
 // RegisterRequest registers a cluster to the scheduler service
@@ -47,7 +50,6 @@ message SubmitJobRequest {
     string name = 1;
     string token = 2;
   }
-
 }
 
 // RequestJobsRequest is used by a cluster (or other entity that can run jobs)

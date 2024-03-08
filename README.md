@@ -22,6 +22,7 @@ For more information:
 - clusters
  - implement function to add a subsystem to an existing cluster (e.g., add I/O)
 - subsystems
+  - do we need bidirectional links for the memory graph?
   - a satisfies request will need to have a representation of subsystems. E.g., what are we asking of each?
     - right now we assume a node resources request going to the dominant subsystem
   - we will want a function to add a new subsystem, right now we have one dominant for nodes

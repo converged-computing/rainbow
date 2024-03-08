@@ -37,6 +37,9 @@ type GraphBackend interface {
 
 	// Add nodes for a newly registered cluster
 	AddCluster(name string, nodes *graph.JsonGraph, subsystem string) error
+
+	// Add a subsystem to the graph
+	AddSubsystem(name string, nodes *graph.JsonGraph, subsystem string) error
 }
 
 // List returns known backends

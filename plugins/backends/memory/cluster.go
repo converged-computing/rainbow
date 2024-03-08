@@ -18,14 +18,18 @@ import (
 	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 )
 
+var (
+	// cluster == containment == nodes
+	defaultDominantSubsystem = "cluster"
+	containsRelation         = "contains"
+)
+
 // A ClusterGraph holds one or more subsystems
 // TODO add support for >1 subsystem, start with dominant
 type ClusterGraph struct {
 	subsystem  map[string]*Subsystem
 	lock       sync.RWMutex
 	backupFile string
-
-	// TODO: cluster level metrics?
 
 	// The dominant subsystem is a lookup in the subsystem map
 	// It defaults to nodes (node resources)
@@ -45,19 +49,29 @@ func (c *ClusterGraph) getSubsystem(subsystem string) string {
 	return subsystem
 }
 
+// validateNodes ensures that we have at least one node and edge
+func (c *ClusterGraph) validateNodes(nodes *jgf.JsonGraph) (error, int, int) {
+	var err error
+	nNodes := len(nodes.Graph.Nodes)
+	nEdges := len(nodes.Graph.Edges)
+	if nEdges == 0 || nNodes == 0 {
+		err = fmt.Errorf("subsystem cluster must have at least one edge and node")
+	}
+	return err, nNodes, nEdges
+}
+
 // NewClusterGraph creates a new cluster graph with a dominant subsystem
-// TODO we will want a function that can add a new subsystem
+// We assume the dominant is hard coded to be containment
 func NewClusterGraph() *ClusterGraph {
 
 	// For now, the dominant subsystem is hard coded to be nodes (resources)
-	dominant := "nodes"
-	subsystem := NewSubsystem()
-	subsystems := map[string]*Subsystem{dominant: subsystem}
+	subsystem := NewSubsystem(defaultDominantSubsystem)
+	subsystems := map[string]*Subsystem{defaultDominantSubsystem: subsystem}
 
 	// TODO options / algorithms can come from config
 	g := &ClusterGraph{
 		subsystem:         subsystems,
-		dominantSubsystem: dominant,
+		dominantSubsystem: defaultDominantSubsystem,
 	}
 	// Listen for syscalls to exit
 	g.awaitExit()
@@ -185,78 +199,37 @@ func (g *ClusterGraph) RegisterCluster(
 	}
 
 	// Load jgf into graph for that subsystem!
-	err = g.LoadClusterNodes(name, &nodes, subsystem)
+	err = g.LoadClusterNodes(name, &nodes, g.getSubsystem(""))
 
 	// do something with g.subsystem
 	return &response, err
 }
 
+func getNamespacedName(clusterName, name string) string {
+	return fmt.Sprintf("%s-%s", clusterName, name)
+}
+
 func (g *ClusterGraph) LoadClusterNodes(
-	name string,
+	clusterName string,
 	nodes *jgf.JsonGraph,
 	subsystem string,
 ) error {
 
-	// Fall back to dominant subsystem name
 	subsystem = g.getSubsystem(subsystem)
-
-	// Let's be pedantic - no clusters allowed without nodes or edges
-	nNodes := len(nodes.Graph.Nodes)
-	nEdges := len(nodes.Graph.Edges)
-	if nEdges == 0 || nNodes == 0 {
-		return fmt.Errorf("cluster must have at least one edge and node")
-	}
-
-	// Grab the current subsystem - it must exist
-	ss, ok := g.subsystem[subsystem]
-	if !ok {
-		return fmt.Errorf("subsystem %s does not exist. Ensure it is created first", subsystem)
-	}
-
-	g.lock.Lock()
-	defer g.lock.Unlock()
-	log.Printf("Preparing to load %d nodes and %d edges\n", nNodes, nEdges)
-
-	// Get the root vertex, every new subsystem starts there!
-	root, exists := ss.GetNode("root")
-	if !exists {
-		return fmt.Errorf("root node does not exist for subsystem %s, this should not happen", subsystem)
-	}
-
-	// The cluster root can only exist as one, and needs to be deleted if it does.
-	_, ok = ss.lookup[name]
-	if ok {
-		log.Printf("cluster %s already exists, cleaning up\n", name)
-		delete(ss.lookup, name)
-	}
-
-	// Create an empty resource counter for the cluster
-	ss.Metrics.NewResource(name)
-
-	// Now loop through the nodes and add them, keeping a temporary lookup
-	lookup := map[string]int{"root": root}
-	for nid, node := range nodes.Graph.Nodes {
-
-		// Currently we are saving the type, size, and unit
-		resource := NewResource(node)
-
-		// levelName (cluster)
-		// name for lookup/cache (if we want to keep it there)
-		// resource type, size, and unit
-		var id int
-		if resource.Type == "cluster" {
-
-			// If it's the cluster, we save the named identifier for it
-			id = ss.AddNode("", name, resource.Type, resource.Size, resource.Unit)
-			lookup[name] = id
-		} else {
-			id = ss.AddNode(name, "", resource.Type, resource.Size, resource.Unit)
-		}
-		lookup[nid] = id
+	ss, lookup, err := g.addNodes(clusterName, nodes, subsystem)
+	if err != nil {
+		return err
 	}
 
 	// Now add edges
 	for _, edge := range nodes.Graph.Edges {
+
+		// We only care about contains for now, recursive lets us just return
+		// This reduces redundancy of edges. We will need the double linking
+		// for subsystems
+		if edge.Relation != containsRelation {
+			continue
+		}
 
 		// Get the nodes in the lookup
 		src, ok := lookup[edge.Source]
@@ -268,7 +241,7 @@ func (g *ClusterGraph) LoadClusterNodes(
 			return fmt.Errorf("destination %s is defined as an edge, but missing as node in graph", edge.Label)
 		}
 		// fmt.Printf("Adding edge from %s -%s-> %s\n", ss.Vertices[src].Type, edge.Relation, ss.Vertices[dest].Type)
-		err := ss.AddEdge(src, dest, 0, edge.Relation)
+		err := ss.AddInternalEdge(src, dest, 0, edge.Relation, g.dominantSubsystem)
 		if err != nil {
 			return err
 		}
