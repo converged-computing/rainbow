@@ -61,7 +61,7 @@ We likely will be designing other abstractions to define the work, which is not 
 
 ### 5. Assign Work
 
-![img/5-submit-work.png](img/5-submit-work.png)
+![img/5-assign-work.png](img/5-assign-work.png)
 
 When some number of clusters are found, the final request is sent to rainbow, which authenticates the user (1), validates access to the clusters (2), and assigns the work. Assignment is simply saving the Jobspec and cluster in the database (3), to be received by the cluster when it pulls next (4). This next step is called receiving work, and is implemented but does not have a diagram here. It comes down to having an endpoint that the cluster uses to receive jobs, authenticating itself with the secret, and then receiving the full jobs with the jobspecs. It accepts them and sends back a success response for rainbow to remove the record from the database. From this point on, the job is owned by the receiving cluster.
 
