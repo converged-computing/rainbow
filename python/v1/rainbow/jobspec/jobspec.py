@@ -48,7 +48,12 @@ class JobspecV1:
         # Case 1: given a raw filename
         if isinstance(filename, str) and os.path.exists(filename):
             self.filename = os.path.abspath(filename)
-            self.jobspec = utils.read_json(self.filename)
+
+            try:
+                self.jobspec = utils.read_json(self.filename)
+            except:
+                self.jobspec = utils.read_yaml(self.filename)
+
         # Case 2: jobspec as dict (that we just want to validate)
         elif isinstance(filename, dict):
             self.jobspec = filename

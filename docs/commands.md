@@ -70,7 +70,7 @@ make register
 If you ran this using the rainbow client you would do:
 
 ```bash
-rainbow register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/scheduler/rainbow-config.yaml --save
+rainbow register --cluster-name keebler --nodes-json ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/scheduler/rainbow-config.yaml --save
 ```
 
 Note in the above we are providing a config file path and `--save` so our cluster secret gets saved there. Be careful always about overwriting any configuration file.
@@ -101,6 +101,7 @@ go run cmd/server/server.go --global-token rainbow
  "keebler": {
   "Name": "keebler",
   "Counts": {
+   "cluster": 1,
    "core": 36,
    "node": 3,
    "rack": 1,
@@ -148,10 +149,120 @@ the following reasons:
 In Computer Science I think they are used interchangeably. For next steps we will be updating the memory graph database to be a little more meaty (adding proper metadata and likely a summary of resources at the top as a quick "does it satisfy" heuristic)
 and then working on the next interaction, the client submit command, which is going to hit the `Satisfies` endpoint. I will write up more about the database and submit design after that.
 
+## Register Subsystem
+
+Adding a subsystem means adding another graph that has nodes with edges that connect (in some meaningful way) to the dominant subsystem.
+
+### Nodes
+
+While the dominant subsystem nodes have identifiers without a namespace (e.g., "0" through "3" for 4 nodes) a subsystem needs to own a namespace of nodes, so it should have `<subsystem-name>0` through `<subsystem-name>N`, where the subsystem name is also the root of the subsystem graph.
+
+### Edges
+
+The edges should reference a node in the dominant subsystem. For example, given that these nodes have these corresponding vertex identifiers (the label or unique id):
+
+- node0 --> "2"
+- node1 --> "16"
+- node2 --> "30"
+
+We would expect edges for I/O to reference them as follows - in the example below, the I/O node of type io0 (the global identifier) is attached or relevant for node0 above:
+
+```json
+{
+    "edges": [
+      {
+        "source": "2",
+        "target": "io1",
+        "relation": "contains"
+      },
+      {
+        "source": "io1",
+        "target": "2",
+        "relation": "in"
+      }
+    ]
+}
+```
+
+Note that is only partial json, and validation when adding a subsystem will ensure that:
+
+- All nodes in the subsystem are linked to the dominant subsystem graph or another subsystem node.
+- All edges defined for the subsystem exist in the graph.
+
+The root exists primarily as a handle to all of the children in the subsystem. You are not allowed to add edges to nodes that don't exist in the dominant subsystem, nor are you allowed to add subsystem nodes that are not being used (and are unlinked or have no edges). When you run the register command, you'll see the following output (e.g, I normally have two terminals and do):
+
+```bash
+# terminal 1
+rm rainbow.db && make server
+
+# terminal 2
+make register && make subsystem
+```
+
+And then I'll see the following output in terminal 1:
+
+```console
+...
+2024/03/08 18:34:44 📝️ received register: keebler
+2024/03/08 18:34:44 Received cluster graph with 44 nodes and 86 edges
+2024/03/08 18:34:44 SELECT count(*) from clusters WHERE name = 'keebler': (0)
+2024/03/08 18:34:44 INSERT into clusters (name, token, secret) VALUES ("keebler", "rainbow", "d6aa12a2-cbff-4504-8a0b-1b36e8796ed8"): (1)
+2024/03/08 18:34:44 Preparing to load 44 nodes and 86 edges
+2024/03/08 18:34:44 We have made an in memory graph (subsystem cluster) with 45 vertices!
+{
+ "keebler": {
+  "Name": "keebler",
+  "Counts": {
+   "cluster": 1,
+   "core": 36,
+   "node": 3,
+   "rack": 1,
+   "socket": 3
+  }
+ }
+}
+2024/03/08 18:34:45 SELECT * from clusters WHERE name LIKE "keebler" LIMIT 1: keebler
+2024/03/08 18:34:45 📝️ received subsystem register: keebler
+2024/03/08 18:34:45 Preparing to load 6 nodes and 30 edges
+2024/03/08 18:34:45 We have made an in memory graph (subsystem io) with 7 vertices, with 15 connections to the dominant!
+{
+ "keebler": {
+  "Name": "keebler",
+  "Counts": {
+   "io": 1,
+   "mtl1unit": 1,
+   "mtl2unit": 1,
+   "mtl3unit": 1,
+   "nvme": 1,
+   "shm": 1
+  }
+ }
+}
+```
+And in terminal 2:
+
+```console
+...
+2024/03/08 18:34:44 Saving cluster secret to ./docs/examples/scheduler/rainbow-config.yaml
+go run cmd/rainbow/rainbow.go register subsystem --subsystem io --nodes-json ./docs/examples/scheduler/cluster-io-subsystem.json --config-path ./docs/examples/scheduler/rainbow-config.yaml
+2024/03/08 18:34:45 🌈️ starting client (localhost:50051)...
+2024/03/08 18:34:45 registering subsystem to cluster: keebler
+2024/03/08 18:34:45 status:REGISTER_SUCCESS
+```
+
+Next we are going to submit jobs - first without anything special, and then taking into account our subsystem. This design is based on the [thinking here](https://github.com/flux-framework/flux-sched/discussions/1153#discussioncomment-8726678).
+
+1. Tasks have resources, because technically speaking, a subsystem is another kind of resource. It's just the needs specific to a task.
+2. Each resource entry is scoped to the equivalently named subsystem. The subsystem can control the algorithms and metadata provided in this section.
+3. A user can request a kind of resource defined in a subsystem that is present on the cluster (e.g., the storage type, power, GPU, etc.) without knowing about additional plugins / data files that are needed.
 
 ## Submit Job
 
-Submission has two steps that are discussed below.
+Submission has two steps that are discussed below. We will talk about:
+
+1. The satisfy request
+2. Assignment
+3. Satisfy and Assignment in the context of asking for subsystem resources
 
 ### 1. Satisfy Request
 
@@ -294,6 +405,44 @@ In the above, we see the default algorithm (if it were not provided) that is ran
 is selected from randomly. We will likely have some representation of state provided in the graph or rainbow, and combined with
 this ability to customize algorithms, a more intelligent assignment to clusters.
 
+### 3. Satisfy and Assignment for a Subsystem
+
+Now we will take the same command, but submit with a jobspec directly. This is considered an advanced use-case, because it's unlikely that someone would be writing jobspecs directly (but not impossible). We have a simple design here for the jobspec that is detailed in [algorithms](algorithms.md). You can run the example, again with two terminals, as follows:
+
+```bash
+# terminal 1 for server
+rm -f rainbow.db && make server
+
+# terminal 2 to register cluster, subsystem, and submit job
+make register && make subsystem && go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/scheduler/rainbow-config.yaml --jobspec ./docs/examples/scheduler/jobspec-io.yaml
+```
+
+The new portion from the above is seeing that the subsystem "io" is satisfied at some level of resource.
+
+```console
+...
+  🔍️ Exploring cluster keebler deeper with depth first search
+
+    👀️ Looking for 'node' in cluster keebler
+      => Checking vertex 'cluster' (count=1) for 'node' (need=2)
+      => Checking vertex 'cluster' (count=1) for 'node' (need=2)
+      => Checking vertex 'rack' (count=1) for 'node' (need=2)
+      => Checking vertex 'node' (count=1) for 'node' (need=2)
+      => Checking vertex 'node' (count=1) for 'node' (need=2)
+     ⏳️ keebler still contender, 3/2 of needed node satisfied
+
+    👀️ Looking for 'slot' in cluster keebler
+      => Assessing needs for subsystem io
+      => Resource 'node' satisfies subsystem io shm
+    🎯️ dfs: we found 1 clusters to satisfy the request
+2024/03/09 13:49:09 SELECT * from clusters WHERE name LIKE "keebler" LIMIT 1: keebler
+2024/03/09 13:49:09 📝️ received job ior for 1 contender clusters
+2024/03/09 13:49:09 📝️ job ior is assigned to cluster keebler
+```
+
+And the work is still assigned to the cluster.
+
+
 ## Receive Jobs
 
 > Receive: Request and Accept jobs
@@ -326,31 +475,5 @@ Note that if you don't define the max jobs (so it is essentially 0) you will get
 Awesome! Next we can put that logic in a flux instance (from the Python grpc to start) and then have Flux
 accept some number of them. The response back to the rainbow scheduler will be those to accept, which will then be removed from the database. For another day.
 
-## Accept Jobs
-
-A derivative of the above is to request and accept jobs. This can be done with the example client above, and adding `--accept N`.
-
-```console
-$ go run ./cmd/rainbow/rainbow.go request --request-secret 3cc06871-0990-4dc2-94d5-eec653c5d7a0 --cluster-name keebler --max-jobs 3 --accept 1
-```
-```console
-2024/02/13 12:29:29 🌀️ Found 3 jobs!
-2024/02/13 12:29:29 1 : {"id":1,"cluster":"keebler","name":"hostname","nodes":1,"tasks":0,"command":"hostname"}
-2024/02/13 12:29:29 2 : {"id":2,"cluster":"keebler","name":"sleep","nodes":1,"tasks":0,"command":"sleep 10"}
-2024/02/13 12:29:29 3 : {"id":3,"cluster":"keebler","name":"dinosaur","nodes":1,"tasks":0,"command":"dinosaur things"}
-2024/02/13 12:29:29 ✅️ Accepting 1 jobs!
-2024/02/13 12:29:29    1
-2024/02/13 12:29:29 status:RESULT_TYPE_SUCCESS
-```
-
-What this does is randomly select from the set you receive, and send back a response to the server to accept it, meaning the identifier is removed from the database. The server shows the following:
-
-```console
-2024/02/13 12:29:29 🌀️ accepting 1 for cluster keebler
-2024/02/13 12:29:29 DELETE FROM jobs WHERE cluster = 'keebler' AND idJob in (1): (1)
-```
-
-The logic you would expect is there - that you can't accept greater than the number available.
-You could try asking for a high level of max jobs again, and see that there is one fewer than before. It was deleted from the database.
 
 [home](/README.md#rainbow-scheduler)

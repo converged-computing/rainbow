@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
+	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 
 	"github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 	"google.golang.org/grpc"
@@ -37,6 +37,9 @@ type GraphBackend interface {
 
 	// Add nodes for a newly registered cluster
 	AddCluster(name string, nodes *graph.JsonGraph, subsystem string) error
+
+	// Add a subsystem to the graph
+	AddSubsystem(name string, nodes *graph.JsonGraph, subsystem string) error
 }
 
 // List returns known backends

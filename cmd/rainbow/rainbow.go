@@ -38,6 +38,7 @@ func main() {
 	registerCmd := parser.NewCommand("register", "Register a new cluster")
 	submitCmd := parser.NewCommand("submit", "Submit a job to a rainbow scheduler")
 	receiveCmd := parser.NewCommand("receive", "Receive and accept jobs")
+	registerClusterCmd := registerCmd.NewCommand("cluster", "Register a new cluster")
 
 	// Configuration
 	configCmd := parser.NewCommand("config", "Interact with rainbow configs")
@@ -54,11 +55,16 @@ func main() {
 	clusterSecret := receiveCmd.String("", "request-secret", &argparse.Options{Help: "Cluster 'secret' to retrieve jobs"})
 	maxJobs := receiveCmd.Int("j", "max-jobs", &argparse.Options{Help: "Maximum number of jobs to accept"})
 
-	// Register
-	secret := registerCmd.String("s", "secret", &argparse.Options{Default: defaultSecret, Help: "Registration 'secret'"})
-	clusterNodes := registerCmd.String("", "cluster-nodes", &argparse.Options{Help: "Cluster nodes json (JGF v2)"})
+	// Register Shared arguments
+	clusterNodes := registerCmd.String("", "nodes-json", &argparse.Options{Help: "Cluster nodes json (JGF v2)"})
+
+	// Cluster register arguments
+	secret := registerClusterCmd.String("s", "secret", &argparse.Options{Default: defaultSecret, Help: "Registration 'secret'"})
 	subsystem := registerCmd.String("", "subsystem", &argparse.Options{Help: "Subsystem to register cluster to (defaults to dominant, nodes)"})
-	saveSecret := registerCmd.Flag("", "save", &argparse.Options{Help: "Save cluster secret to config file, if provided"})
+	saveSecret := registerClusterCmd.Flag("", "save", &argparse.Options{Help: "Save cluster secret to config file, if provided"})
+
+	// Register subsystem (requires config file for authentication)
+	subsysCmd := registerCmd.NewCommand("subsystem", "Register a new subsystem")
 
 	// Submit (note that command for now needs to be in quotes to get the whole thing)
 	token := submitCmd.String("", "token", &argparse.Options{Default: defaultSecret, Help: "Client token to submit jobs with."})
@@ -66,6 +72,7 @@ func main() {
 	tasks := submitCmd.Int("t", "tasks", &argparse.Options{Help: "Number of tasks to request (per node? total?)"})
 	command := submitCmd.String("c", "command", &argparse.Options{Default: defaultSecret, Help: "Command to submit"})
 	jobName := submitCmd.String("", "job-name", &argparse.Options{Help: "Name for the job (defaults to first command)"})
+	jobspec := submitCmd.String("", "jobspec", &argparse.Options{Help: "A yaml Jobspec to submit"})
 
 	// Now parse the arguments
 	err := parser.Parse(os.Args)
@@ -82,20 +89,37 @@ func main() {
 		}
 
 	} else if registerCmd.Happened() {
-		err := register.Run(
-			*host,
-			*clusterName,
-			*clusterNodes,
-			*secret,
-			*saveSecret,
-			*cfg,
-			*graphDatabase,
-			*subsystem,
-			*selectionAlgorithm,
-		)
-		if err != nil {
-			log.Fatalf("Issue with register: %s\n", err)
+
+		if subsysCmd.Happened() {
+			err := register.RegisterSubsystem(
+				*host,
+				*clusterName,
+				*clusterNodes,
+				*subsystem,
+				*cfg,
+			)
+			if err != nil {
+				log.Fatalf("Issue with register subsystem: %s\n", err)
+			}
+		} else if registerClusterCmd.Happened() {
+			err := register.Run(
+				*host,
+				*clusterName,
+				*clusterNodes,
+				*secret,
+				*saveSecret,
+				*cfg,
+				*graphDatabase,
+				*subsystem,
+				*selectionAlgorithm,
+			)
+			if err != nil {
+				log.Fatalf("Issue with register: %s\n", err)
+			}
+		} else {
+			log.Fatal("Register requires a command.")
 		}
+
 	} else if receiveCmd.Happened() {
 		err := receive.Run(
 			*host,
@@ -115,6 +139,7 @@ func main() {
 			*nodes,
 			*tasks,
 			*token,
+			*jobspec,
 			*clusterName,
 			*graphDatabase,
 			*cfg,

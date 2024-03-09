@@ -47,6 +47,36 @@ func (s *Server) Register(_ context.Context, in *pb.RegisterRequest) (*pb.Regist
 	return response, err
 }
 
+// Register a subsystem with the server
+func (s *Server) RegisterSubsystem(_ context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+	if in == nil {
+		return nil, errors.New("request is required")
+	}
+	if in.Name == "" || in.Secret == "" || in.Nodes == "" || in.Subsystem == "" {
+		return nil, errors.New("subsystem nodes, name, cluster name and secret are required")
+	}
+
+	// Validate the secret, this is for a specific cluster
+	_, err := s.db.ValidateClusterSecret(in.Name, in.Secret)
+	if err != nil {
+		return nil, errors.New("request denied")
+	}
+
+	nodes, err := graph.ReadNodeJsonGraphString(in.Nodes)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("cluster nodes are invalid: %s", err))
+	}
+
+	// A subsystem just needs to be added to the graph
+	log.Printf("📝️ received subsystem register: %s", in.Name)
+	response := pb.RegisterResponse{Status: pb.RegisterResponse_REGISTER_SUCCESS}
+	err = s.graph.AddSubsystem(in.Name, &nodes, in.Subsystem)
+	if err != nil {
+		response.Status = pb.RegisterResponse_REGISTER_ERROR
+	}
+	return &response, err
+}
+
 // SubmitJob submits a job to a specific cluster, or adds an entry to the database
 func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.SubmitJobResponse, error) {
 	if in == nil {

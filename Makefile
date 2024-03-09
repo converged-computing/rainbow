@@ -85,7 +85,11 @@ stream: ## Runs the interface client
 
 .PHONY: register
 register: ## Run mock registration
-	go run cmd/rainbow/rainbow.go register --cluster-name keebler --cluster-nodes ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/scheduler/rainbow-config.yaml --save
+	go run cmd/rainbow/rainbow.go register cluster --cluster-name keebler --nodes-json ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/scheduler/rainbow-config.yaml --save
+
+.PHONY: subsystem
+subsystem: ## Run mock registration
+	go run cmd/rainbow/rainbow.go register subsystem --subsystem io --nodes-json ./docs/examples/scheduler/cluster-io-subsystem.json --config-path ./docs/examples/scheduler/rainbow-config.yaml
 
 .PHONY: tag
 tag: ## Creates release tag

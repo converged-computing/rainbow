@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type RainbowSchedulerClient interface {
 	// Register cluster - request to register a new cluster
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
+	// Register cluster - request to register a new cluster
+	RegisterSubsystem(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	// Job Submission - request for submitting a job to a named cluster
 	SubmitJob(ctx context.Context, in *SubmitJobRequest, opts ...grpc.CallOption) (*SubmitJobResponse, error)
 	// Request Job - ask the rainbow scheduler for up to max jobs
@@ -43,6 +45,15 @@ func NewRainbowSchedulerClient(cc grpc.ClientConnInterface) RainbowSchedulerClie
 func (c *rainbowSchedulerClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
 	out := new(RegisterResponse)
 	err := c.cc.Invoke(ctx, "/convergedcomputing.org.grpc.v1.RainbowScheduler/Register", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rainbowSchedulerClient) RegisterSubsystem(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+	out := new(RegisterResponse)
+	err := c.cc.Invoke(ctx, "/convergedcomputing.org.grpc.v1.RainbowScheduler/RegisterSubsystem", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -82,6 +93,8 @@ func (c *rainbowSchedulerClient) AcceptJobs(ctx context.Context, in *AcceptJobsR
 type RainbowSchedulerServer interface {
 	// Register cluster - request to register a new cluster
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
+	// Register cluster - request to register a new cluster
+	RegisterSubsystem(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	// Job Submission - request for submitting a job to a named cluster
 	SubmitJob(context.Context, *SubmitJobRequest) (*SubmitJobResponse, error)
 	// Request Job - ask the rainbow scheduler for up to max jobs
@@ -97,6 +110,9 @@ type UnimplementedRainbowSchedulerServer struct {
 
 func (UnimplementedRainbowSchedulerServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
+}
+func (UnimplementedRainbowSchedulerServer) RegisterSubsystem(context.Context, *RegisterRequest) (*RegisterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterSubsystem not implemented")
 }
 func (UnimplementedRainbowSchedulerServer) SubmitJob(context.Context, *SubmitJobRequest) (*SubmitJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitJob not implemented")
@@ -134,6 +150,24 @@ func _RainbowScheduler_Register_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RainbowSchedulerServer).Register(ctx, req.(*RegisterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RainbowScheduler_RegisterSubsystem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RainbowSchedulerServer).RegisterSubsystem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/convergedcomputing.org.grpc.v1.RainbowScheduler/RegisterSubsystem",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RainbowSchedulerServer).RegisterSubsystem(ctx, req.(*RegisterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -202,6 +236,10 @@ var RainbowScheduler_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Register",
 			Handler:    _RainbowScheduler_Register_Handler,
+		},
+		{
+			MethodName: "RegisterSubsystem",
+			Handler:    _RainbowScheduler_RegisterSubsystem_Handler,
 		},
 		{
 			MethodName: "SubmitJob",

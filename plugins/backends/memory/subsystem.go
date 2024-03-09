@@ -4,337 +4,143 @@ import (
 	"fmt"
 	"log"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
-	v1 "github.com/compspec/jobspec-go/pkg/jobspec/v1"
+	"github.com/converged-computing/jsongraph-go/jsongraph/metadata"
+	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 )
 
 // NewSubsystem generates a new subsystem graph
-func NewSubsystem() *Subsystem {
+func NewSubsystem(name string) *Subsystem {
 	vertices := map[int]*Vertex{}
 	lookup := map[string]int{}
 	metrics := Metrics{ResourceSummary: map[string]Summary{}}
-
-	// TODO need to add metadata onto vertices
-	s := Subsystem{Vertices: vertices, lookup: lookup, Metrics: metrics}
+	s := Subsystem{
+		Vertices: vertices,
+		Lookup:   lookup,
+		Metrics:  metrics,
+		Name:     name,
+	}
 
 	// Create a top level vertex for all clusters that will be added
 	// Question: should the root be above the subsystems?
-	s.AddNode("", "root", "root", 1, "")
+	s.AddNode("", name, name, 1, "", metadata.Metadata{}, false)
 	return &s
 }
 
-// DFSForMatch WILL is a depth first search for matches
-// It starts by looking at total cluster resources on the top level,
-// and then traverses into those that match the first check
-// THIS IS EXPERIMENTAL and likely wrong, or missing details,
-// which is OK as we will only be using it for prototyping.
-func (s *Subsystem) DFSForMatch(jobspec *js.Jobspec) ([]string, error) {
+// LoadSubsystemNodes into the graph
+// For addition, we can have a two way pointer from the subsystem node TO
+// the dominant node and then back:
+// The pointer TO the dominant subsystem let's us find it to delete the opposing one
+// The other one is used during the search to find the subsystem node
+func (g *ClusterGraph) LoadSubsystemNodes(
+	clusterName string,
+	nodes *jgf.JsonGraph,
+	subsystem string,
+) error {
 
-	// Return a list of matching clusters
-	matches := []string{}
+	// Get the dominant subsystem
+	dom := g.DominantSubsystem()
 
-	// Do a quick top level count for resource types
-	totals := map[string]int32{}
+	// Does the subsystem exist? Remember this is for across clusters
+	_, ok := g.subsystem[subsystem]
+	if !ok {
+		ss := NewSubsystem(subsystem)
+		g.subsystem[subsystem] = ss
+	}
 
-	// Go sets loops to an initial value at start,
-	// so we need a function to recurse into nested resources
-	var checkResource func(resource *v1.Resource)
-	checkResource = func(resource *v1.Resource) {
-		count, ok := totals[resource.Type]
-		if !ok {
-			count = 0
+	ss, lookup, err := g.addNodes(clusterName, nodes, subsystem)
+	if err != nil {
+		return err
+	}
+
+	// Count dominant vertices references
+	count := 0
+
+	// Now add edges
+	for _, edge := range nodes.Graph.Edges {
+
+		// We are currently just saving one direction
+		// Not the boy band.
+		if edge.Relation != containsRelation {
+			continue
 		}
-		count += resource.Count
-		totals[resource.Type] = count
 
-		// This is the recursive bit
-		if resource.With != nil {
-			for _, with := range resource.With {
-				checkResource(&with)
+		// Two cases:
+		// 1. the src is in the dominant subsystem
+		// 2. The src is not, and both node are defined in the graph here
+		subIdx1, ok1 := lookup[edge.Source]
+		subIdx2, ok2 := lookup[edge.Target]
+
+		// Case 1: both are in the subsystem graph
+		if ok1 && ok2 {
+			// This says "subsystem resource in node"
+			ss.AddInternalEdge(subIdx1, subIdx2, 0, edge.Relation, subsystem)
+		} else {
+
+			// We need the namespaced name for the dom lookup
+			lookupName := getNamespacedName(clusterName, edge.Source)
+
+			// Case 2: the src is in the dominant subsystem
+			domIdx, ok := dom.Lookup[lookupName]
+			if !ok || !ok2 {
+				return fmt.Errorf("edge %s->%s is not internal, and not connected to the dominant subsystem", edge.Source, edge.Target)
+			}
+			count += 1
+			// Now add the link... the node exists in the subsystem but references a
+			// different subsystem as the edge.
+			// This says "dominant subsystem node conatains subsystem resource"
+			err := dom.AddSubsystemEdge(domIdx, ss.Vertices[subIdx2], 0, edge.Relation, subsystem)
+			if err != nil {
+				return err
 			}
 		}
 	}
+	log.Printf("We have made an in memory graph (subsystem %s) with %d vertices, with %d connections to the dominant!", subsystem, ss.CountVertices(), count)
+	g.subsystem[subsystem] = ss
 
-	// Make a call on each of the top level resources
-	for _, resource := range jobspec.Resources {
-		checkResource(&resource)
-	}
-
-	// Compare against each cluster we know about
-	for cluster, summary := range s.Metrics.ResourceSummary {
-		fmt.Println(summary)
-
-		isMatch := true
-		for resourceType, needed := range totals {
-
-			// TODO this should be part of a subsystem spec to ignore
-			if resourceType == "slot" {
-				continue
-			}
-
-			actual, ok := summary.Counts[resourceType]
-
-			// We don't know. Assume we can't schedule
-			if !ok {
-				fmt.Printf("  ❌️ cluster %s is missing resource type %s, assuming cannot schedule\n", cluster, resourceType)
-				isMatch = false
-				break
-			}
-			// We don't have enough resources
-			if int32(actual) < needed {
-				fmt.Printf("  ❌️ cluster %s does not have sufficient resource type %s - actual %d vs needed %d\n", cluster, resourceType, actual, needed)
-				isMatch = false
-				break
-			} else {
-				fmt.Printf("  ✅️ cluster %s has sufficient resource type %s - actual %d vs needed %d\n", cluster, resourceType, actual, needed)
-			}
-		}
-		// I don't think we need this, just be pedantic
-		if isMatch {
-			fmt.Printf("  match: 🎯️ cluster %s has enough resources and is a match\n", cluster)
-			matches = append(matches, cluster)
-		}
-	}
-
-	// No matches, womp womp.
-	if len(matches) != 0 {
-		// Now that we got through the quicker check, do a deeper search
-		return s.depthFirstSearch(matches, jobspec)
-	}
-
-	fmt.Println("  match: 😥️ no clusters could satisfy this request. We are sad")
-	return matches, nil
-}
-
-// depthFirstSearch fully searches the graph finding a list of maches and a jobspec
-func (s *Subsystem) depthFirstSearch(matches []string, jobspec *js.Jobspec) ([]string, error) {
-
-	// Prepare a lookup of tasks for slots
-	slots := map[string]*v1.Tasks{}
-	for _, task := range jobspec.Tasks {
-		slots[task.Slot] = &task
-	}
-
-	// Keep a list of final matches
-	finalMatches := []string{}
-
-	// Look through our potential matching clusters
-	for _, cluster := range matches {
-		fmt.Printf("\n  🔍️ Exploring cluster %s deeper with depth first search\n", cluster)
-
-		// This is the root vertex of the cluster "cluster" we start with it
-		root := s.lookup[cluster]
-		vertex := s.Vertices[root]
-
-		// Assume this is a match to start
-		isMatch := true
-
-		// Recursive function to recurse into slot resource and find count
-		// of matches for the slot. This returns a count of the matching
-		// slots under a parent level, recursing into child vertices until
-		// we find the right type (and take a count) or keep exploring
-		var findSlots func(vtx *Vertex, slot *v1.Resource) int32
-		findSlots = func(vtx *Vertex, resource *v1.Resource) int32 {
-
-			// This assumes the resource
-			// Is the current vertex what we need? If yes, assess if it can satisfy
-			slotsFound := int32(0)
-			if vtx.Type == resource.Type {
-
-				// I don't know if resource.Count can be zero, but be prepared...
-				if resource.Count == 0 {
-					return slotsFound
-				}
-				// How many full slots can we satisfy at this vertex?
-				// TODO how to handle the slot per/total thing?
-				return vtx.Size
-
-			} else {
-
-				// Otherwise, we haven't found the right level of the graph, keep going
-				for _, child := range vtx.Edges {
-
-					// Only interested in children. That sounds weird.
-					if child.Relation == "contains" {
-						slotsFound += findSlots(child.Vertex, resource)
-					}
-				}
-			}
-			return slotsFound
-		}
-
-		// Recursive function to Determine if a vertex satisfies a resource
-		// Given a resource and a vertex root, it returns the count of vertices under
-		// the root that satisfy the request.
-		var satisfies func(vtx *Vertex, resource *v1.Resource, found int32) int32
-		satisfies = func(vtx *Vertex, resource *v1.Resource, found int32) int32 {
-
-			// All my life, searchin' for a vertex like youuu <3
-			lookingAt := fmt.Sprintf("vertex '%s' (count=%d)", vtx.Type, vtx.Size)
-			lookingFor := fmt.Sprintf("for '%s' (need=%d)", resource.Type, resource.Count)
-			fmt.Printf("      => Checking %s %s\n", lookingAt, lookingFor)
-
-			// A slot needs deeper exploration, and we need to add per_slot/total logic
-			if resource.Type == "slot" {
-
-				// Keep going until we have all the slots, or we run out of places to look
-				return findSlots(vtx, resource)
-			}
-
-			// Wrong resource type, womp womp
-			if vtx.Type != resource.Type {
-				for _, child := range vtx.Edges {
-
-					// Update our found count to include recursing all children
-					if child.Relation == "contains" {
-						found += satisfies(child.Vertex, resource, found)
-
-						// Stop when we have enough
-						if found >= resource.Count {
-							return found
-						}
-					}
-				}
-			}
-
-			// this resource type is satisfied, keep going and add to count
-			if vtx.Type == resource.Type {
-				return found + vtx.Size
-			}
-
-			// I'm not sure we'd ever get here, might want to check
-			return found
-		}
-
-		// Traverse resource is the main function to handle traversing a cluster vertex
-		var traverseResource = func(resource *v1.Resource) bool {
-			fmt.Printf("\n    👀️ Looking for '%s' in cluster %s\n", resource.Type, cluster)
-
-			// Case 1: A slot needs to be explored to determine if we can satsify
-			// the count under it of some resource type
-			if resource.Type == "slot" {
-
-				// TODO: how does the slot Count (under tasks) fit in?
-				// I don't understand what these counts are, because they seem like MPI tasks
-				// but a slot can be defined at any level. So I'm going to ignore for now
-				// Suggestion - this needs to be more clear in jobspec v2.
-				// https://flux-framework.readthedocs.io/projects/flux-rfc/en/latest/spec_14.html
-
-				// These are logical groups of "stuff" that need to be scheduled together
-				slotsNeeded := resource.Count
-
-				// Keep going until we have all the slots, or we run out of places to look
-				slotsFound := int32(0)
-
-				// This assumes that the slot value is defined in the next resource block
-				if resource.With != nil {
-					for _, subresource := range resource.With {
-						slotsFound += findSlots(vertex, &subresource)
-
-						// The slot is satisfied and we can continue searching resources
-						if slotsFound >= slotsNeeded {
-							return true
-						}
-					}
-				}
-				// The slot is satisfied and we can continue searching resources
-				if slotsFound >= slotsNeeded {
-					return true
-				}
-				return false
-
-			} else {
-
-				// Keep traversing vertices, start at the graph root
-				foundMatches := satisfies(vertex, resource, int32(0))
-
-				// We don't have a match, abort.
-				if foundMatches < resource.Count {
-					reason := fmt.Sprintf("%d of %s and %d needed\n", foundMatches, resource.Type, resource.Count)
-					fmt.Printf("    ❌️ %s not a match, %s\n", cluster, reason)
-					return false
-				} else {
-					reason := fmt.Sprintf("%d/%d of needed %s satisfied", foundMatches, resource.Count, resource.Type)
-					fmt.Printf("     ⏳️ %s still contender, %s\n", cluster, reason)
-				}
-			}
-			// We get here if we assess a resource and vertex that isn't a slot, and foundMatches >= resource count
-			return true
-		}
-
-		// Go through jobspec resources and determine satisfiability
-		// This currently treats each item under resources separately
-		// as opposed to one unit of work, and I'm not sure if that is
-		// right. I haven't seen jobspecs in the wild with two entries
-		// under resources.
-		for _, resource := range jobspec.Resources {
-
-			// Break out early if we can't sastify a resource group
-			isMatch := traverseResource(&resource)
-			if !isMatch {
-				fmt.Printf("Resource %s is not a match for for cluster %s", resource.Label, cluster)
-				break
-			}
-
-			// This is the recursive bit
-			if resource.With != nil {
-				for _, with := range resource.With {
-					isMatch = traverseResource(&with)
-					if !isMatch {
-						break
-					}
-				}
-			}
-		}
-		if isMatch {
-			finalMatches = append(finalMatches, cluster)
-		}
-
-	}
-
-	if len(finalMatches) == 0 {
-		fmt.Println("    😥️ dfs: no clusters could satisfy this request. We are sad")
-	} else {
-		fmt.Printf("    🎯️ dfs: we found %d clusters to satisfy the request\n", len(finalMatches))
-	}
-	return finalMatches, nil
+	// Show metrics
+	ss.Metrics.Show()
+	return nil
 }
 
 // AddNode (a physical node) as a vertex, return the vertex id
 func (s *Subsystem) AddNode(
-	clusterName, name, typ string,
+	clusterName, lookupName, typ string,
 	size int32,
 	unit string,
+	meta metadata.Metadata,
+	countResource bool,
 ) int {
 
 	// Add resource to the metrics, indexed by the level (clusterName)
-	// that we care about
-	if clusterName != "" {
+	// We don't count the root "root" of a subsystem, typically
+	if countResource {
 		s.Metrics.CountResource(clusterName, typ)
 	}
 
 	id := s.counter
 	newEdges := map[int]*Edge{}
+	newSubsystems := map[string]map[int]*Edge{}
 	s.Vertices[id] = &Vertex{
 		Identifier: id,
 		Edges:      newEdges,
 		Size:       size,
 		Type:       typ,
 		Unit:       unit,
+		Metadata:   meta,
+		Subsystems: newSubsystems,
 	}
 	s.counter += 1
 
 	// If name is not null, we want to remember this node for later
-	if name != "" {
-		log.Printf("Adding special vertex %s at index %d\n", name, id)
-		s.lookup[name] = id
+	if lookupName != "" {
+		s.Lookup[lookupName] = id
 	}
 	return id
 }
 
 // GetNode returns the vertex if of a node, if it exists in the lookup
 func (s *Subsystem) GetNode(name string) (int, bool) {
-	id, ok := s.lookup[name]
+	id, ok := s.Lookup[name]
 	if ok {
 		return id, true
 	}
@@ -342,11 +148,14 @@ func (s *Subsystem) GetNode(name string) (int, bool) {
 }
 
 // Add an edge to the graph with a source and dest identifier
+// This assumes they belong in the same subsystem (src subsystem == dest subsystem)
 // Optionally add a weight. We aren't using this (but I think might)
-func (s *Subsystem) AddEdge(src, dest int, weight int, relation string) error {
+func (s *Subsystem) AddInternalEdge(
+	src, dest, weight int,
+	relation, subsystem string,
+) error {
 
 	// We shoudn't be added identifiers that don't exist...
-	// TODO: do we want to count edges?
 	srcVertex, ok := s.Vertices[src]
 	if !ok {
 		return fmt.Errorf("vertex with identifier %d does not exist", src)
@@ -357,10 +166,49 @@ func (s *Subsystem) AddEdge(src, dest int, weight int, relation string) error {
 	}
 
 	// add edge src --> dest
-	newEdge := Edge{Weight: weight, Vertex: destVertex, Relation: relation}
+	// Right now subsystem references the source
+	newEdge := Edge{
+		Weight:    weight,
+		Vertex:    destVertex,
+		Relation:  relation,
+		Subsystem: subsystem,
+	}
 	srcVertex.Edges[dest] = &newEdge
 	s.Vertices[src] = srcVertex
 	return nil
+}
+
+// Add an subsystem edge, meaning adding the edge AND a link to the dominant subsystem
+// This would be called by the dominant to add an edge to itself
+func (s *Subsystem) AddSubsystemEdge(
+	src int,
+	dest *Vertex,
+	weight int,
+	relation string,
+	subsystem string,
+) error {
+
+	// The source vertex is owned by this subsystem
+	// But we don't check dest, it's part of another subsystem
+	srcVertex, ok := s.Vertices[src]
+	if !ok {
+		return fmt.Errorf("vertex with identifier %d does not exist", src)
+	}
+
+	// add edge src --> dest
+	// Right now subsystem references the source
+	newEdge := Edge{
+		Weight:    weight,
+		Vertex:    dest,
+		Relation:  relation,
+		Subsystem: subsystem,
+	}
+
+	// Add the reference of the new edge here
+	srcVertex.Edges[dest.Identifier] = &newEdge
+	s.Vertices[src] = srcVertex
+	return nil
+
 }
 
 // GetConnections to a vertex

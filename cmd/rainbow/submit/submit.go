@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
+	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	"github.com/converged-computing/rainbow/pkg/client"
 	"github.com/converged-computing/rainbow/pkg/config"
+	jscli "github.com/converged-computing/rainbow/pkg/jobspec"
 )
 
 // Run will check a manifest list of artifacts against a host machine
@@ -16,7 +16,7 @@ import (
 func Run(
 	host, jobName, command string,
 	nodes, tasks int,
-	token, clusterName,
+	token, jobspec, clusterName,
 	database, cfgFile string,
 	selectionAlgorithm string,
 ) error {
@@ -26,22 +26,26 @@ func Run(
 		return nil
 	}
 
-	// Further validation of job happens with client below
-	if command == "" {
-		return fmt.Errorf("a command is required")
-	}
-	log.Printf("submit job: %s", command)
+	jspec := &js.Jobspec{}
+	if jobspec == "" {
+		jspec, err = jscli.JobspecFromCommand(command, jobName, int32(nodes), int32(tasks))
+		if err != nil {
+			return err
+		}
+	} else {
+		jspec, err = js.LoadJobspecYaml(jobspec)
+		if err != nil {
+			return err
+		}
 
-	// Prepare a JobSpec
-	if jobName == "" {
-		parts := strings.Split(command, " ")
-		jobName = parts[0]
-	}
-
-	// Convert the simple command / nodes / etc into a JobSpec
-	js, err := js.NewSimpleJobspec(jobName, command, int32(nodes), int32(tasks))
-	if err != nil {
-		return nil
+		// Validate the jobspec
+		valid, err := jspec.Validate()
+		if err != nil {
+			return err
+		}
+		if !valid {
+			return fmt.Errorf("jobspec is not valid")
+		}
 	}
 
 	// Read in the config, if provided, TODO we need a set of tokens here?
@@ -54,7 +58,7 @@ func Run(
 	cfg.AddCluster(clusterName, token)
 
 	// Submission is always with a configuration
-	response, err := c.SubmitJob(context.Background(), js, cfg)
+	response, err := c.SubmitJob(context.Background(), jspec, cfg)
 	if err != nil {
 		return err
 	}

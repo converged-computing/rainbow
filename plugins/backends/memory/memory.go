@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"log"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
+	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 
 	"github.com/converged-computing/rainbow/pkg/graph/backend"
@@ -40,13 +40,24 @@ func (m MemoryGraph) Description() string {
 // AddCluster adds a JGF graph of new nodes
 // Note that a client can interact with the database (in read only)
 // but since this is directly in the rainbow cluster, we call
-// the functions directly.
+// the functions directly. The "addCluster" here is referring
+// to the dominant subsystem, while a "subsystem" below is
+// considered supplementary to that.
 func (m MemoryGraph) AddCluster(
 	name string,
 	nodes *jgf.JsonGraph,
 	subsystem string,
 ) error {
 	return graphClient.LoadClusterNodes(name, nodes, subsystem)
+}
+
+// Add subsystem adds a new subsystem to the graph!
+func (m MemoryGraph) AddSubsystem(
+	name string,
+	nodes *jgf.JsonGraph,
+	subsystem string,
+) error {
+	return graphClient.LoadSubsystemNodes(name, nodes, subsystem)
 }
 
 func (m MemoryGraph) RegisterService(s *grpc.Server) error {

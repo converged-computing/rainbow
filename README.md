@@ -13,23 +13,9 @@ For more information:
 
 ## TODO
 
-- submit
- - need strategy to add summary state data to top of graph (to provide to selection algorithms)
- - need more selection algorithms!
-- receive
- - implement python examples next, then prototype alongside flux to submit
- - after that, think about adding subsystem register (and rest of points below)
-- clusters
- - implement function to add a subsystem to an existing cluster (e.g., add I/O)
 - subsystems
-  - a satisfies request will need to have a representation of subsystems. E.g., what are we asking of each?
-    - right now we assume a node resources request going to the dominant subsystem
-  - we will want a function to add a new subsystem, right now we have one dominant for nodes
   - make also a function to delete subsystems
-  - subsystems should allow for multiple (with keys) and references across to dominant subsystem
-- is there a way to unify into one graph?
 - ephemeral case - actual nodes don't exist, but instead rules for requests and limits. Need to develop this and means to authenticate to use it.
-
 
 ## License
 
