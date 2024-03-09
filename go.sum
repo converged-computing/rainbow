@@ -1,7 +1,7 @@
 github.com/akamensky/argparse v1.4.0 h1:YGzvsTqCvbEZhL8zZu2AiA5nq805NZh75JNj4ajn1xc=
 github.com/akamensky/argparse v1.4.0/go.mod h1:S5kwC7IuDcEr5VeXtGPRVZ5o/FdhcMlQz4IZQuw64xA=
-github.com/compspec/jobspec-go v0.0.0-20240302201731-e7fb2bf2627f h1:JHOVu3snvprXuO3UDT2FngfmfDGj+2g5inZof2my9IA=
-github.com/compspec/jobspec-go v0.0.0-20240302201731-e7fb2bf2627f/go.mod h1:BaJyxaOhESe2DD4lqBdwTEWOw0TaTZVJGPrFh6KyXQM=
+github.com/compspec/jobspec-go v0.0.0-20240309125332-2ded2757bc59 h1:cGgctf3A2dzJlWm4NWSbZcu8majSI+t6KmavM892wbU=
+github.com/compspec/jobspec-go v0.0.0-20240309125332-2ded2757bc59/go.mod h1:BaJyxaOhESe2DD4lqBdwTEWOw0TaTZVJGPrFh6KyXQM=
 github.com/converged-computing/jsongraph-go v0.0.0-20240229082022-c6887a5a00fe h1:Tk//RW3uKn4A7N8gpHRXs+ZGlR7Fxkwh+4/Iml0GBV4=
 github.com/converged-computing/jsongraph-go v0.0.0-20240229082022-c6887a5a00fe/go.mod h1:+DhVyLXGVfBsfta4185jd33jqa94inshCcdvsXK2Irk=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=

@@ -5,7 +5,7 @@ scheduler:
         name: random
 cluster:
     name: keebler
-    secret: d6aa12a2-cbff-4504-8a0b-1b36e8796ed8
+    secret: d8d50175-4d9f-4dc0-8f95-4893d26618ac
 graphdatabase:
     name: memory
     host: 127.0.0.1:50051

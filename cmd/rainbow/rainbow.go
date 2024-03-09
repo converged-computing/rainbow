@@ -72,6 +72,7 @@ func main() {
 	tasks := submitCmd.Int("t", "tasks", &argparse.Options{Help: "Number of tasks to request (per node? total?)"})
 	command := submitCmd.String("c", "command", &argparse.Options{Default: defaultSecret, Help: "Command to submit"})
 	jobName := submitCmd.String("", "job-name", &argparse.Options{Help: "Name for the job (defaults to first command)"})
+	jobspec := submitCmd.String("", "jobspec", &argparse.Options{Help: "A yaml Jobspec to submit"})
 
 	// Now parse the arguments
 	err := parser.Parse(os.Args)
@@ -138,6 +139,7 @@ func main() {
 			*nodes,
 			*tasks,
 			*token,
+			*jobspec,
 			*clusterName,
 			*graphDatabase,
 			*cfg,

@@ -11,7 +11,7 @@ import (
 	"sync"
 	"syscall"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
+	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 	"github.com/converged-computing/rainbow/pkg/graph"
 	"github.com/converged-computing/rainbow/pkg/utils"
@@ -25,7 +25,6 @@ var (
 )
 
 // A ClusterGraph holds one or more subsystems
-// TODO add support for >1 subsystem, start with dominant
 type ClusterGraph struct {
 	subsystem  map[string]*Subsystem
 	lock       sync.RWMutex

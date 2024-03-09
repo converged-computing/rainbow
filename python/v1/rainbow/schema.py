@@ -48,7 +48,7 @@ rainbow_config_v1 = {
     },
 }
 
-
+# Note that this has experimental features added, they are flagged
 jobspec_v1 = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "http://github.com/flux-framework/rfc/tree/master/data/spec_24/schema.json",
@@ -104,7 +104,9 @@ jobspec_v1 = {
         },
     },
     "type": "object",
-    "required": ["version", "resources", "attributes", "tasks"],
+    # NOTE that I removed resources, I don't see why they need to be required
+    "required": ["version", "resources", "tasks"],
+    # "required": ["version", "resources", "attributes", "tasks"],
     "properties": {
         "version": {
             "description": "the jobspec version",
@@ -152,6 +154,8 @@ jobspec_v1 = {
                         "minItems": 1,
                         "items": {"type": "string"},
                     },
+                    # RESOURCES ARE EXPERIMENTAL
+                    "resources": {"type": "object"},
                     "slot": {"type": "string"},
                     "count": {
                         "type": "object",

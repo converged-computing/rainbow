@@ -9,6 +9,9 @@ import (
 // a compute note
 type Subsystem struct {
 
+	// Name of the subsystem
+	Name string
+
 	// Using a map means O(1) lookup time
 	Vertices map[int]*Vertex `json:"vertices"`
 
@@ -75,4 +78,15 @@ type Metrics struct {
 type Summary struct {
 	Name   string
 	Counts map[string]int64
+}
+
+// Serialize slot resource needs into a struct that is easier to parse
+type SlotResourceNeeds struct {
+	Satisfied  bool
+	Subsystems []SubsystemNeeds
+}
+
+type SubsystemNeeds struct {
+	Name       string
+	Attributes map[string]bool
 }

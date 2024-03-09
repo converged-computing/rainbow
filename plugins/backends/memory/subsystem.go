@@ -13,9 +13,12 @@ func NewSubsystem(name string) *Subsystem {
 	vertices := map[int]*Vertex{}
 	lookup := map[string]int{}
 	metrics := Metrics{ResourceSummary: map[string]Summary{}}
-
-	// TODO need to add metadata onto vertices
-	s := Subsystem{Vertices: vertices, Lookup: lookup, Metrics: metrics}
+	s := Subsystem{
+		Vertices: vertices,
+		Lookup:   lookup,
+		Metrics:  metrics,
+		Name:     name,
+	}
 
 	// Create a top level vertex for all clusters that will be added
 	// Question: should the root be above the subsystems?

@@ -1,5 +1,6 @@
 - [User's Guide](README.md)
   - [Commands](commands.md)
+  - [Algorithms](algorithms.md)
 - [Developer](developer.md)
 - [Design](design.md)
 - [Support](support.md)

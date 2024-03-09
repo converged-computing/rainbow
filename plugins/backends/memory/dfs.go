@@ -3,8 +3,7 @@ package memory
 import (
 	"fmt"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/v1"
-	v1 "github.com/compspec/jobspec-go/pkg/jobspec/v1"
+	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 )
 
 // DFSForMatch WILL is a depth first search for matches
@@ -12,7 +11,7 @@ import (
 // and then traverses into those that match the first check
 // THIS IS EXPERIMENTAL and likely wrong, or missing details,
 // which is OK as we will only be using it for prototyping.
-func (s *Subsystem) DFSForMatch(jobspec *js.Jobspec) ([]string, error) {
+func (s *Subsystem) DFSForMatch(jobspec *v1.Jobspec) ([]string, error) {
 
 	// Return a list of matching clusters
 	matches := []string{}
@@ -92,12 +91,13 @@ func (s *Subsystem) DFSForMatch(jobspec *js.Jobspec) ([]string, error) {
 }
 
 // depthFirstSearch fully searches the graph finding a list of maches and a jobspec
-func (s *Subsystem) depthFirstSearch(matches []string, jobspec *js.Jobspec) ([]string, error) {
+func (s *Subsystem) depthFirstSearch(matches []string, jobspec *v1.Jobspec) ([]string, error) {
 
 	// Prepare a lookup of tasks for slots
 	slots := map[string]*v1.Tasks{}
 	for _, task := range jobspec.Tasks {
 		slots[task.Slot] = &task
+		// NOTE that the task.Resources here has metadata about subsystem needs
 	}
 
 	// Keep a list of final matches
@@ -118,20 +118,21 @@ func (s *Subsystem) depthFirstSearch(matches []string, jobspec *js.Jobspec) ([]s
 		// of matches for the slot. This returns a count of the matching
 		// slots under a parent level, recursing into child vertices until
 		// we find the right type (and take a count) or keep exploring
-		var findSlots func(vtx *Vertex, slot *v1.Resource) int32
-		findSlots = func(vtx *Vertex, resource *v1.Resource) int32 {
+		var findSlots func(vtx *Vertex, slot *v1.Resource, slotNeeds *SlotResourceNeeds) int32
+		findSlots = func(vtx *Vertex, resource *v1.Resource, slotNeeds *SlotResourceNeeds) int32 {
 
 			// This assumes the resource
 			// Is the current vertex what we need? If yes, assess if it can satisfy
 			slotsFound := int32(0)
 			if vtx.Type == resource.Type {
 
-				// I don't know if resource.Count can be zero, but be prepared...
-				if resource.Count == 0 {
+				// If we hit here, we technically have the right vertex type, but we
+				// also need subsystems to be satisfied
+				if !slotNeeds.Satisfied {
 					return slotsFound
 				}
 				// How many full slots can we satisfy at this vertex?
-				// TODO how to handle the slot per/total thing?
+				// This indicates that subsystems are also satisfied
 				return vtx.Size
 
 			} else {
@@ -139,9 +140,13 @@ func (s *Subsystem) depthFirstSearch(matches []string, jobspec *js.Jobspec) ([]s
 				// Otherwise, we haven't found the right level of the graph, keep going
 				for _, child := range vtx.Edges {
 
+					// Check if the subsystem edge satisfies the needs of the slot
+					checkSubsystemEdge(slotNeeds, child, vtx)
+
 					// Only interested in children. That sounds weird.
-					if child.Relation == "contains" {
-						slotsFound += findSlots(child.Vertex, resource)
+					// This is also traversing the dominant subsystem
+					if child.Relation == containsRelation && child.Subsystem == s.Name {
+						slotsFound += findSlots(child.Vertex, resource, slotNeeds)
 					}
 				}
 			}
@@ -161,9 +166,11 @@ func (s *Subsystem) depthFirstSearch(matches []string, jobspec *js.Jobspec) ([]s
 
 			// A slot needs deeper exploration, and we need to add per_slot/total logic
 			if resource.Type == "slot" {
+				slot := slots[resource.Label]
+				slotResourceNeeds := getSlotResourceNeeds(slot)
 
 				// Keep going until we have all the slots, or we run out of places to look
-				return findSlots(vtx, resource)
+				return findSlots(vtx, resource, slotResourceNeeds)
 			}
 
 			// Wrong resource type, womp womp
@@ -171,7 +178,7 @@ func (s *Subsystem) depthFirstSearch(matches []string, jobspec *js.Jobspec) ([]s
 				for _, child := range vtx.Edges {
 
 					// Update our found count to include recursing all children
-					if child.Relation == "contains" {
+					if child.Relation == containsRelation {
 						found += satisfies(child.Vertex, resource, found)
 
 						// Stop when we have enough
@@ -199,6 +206,16 @@ func (s *Subsystem) depthFirstSearch(matches []string, jobspec *js.Jobspec) ([]s
 			// the count under it of some resource type
 			if resource.Type == "slot" {
 
+				// We need to find the subsystem resources needed under a slot
+				slot := slots[resource.Label]
+
+				// Create a simple means to determine if a subsystem is matched
+				// This will eventually be more complex, but right now we are just
+				// matching labels, because that's all we need for the early
+				// scheduling experiments. This can eventually be a setting, but right
+				// now is a single algorithm (function) since there is only one.
+				slotResourceNeeds := getSlotResourceNeeds(slot)
+
 				// TODO: how does the slot Count (under tasks) fit in?
 				// I don't understand what these counts are, because they seem like MPI tasks
 				// but a slot can be defined at any level. So I'm going to ignore for now
@@ -212,9 +229,10 @@ func (s *Subsystem) depthFirstSearch(matches []string, jobspec *js.Jobspec) ([]s
 				slotsFound := int32(0)
 
 				// This assumes that the slot value is defined in the next resource block
+				// We assume the resources defined under the slot are needed for the slot
 				if resource.With != nil {
 					for _, subresource := range resource.With {
-						slotsFound += findSlots(vertex, &subresource)
+						slotsFound += findSlots(vertex, &subresource, slotResourceNeeds)
 
 						// The slot is satisfied and we can continue searching resources
 						if slotsFound >= slotsNeeded {

@@ -103,6 +103,33 @@ class RainbowClient:
             response = stub.Register(registerRequest)
         return response
 
+    def register_subsystem(self, cluster, subsystem, secret, nodes):
+        """
+        Register subsystem nodes to rainbow
+        """
+        if not cluster:
+            raise ValueError("A cluster name is required to register")
+        if not secret:
+            raise ValueError("A secret is required to register")
+        if not os.path.exists(nodes):
+            raise ValueError(f"Subsystem nodes file {nodes} for registration does not exist.")
+
+        # Read in the nodes to string
+        nodes = utils.read_file(nodes)
+
+        # These are the variables for our cluster - name for now
+        registerRequest = rainbow_pb2.RegisterRequest(
+            name=cluster,
+            secret=secret,
+            nodes=nodes,
+            subsystem=subsystem,
+        )
+
+        with grpc.insecure_channel(self.host) as channel:
+            stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
+            response = stub.RegisterSubsystem(registerRequest)
+        return response
+
     def load_backend(self):
         """
         Load the backend

@@ -65,7 +65,42 @@ options:
                         Nodes to provide for registration
 ```
 
-### Submit Job
+### Register Subsystem
+
+Let's now register the subsystem. Akin to register, this has the path to the subsystem nodes set as a default,
+and the name `--subsystem` set to "io." This assumes you've registered your cluster and have the cluster secret
+in your ./rainbow-config.yaml
+
+```bash
+python ./examples/flux/register-subsystem.py keebler --config-path ./rainbow-config.yaml
+```
+```console
+status: REGISTER_SUCCESS
+```
+
+In the server window you'll see the subsystem added:
+
+```console
+...
+2024/03/09 14:21:50 📝️ received subsystem register: keebler
+2024/03/09 14:21:50 Preparing to load 6 nodes and 30 edges
+2024/03/09 14:21:50 We have made an in memory graph (subsystem io) with 7 vertices, with 15 connections to the dominant!
+{
+ "keebler": {
+  "Name": "keebler",
+  "Counts": {
+   "io": 1,
+   "mtl1unit": 1,
+   "mtl2unit": 1,
+   "mtl3unit": 1,
+   "nvme": 1,
+   "shm": 1
+  }
+ }
+}
+```
+
+### Submit Job (Simple)
 
 Now let's submit a job to our faux cluster. We need to provide the token we received above. Remember that this is a two stage process:
 
@@ -134,6 +169,34 @@ $ python examples/flux/submit-job.py --config-path ./rainbow-config.yaml --nodes
     ],
     "attributes": {}
 }
+clusters: "keebler"
+status: RESULT_TYPE_SUCCESS
+
+status: SUBMIT_SUCCESS
+```
+
+### Submit Jobspec
+
+We can also submit a jobspec directly, which is an advanced use case. It works predominantly the same, except we load in the Jobspec from
+the yaml directly.
+
+```console
+python examples/flux/submit-jobspec.py --config-path ./rainbow-config.yaml ../../docs/examples/scheduler/jobspec-io.yaml
+
+🌈️ Rainbow scheduler submit
+
+positional arguments:
+  jobspec               Jobspec path to submit
+
+options:
+  -h, --help            show this help message and exit
+  --config-path CONFIG_PATH
+                        config path with cluster metadata
+```
+
+It largely looks the same - I'll cut most of it out. It's just a different entry point for the job definition.
+
+```console
 clusters: "keebler"
 status: RESULT_TYPE_SUCCESS
 
