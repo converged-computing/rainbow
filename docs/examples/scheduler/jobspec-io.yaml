@@ -1,0 +1,21 @@
+version: 1
+resources:
+- count: 2
+  type: node
+  with:
+  - count: 1
+    label: default
+    type: slot
+    with:
+    - count: 2
+      type: core
+tasks:
+- command:
+  - ior
+  slot: default
+  count:
+    per_slot: 1
+  resources:
+    io:
+      match:
+      - type: shm
