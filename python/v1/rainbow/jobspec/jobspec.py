@@ -17,6 +17,7 @@ class JobspecV1:
         Load in and validate a Flux Jobspec
         """
         self.schema = schema
+        self.filename = filename
         self.jobspec = None
         self.load(filename)
         if validate:
@@ -70,3 +71,7 @@ class JobspecV1:
         Validate the jsonschema
         """
         jsonschema.validate(self.jobspec, self.schema)
+        # Require at least one of command, batch, or script
+        for task in self.jobspec.get("tasks", []):
+            if "command" not in task and "batch" not in task and "script" not in task:
+                raise ValueError("Jobspec is not valid, task is missing a command|script|batch")

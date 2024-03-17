@@ -22,7 +22,7 @@ import (
 // available. This can eventually take a count, but right now is a boolean match
 // and this is done intentionally to satisfy the simplest scheduler experiment
 // prototype where we are more interested in features
-func getSlotResourceNeeds(slot *v1.Tasks) *SlotResourceNeeds {
+func getSlotResourceNeeds(slot *v1.Task) *SlotResourceNeeds {
 	sNeeds := map[string]map[string]bool{}
 	for subsystem, needs := range slot.Resources {
 

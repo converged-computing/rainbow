@@ -49,6 +49,7 @@ rainbow_config_v1 = {
 }
 
 # Note that this has experimental features added, they are flagged
+# So it is not technically v1 :)
 jobspec_v1 = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "http://github.com/flux-framework/rfc/tree/master/data/spec_24/schema.json",
@@ -147,7 +148,9 @@ jobspec_v1 = {
             "maxItems": 1,
             "items": {
                 "type": "object",
-                "required": ["command", "slot", "count"],
+                "required": ["slot", "count"],
+                # Command is not required in favor of having batch and script too
+                # "required": ["command", "slot", "count"],
                 "properties": {
                     "command": {
                         "type": ["string", "array"],
@@ -156,6 +159,8 @@ jobspec_v1 = {
                     },
                     # RESOURCES ARE EXPERIMENTAL
                     "resources": {"type": "object"},
+                    "batch": {"type": "string"},
+                    "script": {"type": "string"},
                     "slot": {"type": "string"},
                     "count": {
                         "type": "object",

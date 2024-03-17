@@ -94,11 +94,9 @@ func (s *Subsystem) DFSForMatch(jobspec *v1.Jobspec) ([]string, error) {
 func (s *Subsystem) depthFirstSearch(matches []string, jobspec *v1.Jobspec) ([]string, error) {
 
 	// Prepare a lookup of tasks for slots
-	slots := map[string]*v1.Tasks{}
-	for _, task := range jobspec.Tasks {
-		slots[task.Slot] = &task
-		// NOTE that the task.Resources here has metadata about subsystem needs
-	}
+	// Note that in the experimental version we have one task
+	slots := map[string]*v1.Task{}
+	slots[jobspec.Task.Slot] = &jobspec.Task
 
 	// Keep a list of final matches
 	finalMatches := []string{}
