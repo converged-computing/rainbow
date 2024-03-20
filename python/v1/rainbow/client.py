@@ -2,12 +2,12 @@ import json
 import os
 
 import grpc
+import jobspec.core as js
+import jobspec.core.converter as converter
 
 import rainbow.backends as backends
 import rainbow.config as config
 import rainbow.defaults as defaults
-import rainbow.jobspec as js
-import rainbow.jobspec.converter as converter
 import rainbow.utils as utils
 from rainbow.protos import rainbow_pb2, rainbow_pb2_grpc
 
