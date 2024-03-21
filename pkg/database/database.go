@@ -45,6 +45,9 @@ func (db *Database) create() error {
 
 	// Open the created SQLite File (to test)
 	conn, err := db.connect()
+	if err != nil {
+		return err
+	}
 	defer conn.Close()
 	return err
 }
@@ -101,8 +104,8 @@ func (db *Database) GetCluster(name string) (*Cluster, error) {
 			return nil, err
 		}
 	}
-	// Debugging extra for now
-	log.Printf("%s: %s\n", query, cluster.Name)
+	// Debugging if needed
+	// log.Printf("%s: %s\n", query, cluster.Name)
 	return &cluster, nil
 }
 

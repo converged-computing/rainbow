@@ -128,6 +128,8 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 	if err == nil {
 		log.Printf("📝️ job %s is assigned to cluster %s", in.Name, selected)
 	}
+	// Tell the user right away the assigned cluster
+	response.Cluster = selected
 	return response, err
 }
 

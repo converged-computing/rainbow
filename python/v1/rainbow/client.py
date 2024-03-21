@@ -163,7 +163,6 @@ class RainbowClient:
         # Ask the database backend if our jobspec can be satisfied
         response = self.backend.satisfies(jobspec)
         matches = response.clusters
-        print(response)
 
         # No matches?
         if not matches:

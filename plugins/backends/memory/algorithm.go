@@ -26,8 +26,6 @@ func getSlotResourceNeeds(slot *v1.Task) *SlotResourceNeeds {
 	sNeeds := map[string]map[string]bool{}
 	for subsystem, needs := range slot.Resources {
 
-		fmt.Printf("      => Assessing needs for subsystem %s\n", subsystem)
-
 		// Needs should be interface{} --> map[string][]map[string]string{}
 		// Assume if we cannot parse, don't consider
 		needs, ok := needs.(map[string]interface{})
@@ -65,19 +63,27 @@ func getSlotResourceNeeds(slot *v1.Task) *SlotResourceNeeds {
 					if !ok {
 						sNeeds[subsystem] = map[string]bool{}
 					}
+
+					// This sets the starting state that the value is not satisfied
 					sNeeds[subsystem][value] = false
 				}
 			}
 		}
 	}
-
 	// Parse into the slot resource needs
 	needs := []SubsystemNeeds{}
 	for subsystem, sneeds := range sNeeds {
 		subsystemNeeds := SubsystemNeeds{Name: subsystem, Attributes: sneeds}
 		needs = append(needs, subsystemNeeds)
 	}
-	return &SlotResourceNeeds{Subsystems: needs}
+
+	// If we don't have any needs, the slot is satisfied for that
+	slotNeeds := &SlotResourceNeeds{Subsystems: needs}
+	if len(needs) == 0 {
+		slotNeeds.Satisfied = true
+	}
+	fmt.Printf("      => Assessing needs for slot: %v\n", slotNeeds)
+	return slotNeeds
 }
 
 // checkSubsystemEdge evaluates a node edge in the dominant subsystem for a
@@ -85,31 +91,37 @@ func getSlotResourceNeeds(slot *v1.Task) *SlotResourceNeeds {
 // Vertex (from dominant subsysetem) is only passed in for informational purposes
 func checkSubsystemEdge(slotNeeds *SlotResourceNeeds, edge *Edge, vtx *Vertex) {
 
+	// Return early if we are satisfied
+	if slotNeeds.Satisfied {
+		return
+	}
 	// Determine if our slot needs can be met
 	// Nested for loops are not great - this will be improved with a more robust graph
 	// that isn't artisinal avocado toast developed by me :)
-	if !slotNeeds.Satisfied {
 
-		// TODO Keep a record if all are satisfied so we stop searching
-		// earlier if this is the case on subsequent calls
-		updated := []SubsystemNeeds{}
-		for _, subsys := range slotNeeds.Subsystems {
+	fmt.Printf("Looking at edge %s->%s\n", edge.Relation, edge.Vertex.Type)
 
-			// The subsystem has an edge defined here!
-			if subsys.Name == edge.Subsystem {
+	// TODO Keep a record if all are satisfied so we stop searching
+	// earlier if this is the case on subsequent calls
+	for i, subsys := range slotNeeds.Subsystems {
 
-				// Yuck, this needs to be a query! Oh well.
-				for k := range subsys.Attributes {
-					if edge.Vertex.Type == k {
-						fmt.Printf("      => Resource '%s' satisfies subsystem %s %s\n", vtx.Type, subsys.Name, k)
-						subsys.Attributes[k] = true
-					}
+		fmt.Printf("      => Looking in subsystem %s\n", edge.Subsystem)
+
+		// The subsystem has an edge defined here!
+		if subsys.Name == edge.Subsystem {
+			fmt.Printf("      => Found matching subsystem %s for %s\n", subsys.Name, edge.Subsystem)
+
+			// Yuck, this needs to be a query! Oh well.
+			for k := range subsys.Attributes {
+				// fmt.Printf("      => Looking at edge %s '%s' for %s that needs %s\n", edge.Subsystem, edge.Vertex.Type, subsys.Name, k)
+
+				if edge.Vertex.Type == k {
+					fmt.Printf("      => Resource '%s' has edge '%s' satisfies subsystem %s %s\n", vtx.Type, edge.Vertex.Type, subsys.Name, k)
+					subsys.Attributes[k] = true
 				}
 			}
-			// This is a wasteful, lazy way of doing this
-			updated = append(updated, subsys)
 		}
-		slotNeeds.Subsystems = updated
+		slotNeeds.Subsystems[i] = subsys
 	}
 
 	// Try to avoid future checking if subsystem needs are addressed

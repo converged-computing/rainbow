@@ -110,7 +110,8 @@ message SubmitJobResponse {
   }
   string request_id = 1;
   int32 jobid = 2;
-  ResultType status = 3;
+  string cluster = 3;
+  ResultType status = 4;
 }
 
 // RequestJobsResponse

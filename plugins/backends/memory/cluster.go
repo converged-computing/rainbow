@@ -1,21 +1,11 @@
 package memory
 
 import (
-	"encoding/gob"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
-	"github.com/converged-computing/rainbow/pkg/graph"
-	"github.com/converged-computing/rainbow/pkg/utils"
-	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 )
 
 var (
@@ -24,11 +14,13 @@ var (
 	containsRelation         = "contains"
 )
 
-// A ClusterGraph holds one or more subsystems
+// A ClusterGraph holds a single graph with one or more subsystems
 type ClusterGraph struct {
-	subsystem  map[string]*Subsystem
-	lock       sync.RWMutex
-	backupFile string
+	subsystem map[string]*Subsystem
+	lock      sync.RWMutex
+
+	// Courtesy holder for name
+	Name string
 
 	// The dominant subsystem is a lookup in the subsystem map
 	// It defaults to nodes (node resources)
@@ -48,174 +40,14 @@ func (c *ClusterGraph) getSubsystem(subsystem string) string {
 	return subsystem
 }
 
-// validateNodes ensures that we have at least one node and edge
-func (c *ClusterGraph) validateNodes(nodes *jgf.JsonGraph) (error, int, int) {
-	var err error
-	nNodes := len(nodes.Graph.Nodes)
-	nEdges := len(nodes.Graph.Edges)
-	if nEdges == 0 || nNodes == 0 {
-		err = fmt.Errorf("subsystem cluster must have at least one edge and node")
-	}
-	return err, nNodes, nEdges
-}
-
-// NewClusterGraph creates a new cluster graph with a dominant subsystem
-// We assume the dominant is hard coded to be containment
-func NewClusterGraph() *ClusterGraph {
-
-	// For now, the dominant subsystem is hard coded to be nodes (resources)
-	subsystem := NewSubsystem(defaultDominantSubsystem)
-	subsystems := map[string]*Subsystem{defaultDominantSubsystem: subsystem}
-
-	// TODO options / algorithms can come from config
-	g := &ClusterGraph{
-		subsystem:         subsystems,
-		dominantSubsystem: defaultDominantSubsystem,
-	}
-	// Listen for syscalls to exit
-	g.awaitExit()
-
-	// Load backup file, if exists
-	g.LoadBackup()
-	return g
-}
-
-// await listens for syscalls and exits when they happen
-func (g *ClusterGraph) awaitExit() {
-	var stopper = make(chan os.Signal, 1)
-	signal.Notify(stopper, syscall.SIGTERM, syscall.SIGINT)
-
-	go func() {
-		sig := <-stopper
-		fmt.Printf("memory graph database caught signal: %+v\n", sig)
-		err := g.Close()
-		if err != nil {
-			log.Println(err.Error())
-		}
-		os.Exit(0)
-	}()
-}
-
-// Close the database and save to backup file
-func (g *ClusterGraph) Close() error {
-
-	// No backup file, nothing to save
-	if g.backupFile == "" {
-		return nil
-	}
-	fp, err := os.Create(g.backupFile)
-	if err != nil {
-		return err
-	}
-
-	// a "gob" is "binary values exchanged between an encode->decoder"
-	encoder := gob.NewEncoder(fp)
-	defer func() {
-		recovered := recover()
-		if recovered != nil {
-			err = errors.New("error registering item types with Gob library")
-		}
-	}()
-	g.lock.Lock()
-	defer g.lock.Unlock()
-
-	err = encoder.Encode(&g.subsystem)
-	if err != nil {
-		fp.Close()
-		return err
-	}
-	return fp.Close()
-}
-
-// GetMetrics for a named subsystem, defaulting to dominant
-func (g *ClusterGraph) GetMetrics(subsystem string) Metrics {
-	subsystem = g.getSubsystem(subsystem)
-	ss := g.subsystem[subsystem]
-	return ss.Metrics
-}
-
-// Satisfy should:
-// 1. Read in and populate the payload into a jobspec
-// 2. Determine by way of a depth first search if we can satisfy
-// 3. Return the names of the cluster
-// TODO this needs to have subsystem representation, right now we just
-// choose dominant and assume the payload is a cluster / nodes
-func (g *ClusterGraph) Satisfies(payload string) (*service.SatisfyResponse, error) {
-	response := service.SatisfyResponse{}
-
-	// Get subsystem (will get dominant, this can eventually take a variable)
-	subsystem := g.getSubsystem("")
-
-	// Serialize back into Jobspec
-	jobspec := js.Jobspec{}
-	err := json.Unmarshal([]byte(payload), &jobspec)
-	if err != nil {
-		return &response, err
-	}
-
-	// Assume we are querying the dominant subsystem with nodes
-	ss, ok := g.subsystem[g.dominantSubsystem]
-	if !ok {
-		response.Status = service.SatisfyResponse_RESULT_TYPE_ERROR
-		return &response, fmt.Errorf("the subsystem %s does not exist", subsystem)
-	}
-
-	// Tell the user /logs we are looking for a match
-	fmt.Printf("\n🍇️ Satisfy request to Graph 🍇️\n")
-	fmt.Printf(" jobspec: %s\n", payload)
-
-	// Do depth rst search to determine if there is a match.
-	// Right now this is a boolean because I don't know what it should look like
-	matches, err := ss.DFSForMatch(&jobspec)
-	if err != nil {
-		response.Status = service.SatisfyResponse_RESULT_TYPE_ERROR
-		return &response, err
-	}
-
-	// Add the matches to the response
-	response.Clusters = matches
-	response.Status = service.SatisfyResponse_RESULT_TYPE_SUCCESS
-	return &response, nil
-}
-
-// Register cluster should:
-// 1. Load in json graph of nodes from string
-// 2. Add nodes to the graph, also keep top level metrics?
-// 3. Return corresponding response
-func (g *ClusterGraph) RegisterCluster(
-	name string,
-	payload string,
-	subsystem string,
-) (*service.Response, error) {
-
-	// Prepare a response
-	response := service.Response{}
-
-	// Load payload into jgf
-	nodes, err := graph.ReadNodeJsonGraphString(payload)
-	if err != nil {
-		return nil, errors.New("cluster nodes are invalid")
-	}
-
-	// Load jgf into graph for that subsystem!
-	err = g.LoadClusterNodes(name, &nodes, g.getSubsystem(""))
-
-	// do something with g.subsystem
-	return &response, err
-}
-
-func getNamespacedName(clusterName, name string) string {
-	return fmt.Sprintf("%s-%s", clusterName, name)
-}
-
 func (g *ClusterGraph) LoadClusterNodes(
-	clusterName string,
 	nodes *jgf.JsonGraph,
 	subsystem string,
 ) error {
 
+	// Create the new subsystem for it, and add nods
 	subsystem = g.getSubsystem(subsystem)
-	ss, lookup, err := g.addNodes(clusterName, nodes, subsystem)
+	ss, lookup, err := g.addNodes(nodes, subsystem)
 	if err != nil {
 		return err
 	}
@@ -240,46 +72,128 @@ func (g *ClusterGraph) LoadClusterNodes(
 			return fmt.Errorf("destination %s is defined as an edge, but missing as node in graph", edge.Label)
 		}
 		// fmt.Printf("Adding edge from %s -%s-> %s\n", ss.Vertices[src].Type, edge.Relation, ss.Vertices[dest].Type)
-		err := ss.AddInternalEdge(src, dest, 0, edge.Relation, g.dominantSubsystem)
+		err := ss.AddInternalEdge(src, dest, 0, edge.Relation, subsystem)
 		if err != nil {
 			return err
 		}
 	}
 	log.Printf("We have made an in memory graph (subsystem %s) with %d vertices!", subsystem, ss.CountVertices())
-	g.subsystem[subsystem] = ss
-
 	// Show metrics
 	ss.Metrics.Show()
 	return nil
 }
 
-// LoadBackup loads the saved database from a backup
-func (g *ClusterGraph) LoadBackup() error {
-
-	// No backup file, no need to save
-	if g.backupFile == "" {
-		return nil
-
+// validateNodes ensures that we have at least one node and edge
+func (c *ClusterGraph) validateNodes(nodes *jgf.JsonGraph) (error, int, int) {
+	var err error
+	nNodes := len(nodes.Graph.Nodes)
+	nEdges := len(nodes.Graph.Edges)
+	if nEdges == 0 || nNodes == 0 {
+		err = fmt.Errorf("subsystem cluster must have at least one edge and node")
 	}
-	exists, err := utils.PathExists(g.backupFile)
-	if !exists || err != nil {
-		return err
-	}
+	return err, nNodes, nEdges
+}
 
-	fp, err := os.Open(g.backupFile)
+// NewClusterGraph creates a new cluster graph with a dominant subsystem
+// We assume the dominant is hard coded to be containment
+func NewClusterGraph(name string, domSubsystem string) *ClusterGraph {
+
+	// If not defined, set the dominant subsystem
+	if domSubsystem == "" {
+		domSubsystem = defaultDominantSubsystem
+	}
+	// For now, the dominant subsystem is hard coded to be nodes (resources)
+	subsystem := NewSubsystem(domSubsystem)
+	subsystems := map[string]*Subsystem{defaultDominantSubsystem: subsystem}
+
+	// TODO options / algorithms can come from config
+	g := &ClusterGraph{
+		Name:              name,
+		subsystem:         subsystems,
+		dominantSubsystem: defaultDominantSubsystem,
+	}
+	return g
+}
+
+// GetMetrics for a named subsystem, defaulting to dominant
+func (g *ClusterGraph) GetMetrics(subsystem string) Metrics {
+	subsystem = g.getSubsystem(subsystem)
+	ss := g.subsystem[subsystem]
+	return ss.Metrics
+}
+
+// LoadSubsystemNodes into the cluster
+func (g *ClusterGraph) LoadSubsystemNodes(
+	nodes *jgf.JsonGraph,
+	subsystem string,
+) error {
+
+	// Get the dominant subsystem for the cluster
+	dom := g.DominantSubsystem()
+
+	// Does the subsystem exist? One unique subsytem (by name) per cluster
+	_, ok := g.subsystem[subsystem]
+	if ok {
+		return fmt.Errorf("subsystem %s already exists for cluster %s", subsystem, g.Name)
+	}
+	ss := NewSubsystem(subsystem)
+	g.subsystem[subsystem] = ss
+
+	ss, lookup, err := g.addNodes(nodes, subsystem)
 	if err != nil {
 		return err
 	}
-	defer fp.Close()
 
-	// Load the subsystem from the filesystem gob
-	dec := gob.NewDecoder(fp)
-	items := g.subsystem
-	err = dec.Decode(&items)
-	if err == nil {
-		g.lock.Lock()
-		defer g.lock.Unlock()
-		g.subsystem = items
+	// Count dominant vertices references
+	count := 0
+
+	// Now add edges
+	for _, edge := range nodes.Graph.Edges {
+
+		// We are currently just saving one direction "x contains y"
+		if edge.Relation != containsRelation {
+			continue
+		}
+
+		// Two cases:
+		// 1. the src is in the dominant subsystem
+		// 2. The src is not, and both node are defined in the graph here
+		subIdx1, ok1 := lookup[edge.Source]
+		subIdx2, ok2 := lookup[edge.Target]
+
+		// Case 1: both are in the subsystem graph
+		if ok1 && ok2 {
+			// This says "subsystem resource in node"
+			fmt.Printf("Adding internal edge for %s to %s\n", edge.Source, edge.Target)
+			ss.AddInternalEdge(subIdx1, subIdx2, 0, edge.Relation, subsystem)
+
+		} else {
+
+			// We need the namespaced name for the dom lookup
+			lookupName := getNamespacedName(dom.Name, edge.Source)
+
+			// Case 2: the src is in the dominant subsystem
+			domIdx, ok := dom.Lookup[lookupName]
+
+			fmt.Printf("Adding dominant subsystem edge for %s to %s\n", lookupName, subsystem)
+
+			if !ok || !ok2 {
+				return fmt.Errorf("edge %s->%s is not internal, and not connected to the dominant subsystem", edge.Source, edge.Target)
+			}
+			count += 1
+			// Now add the link... the node exists in the subsystem but references a
+			// different subsystem as the edge.
+			// This says "dominant subsystem node conatains subsystem resource"
+			err := dom.AddSubsystemEdge(domIdx, ss.Vertices[subIdx2], 0, edge.Relation, subsystem)
+			if err != nil {
+				return err
+			}
+		}
 	}
-	return err
+	log.Printf("We have made an in memory graph (subsystem %s) with %d vertices, with %d connections to the dominant!", subsystem, ss.CountVertices(), count)
+	g.subsystem[subsystem] = ss
+
+	// Show metrics
+	ss.Metrics.Show()
+	return nil
 }

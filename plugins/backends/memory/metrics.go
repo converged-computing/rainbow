@@ -8,31 +8,25 @@ import (
 )
 
 // CountResource under some named top level, usually a root-> cluster (the cluster)
-func (m *Metrics) CountResource(topLevel, resourceType string) {
-	summary, ok := m.ResourceSummary[topLevel]
-	if !ok {
-		summary = Summary{Name: topLevel, Counts: map[string]int64{}}
-	}
-
+func (m *Metrics) CountResource(resourceType string) {
 	// Here we are updating the count for the specific type
-	count, ok := summary.Counts[resourceType]
+	count, ok := m.ResourceCounts[resourceType]
 	if !ok {
 		count = 0
 	}
 	count += 1
-	summary.Counts[resourceType] = count
-	m.ResourceSummary[topLevel] = summary
+	m.ResourceCounts[resourceType] = count
 }
 
 // NewResource resets the resource counters for a cluster
 func (m *Metrics) NewResource(levelName string) {
-	counts := map[string]int64{}
-	m.ResourceSummary[levelName] = Summary{Name: levelName, Counts: counts}
+	m.ResourceCounts[levelName] = 0
 }
 
 // Show prints a summary of resources for an entire subsystem
 func (m *Metrics) Show() error {
-	out, err := json.MarshalIndent(m.ResourceSummary, "", " ")
+	fmt.Printf("Metrics for subsystem %s", m.Name)
+	out, err := json.MarshalIndent(m.ResourceCounts, "", " ")
 	if err != nil {
 		return err
 	}

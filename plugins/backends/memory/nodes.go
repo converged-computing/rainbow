@@ -7,9 +7,8 @@ import (
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 )
 
-// addNode (vertices) to the cluster graph
+// addNode (vertices) to the cluster graph for a subsystem
 func (g *ClusterGraph) addNodes(
-	name string,
 	nodes *jgf.JsonGraph,
 	subsystem string,
 ) (*Subsystem, map[string]int, error) {
@@ -38,35 +37,29 @@ func (g *ClusterGraph) addNodes(
 
 	// Get the root vertex, every new subsystem starts there!
 	// The root vertex is named according to the subsystem
-	root, exists := ss.GetNode(subsystem)
-	if !exists {
-		return ss, lookup, fmt.Errorf("root node does not exist for subsystem %s, this should not happen", subsystem)
-	}
+	//	root, exists := ss.GetNode(subsystem)
+	//	if !exists {
+	//		return ss, lookup, fmt.Errorf("root node does not exist for subsystem %s, this should not happen", subsystem)
+	//	}
 
-	// The cluster root can only exist as one, we don't want to delete given
-	// references from subsystems for now (will need another function to delete)
-	_, ok = ss.Lookup[name]
-	if ok {
-		return ss, lookup, fmt.Errorf("cluster %s already exists, delete first", name)
-	}
-
-	// Create an empty resource counter for the cluster
-	ss.Metrics.NewResource(name)
+	// Create an empty resource counter for the subsystem
+	ss.Metrics.NewResource(subsystem)
 
 	// Now loop through the nodes and add them, keeping a temporary lookup
-	lookup[subsystem] = root
+	//	lookup[subsystem] = root
 	for nid, node := range nodes.Graph.Nodes {
 
 		// Currently we are saving the type, size, and unit
 		resource := NewResource(node)
 
-		// levelName (cluster)
-		lookupName := getNamespacedName(name, nid)
+		// Defining a lookup name means that we keep a direct index to the node in
+		// the subsystem lookup. We do this for edges between subsystems so
+		// they are always namespaced
+		lookupName := getNamespacedName(subsystem, nid)
 
 		// If it's the cluster, we save the named identifier for it
 		// We aren't interested in other metadata here so we don't add it
 		id := ss.AddNode(
-			name,
 			lookupName,
 			resource.Type,
 			resource.Size,
@@ -75,14 +68,6 @@ func (g *ClusterGraph) addNodes(
 			true,
 		)
 		lookup[nid] = id
-
-		// If it's a cluster, connect to the root
-		if resource.Type == subsystem {
-			err := ss.AddInternalEdge(root, id, 0, containsRelation, g.dominantSubsystem)
-			if err != nil {
-				return ss, lookup, err
-			}
-		}
 	}
 	return ss, lookup, nil
 }

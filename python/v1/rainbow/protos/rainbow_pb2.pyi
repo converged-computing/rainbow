@@ -89,7 +89,7 @@ class RegisterResponse(_message.Message):
     def __init__(self, request_id: _Optional[str] = ..., token: _Optional[str] = ..., secret: _Optional[str] = ..., status: _Optional[_Union[RegisterResponse.ResultType, str]] = ...) -> None: ...
 
 class SubmitJobResponse(_message.Message):
-    __slots__ = ("request_id", "jobid", "status")
+    __slots__ = ("request_id", "jobid", "cluster", "status")
     class ResultType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = ()
         SUBMIT_UNSPECIFIED: _ClassVar[SubmitJobResponse.ResultType]
@@ -102,11 +102,13 @@ class SubmitJobResponse(_message.Message):
     SUBMIT_DENIED: SubmitJobResponse.ResultType
     REQUEST_ID_FIELD_NUMBER: _ClassVar[int]
     JOBID_FIELD_NUMBER: _ClassVar[int]
+    CLUSTER_FIELD_NUMBER: _ClassVar[int]
     STATUS_FIELD_NUMBER: _ClassVar[int]
     request_id: str
     jobid: int
+    cluster: str
     status: SubmitJobResponse.ResultType
-    def __init__(self, request_id: _Optional[str] = ..., jobid: _Optional[int] = ..., status: _Optional[_Union[SubmitJobResponse.ResultType, str]] = ...) -> None: ...
+    def __init__(self, request_id: _Optional[str] = ..., jobid: _Optional[int] = ..., cluster: _Optional[str] = ..., status: _Optional[_Union[SubmitJobResponse.ResultType, str]] = ...) -> None: ...
 
 class ReceiveJobsResponse(_message.Message):
     __slots__ = ("request_id", "jobs", "status")

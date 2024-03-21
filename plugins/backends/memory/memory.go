@@ -19,7 +19,7 @@ import (
 // This is the global, in memory graph handle
 var (
 	memoryHost  = ":50051"
-	graphClient *ClusterGraph
+	graphClient *Graph
 )
 
 type MemoryGraph struct{}
@@ -65,7 +65,8 @@ func (m MemoryGraph) RegisterService(s *grpc.Server) error {
 	// This is akin to calling init
 	// The service is in the same module as here, so is available to the grpc functions
 	log.Printf("🧠️ Registering memory graph database...\n")
-	graphClient = NewClusterGraph()
+
+	graphClient = NewGraph()
 
 	service.RegisterMemoryGraphServer(s, MemoryServer{})
 	return nil
