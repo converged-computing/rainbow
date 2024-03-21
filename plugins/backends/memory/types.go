@@ -69,15 +69,11 @@ type Metrics struct {
 	Writes   int64 `json:"writes"`
 	Reads    int64 `json:"reads"`
 
-	// Resource specific metrics
-	ResourceSummary map[string]Summary
-}
+	// Courtesy to print the subsystem name
+	Name string `json:"name"`
 
-// Resource summary to hold counts for each type
-// We assemble this as we create a new graph
-type Summary struct {
-	Name   string
-	Counts map[string]int64
+	// Resource specific metrics
+	ResourceCounts map[string]int64
 }
 
 // Serialize slot resource needs into a struct that is easier to parse

@@ -3,7 +3,6 @@ package database
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
@@ -177,7 +176,7 @@ func (db *Database) AcceptJobs(
 		return response, err
 	}
 	count, err := result.RowsAffected()
-	log.Printf("%s: (%d)\n", query, count)
+	// log.Printf("%s: (%d)\n", query, count)
 
 	response.Status = pb.AcceptJobsResponse_RESULT_TYPE_PARTIAL
 	if count == int64(len(request.Jobids)) {

@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/akamensky/argparse v1.4.0
-	github.com/compspec/jobspec-go v0.0.0-20240309125332-2ded2757bc59
+	github.com/compspec/jobspec-go v0.0.0-20240319000127-8020a01a65da
 	github.com/converged-computing/jsongraph-go v0.0.0-20240229082022-c6887a5a00fe
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-sqlite3 v1.14.22

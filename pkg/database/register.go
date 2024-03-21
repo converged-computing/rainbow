@@ -35,8 +35,8 @@ func (db *Database) RegisterCluster(
 	if err != nil {
 		return response, err
 	}
-	// Debugging extra for now
-	log.Printf("%s: (%d)\n", query, count)
+	// Debugging extra if needed
+	// log.Printf("%s: (%d)\n", query, count)
 
 	// Case 1: already exists
 	if count > 0 {
