@@ -6,8 +6,7 @@ from . import rainbow_pb2 as rainbow__pb2
 
 
 class RainbowSchedulerStub(object):
-    """RainbowSchedulerService provides API endpoints for interacting with the central scheduler service
-    """
+    """RainbowSchedulerService provides API endpoints for interacting with the central scheduler service"""
 
     def __init__(self, channel):
         """Constructor.
@@ -16,191 +15,245 @@ class RainbowSchedulerStub(object):
             channel: A grpc.Channel.
         """
         self.Register = channel.unary_unary(
-                '/convergedcomputing.org.grpc.v1.RainbowScheduler/Register',
-                request_serializer=rainbow__pb2.RegisterRequest.SerializeToString,
-                response_deserializer=rainbow__pb2.RegisterResponse.FromString,
-                )
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/Register",
+            request_serializer=rainbow__pb2.RegisterRequest.SerializeToString,
+            response_deserializer=rainbow__pb2.RegisterResponse.FromString,
+        )
         self.RegisterSubsystem = channel.unary_unary(
-                '/convergedcomputing.org.grpc.v1.RainbowScheduler/RegisterSubsystem',
-                request_serializer=rainbow__pb2.RegisterRequest.SerializeToString,
-                response_deserializer=rainbow__pb2.RegisterResponse.FromString,
-                )
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/RegisterSubsystem",
+            request_serializer=rainbow__pb2.RegisterRequest.SerializeToString,
+            response_deserializer=rainbow__pb2.RegisterResponse.FromString,
+        )
         self.SubmitJob = channel.unary_unary(
-                '/convergedcomputing.org.grpc.v1.RainbowScheduler/SubmitJob',
-                request_serializer=rainbow__pb2.SubmitJobRequest.SerializeToString,
-                response_deserializer=rainbow__pb2.SubmitJobResponse.FromString,
-                )
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/SubmitJob",
+            request_serializer=rainbow__pb2.SubmitJobRequest.SerializeToString,
+            response_deserializer=rainbow__pb2.SubmitJobResponse.FromString,
+        )
         self.ReceiveJobs = channel.unary_unary(
-                '/convergedcomputing.org.grpc.v1.RainbowScheduler/ReceiveJobs',
-                request_serializer=rainbow__pb2.ReceiveJobsRequest.SerializeToString,
-                response_deserializer=rainbow__pb2.ReceiveJobsResponse.FromString,
-                )
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/ReceiveJobs",
+            request_serializer=rainbow__pb2.ReceiveJobsRequest.SerializeToString,
+            response_deserializer=rainbow__pb2.ReceiveJobsResponse.FromString,
+        )
         self.AcceptJobs = channel.unary_unary(
-                '/convergedcomputing.org.grpc.v1.RainbowScheduler/AcceptJobs',
-                request_serializer=rainbow__pb2.AcceptJobsRequest.SerializeToString,
-                response_deserializer=rainbow__pb2.AcceptJobsResponse.FromString,
-                )
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/AcceptJobs",
+            request_serializer=rainbow__pb2.AcceptJobsRequest.SerializeToString,
+            response_deserializer=rainbow__pb2.AcceptJobsResponse.FromString,
+        )
 
 
 class RainbowSchedulerServicer(object):
-    """RainbowSchedulerService provides API endpoints for interacting with the central scheduler service
-    """
+    """RainbowSchedulerService provides API endpoints for interacting with the central scheduler service"""
 
     def Register(self, request, context):
-        """Register cluster - request to register a new cluster
-        """
+        """Register cluster - request to register a new cluster"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def RegisterSubsystem(self, request, context):
-        """Register cluster - request to register a new cluster
-        """
+        """Register cluster - request to register a new cluster"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def SubmitJob(self, request, context):
-        """Job Submission - request for submitting a job to a named cluster
-        """
+        """Job Submission - request for submitting a job to a named cluster"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def ReceiveJobs(self, request, context):
-        """Request Job - ask the rainbow scheduler for up to max jobs
-        """
+        """Request Job - ask the rainbow scheduler for up to max jobs"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def AcceptJobs(self, request, context):
-        """Accept Jobs - accept some number of jobs
-        """
+        """Accept Jobs - accept some number of jobs"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
 
 def add_RainbowSchedulerServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Register': grpc.unary_unary_rpc_method_handler(
-                    servicer.Register,
-                    request_deserializer=rainbow__pb2.RegisterRequest.FromString,
-                    response_serializer=rainbow__pb2.RegisterResponse.SerializeToString,
-            ),
-            'RegisterSubsystem': grpc.unary_unary_rpc_method_handler(
-                    servicer.RegisterSubsystem,
-                    request_deserializer=rainbow__pb2.RegisterRequest.FromString,
-                    response_serializer=rainbow__pb2.RegisterResponse.SerializeToString,
-            ),
-            'SubmitJob': grpc.unary_unary_rpc_method_handler(
-                    servicer.SubmitJob,
-                    request_deserializer=rainbow__pb2.SubmitJobRequest.FromString,
-                    response_serializer=rainbow__pb2.SubmitJobResponse.SerializeToString,
-            ),
-            'ReceiveJobs': grpc.unary_unary_rpc_method_handler(
-                    servicer.ReceiveJobs,
-                    request_deserializer=rainbow__pb2.ReceiveJobsRequest.FromString,
-                    response_serializer=rainbow__pb2.ReceiveJobsResponse.SerializeToString,
-            ),
-            'AcceptJobs': grpc.unary_unary_rpc_method_handler(
-                    servicer.AcceptJobs,
-                    request_deserializer=rainbow__pb2.AcceptJobsRequest.FromString,
-                    response_serializer=rainbow__pb2.AcceptJobsResponse.SerializeToString,
-            ),
+        "Register": grpc.unary_unary_rpc_method_handler(
+            servicer.Register,
+            request_deserializer=rainbow__pb2.RegisterRequest.FromString,
+            response_serializer=rainbow__pb2.RegisterResponse.SerializeToString,
+        ),
+        "RegisterSubsystem": grpc.unary_unary_rpc_method_handler(
+            servicer.RegisterSubsystem,
+            request_deserializer=rainbow__pb2.RegisterRequest.FromString,
+            response_serializer=rainbow__pb2.RegisterResponse.SerializeToString,
+        ),
+        "SubmitJob": grpc.unary_unary_rpc_method_handler(
+            servicer.SubmitJob,
+            request_deserializer=rainbow__pb2.SubmitJobRequest.FromString,
+            response_serializer=rainbow__pb2.SubmitJobResponse.SerializeToString,
+        ),
+        "ReceiveJobs": grpc.unary_unary_rpc_method_handler(
+            servicer.ReceiveJobs,
+            request_deserializer=rainbow__pb2.ReceiveJobsRequest.FromString,
+            response_serializer=rainbow__pb2.ReceiveJobsResponse.SerializeToString,
+        ),
+        "AcceptJobs": grpc.unary_unary_rpc_method_handler(
+            servicer.AcceptJobs,
+            request_deserializer=rainbow__pb2.AcceptJobsRequest.FromString,
+            response_serializer=rainbow__pb2.AcceptJobsResponse.SerializeToString,
+        ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'convergedcomputing.org.grpc.v1.RainbowScheduler', rpc_method_handlers)
+        "convergedcomputing.org.grpc.v1.RainbowScheduler", rpc_method_handlers
+    )
     server.add_generic_rpc_handlers((generic_handler,))
 
 
- # This class is part of an EXPERIMENTAL API.
+# This class is part of an EXPERIMENTAL API.
 class RainbowScheduler(object):
-    """RainbowSchedulerService provides API endpoints for interacting with the central scheduler service
-    """
+    """RainbowSchedulerService provides API endpoints for interacting with the central scheduler service"""
 
     @staticmethod
-    def Register(request,
+    def Register(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/convergedcomputing.org.grpc.v1.RainbowScheduler/Register',
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/Register",
             rainbow__pb2.RegisterRequest.SerializeToString,
             rainbow__pb2.RegisterResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def RegisterSubsystem(request,
+    def RegisterSubsystem(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/convergedcomputing.org.grpc.v1.RainbowScheduler/RegisterSubsystem',
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/RegisterSubsystem",
             rainbow__pb2.RegisterRequest.SerializeToString,
             rainbow__pb2.RegisterResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def SubmitJob(request,
+    def SubmitJob(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/convergedcomputing.org.grpc.v1.RainbowScheduler/SubmitJob',
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/SubmitJob",
             rainbow__pb2.SubmitJobRequest.SerializeToString,
             rainbow__pb2.SubmitJobResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def ReceiveJobs(request,
+    def ReceiveJobs(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/convergedcomputing.org.grpc.v1.RainbowScheduler/ReceiveJobs',
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/ReceiveJobs",
             rainbow__pb2.ReceiveJobsRequest.SerializeToString,
             rainbow__pb2.ReceiveJobsResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def AcceptJobs(request,
+    def AcceptJobs(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/convergedcomputing.org.grpc.v1.RainbowScheduler/AcceptJobs',
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/AcceptJobs",
             rainbow__pb2.AcceptJobsRequest.SerializeToString,
             rainbow__pb2.AcceptJobsResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
