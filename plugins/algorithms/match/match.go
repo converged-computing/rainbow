@@ -8,18 +8,15 @@ import (
 	"github.com/converged-computing/rainbow/pkg/types"
 )
 
-// Random selection of a cluster
-// It doesn't get simpler than this!
-
 type MatchType struct{}
 
 var (
-	description  = "match type for a subsystem for job assignment"
-	selectorName = "match"
+	description = "match type for a subsystem for job assignment"
+	matcherName = "match"
 )
 
 func (s MatchType) Name() string {
-	return selectorName
+	return matcherName
 }
 
 func (s MatchType) Description() string {
@@ -27,16 +24,16 @@ func (s MatchType) Description() string {
 }
 
 // getSlotResource needs assumes a subsystem request as follows:
-/* tasks:
-- command:
-  - ior
-    slot: default
-    count:
-    per_slot: 1
-  resources:
-    io:
-    match:
-    - type: shm
+/* task:
+command:
+- ior
+  slot: default
+  count:
+  per_slot: 1
+resources:
+  io:
+  match:
+  - type: shm
 */
 // it is an explicit match, so we expect the slot to have that exact resource
 // available. This can eventually take a count, but right now is a boolean match

@@ -3,6 +3,7 @@ module github.com/converged-computing/rainbow
 go 1.20
 
 require (
+	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/akamensky/argparse v1.4.0
 	github.com/compspec/jobspec-go v0.0.0-20240319000127-8020a01a65da
 	github.com/converged-computing/jsongraph-go v0.0.0-20240229082022-c6887a5a00fe

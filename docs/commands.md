@@ -444,7 +444,11 @@ Now we will take the same command, but submit with a jobspec directly. This is c
 ```bash
 # terminal 1 for server
 rm -f rainbow.db && make server
+```
 
+#### Match Algorithm (default)
+
+```bash
 # terminal 2 to register cluster, subsystem, and submit job
 make register && make subsystem && go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/scheduler/rainbow-config.yaml --jobspec ./docs/examples/scheduler/jobspec-io.yaml
 ```
@@ -474,6 +478,50 @@ The new portion from the above is seeing that the subsystem "io" is satisfied at
 
 And the work is still assigned to the cluster.
 
+#### Range Algorithm (default)
+
+This algorithm is intended to match a range of versions, either a min, max, or both.
+We have an example subsystem JGF intended for spack, complete with packages, compilers, externals, licenses, and anguish.  In one
+window, start the server:
+
+```bash
+make server
+```
+
+In another terminal register the nodes, the subsystem, and then submit the job with the range algorithm;
+
+```bash
+# Create your rainbow config
+go run cmd/rainbow/rainbow.go config init --cluster-name spack-builder --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --match-algorithm range
+
+# Register your nodes
+go run cmd/rainbow/rainbow.go register cluster --cluster-name spack-builder --nodes-json ./docs/examples/match-algorithms/range/cluster-nodes.json --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --save
+
+# Register the subsystem
+go run cmd/rainbow/rainbow.go register subsystem  --subsystem spack --nodes-json ./docs/examples/match-algorithms/range/spack-subsystem.json --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml
+
+# Submit a job that asked for a valid range
+go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --jobspec ./docs/examples/match-algorithms/range/jobspec-valid-range.yaml --match-algorithm range
+```
+For the above job, you'll see it's satisfied:
+
+```console
+  match: ✅️ there are 1 matches with sufficient resources
+2024/03/30 17:03:35 📝️ received job ior for 1 contender clusters
+2024/03/30 17:03:35 📝️ job ior is assigned to cluster spack-builder
+```
+
+Try submitting a job that can't be satisfied for the range.
+
+```bash
+# Submit a job that asked for a valid range
+go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --jobspec ./docs/examples/match-algorithms/range/jobspec-invalid-range.yaml --match-algorithm range
+```
+```console
+Slots found 0/1 for vertex cluster
+  match: 🎯️ cluster spack-builder does not have sufficient resources and is NOT a match
+  match: 😥️ no clusters could satisfy this request. We are sad
+```
 
 ## Receive Jobs
 

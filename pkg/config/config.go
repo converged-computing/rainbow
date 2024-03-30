@@ -78,17 +78,17 @@ func (c *RainbowConfig) ToYaml() (string, error) {
 }
 
 // setAlgorithm sets the algorithms for the rainbow scheduler
-func (c *RainbowConfig) setAlgorithms(matchAlgo, selectAlgo string) {
+func (c *RainbowConfig) setAlgorithms(selectAlgo, matchAlgo string) {
 	sAlgo := Algorithm{Name: DefaultSelectionAlgorithm, Options: map[string]string{}}
 	mAlgo := Algorithm{Name: DefaultMatchAlgorithm, Options: map[string]string{}}
+	if selectAlgo != "" {
+		mAlgo.Name = selectAlgo
+	}
+	if matchAlgo != "" {
+		mAlgo.Name = matchAlgo
+	}
 	c.Scheduler.Algorithms.Selection = sAlgo
 	c.Scheduler.Algorithms.Match = mAlgo
-	if selectAlgo == "" {
-		c.Scheduler.Algorithms.Selection.Name = selectAlgo
-	}
-	if matchAlgo == "" {
-		c.Scheduler.Algorithms.Match.Name = matchAlgo
-	}
 }
 
 // ToJson serializes to json

@@ -28,10 +28,12 @@ func NewResource(node jgf.Node) *types.Resource {
 		resourceUnit = unit
 	}
 
+	// Throw in the rest of the metadata for algorithms to parse
 	return &types.Resource{
-		Size: resourceSize,
-		Unit: resourceUnit,
-		Type: resourceType,
+		Size:     resourceSize,
+		Unit:     resourceUnit,
+		Type:     resourceType,
+		Metadata: node.Metadata,
 	}
 }
 

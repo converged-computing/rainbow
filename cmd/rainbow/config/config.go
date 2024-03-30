@@ -13,7 +13,10 @@ var (
 )
 
 // Run will init a new config
-func RunInit(path string) error {
+func RunInit(
+	path string,
+	clusterName, selectAlgo, matchAlgo string,
+) error {
 
 	if path == "" {
 		path = defaultConfigFile
@@ -21,7 +24,7 @@ func RunInit(path string) error {
 
 	// Generate an empty config - providing an empty filename ensures we don't read an existing one
 	// This defaults to an in-memory vanilla database
-	cfg, err := config.NewRainbowClientConfig("", "rainbow-cluster", "chocolate-cookies", "", "random", "match")
+	cfg, err := config.NewRainbowClientConfig("", clusterName, "chocolate-cookies", "", selectAlgo, matchAlgo)
 	if err != nil {
 		return err
 	}

@@ -96,7 +96,8 @@ func (g MemoryGraph) Satisfies(
 	if err != nil {
 		return matches, err
 	}
-	request := service.SatisfyRequest{Payload: string(out)}
+	// Make the satisfy request, ensuring we provide the graph algorithm
+	request := service.SatisfyRequest{Payload: string(out), Matcher: matcher.Name()}
 	ctx := context.Background()
 	response, err := client.Satisfy(ctx, &request)
 	if err != nil {

@@ -138,6 +138,47 @@ task:
 
 We would look for a node of type "shm" in the io subsystem that is directly attached (an edge) to a node in the dominant subsystem graph.
 
+### Range
+
+Range is designed typically to handle package versions. You *must* specify a field that is to be inspected on the subsystem metadata, and you must specify one of "min" or "max" or both. For example:
+
+```yaml
+task:
+  command:
+  - spack
+  slot: default
+  count:
+    per_slot: 1
+  resources:
+    spack:
+      range:
+      - field: version
+        min: "0.5.1"
+        max: "0.5.5"
+```
+
+The above would expect to look for the field `version` defined for a slot, and use semver to determine within that range. Here is what the subsystem node might look like. In this case, the node is saying "the dominant subsystem node that I'm connected to has this package with this metadata":
+
+```json
+"spack1": {
+    "label": "spack1",
+    "metadata": {
+    "basename": "package",
+    "exclusive": true,
+    "id": 1,
+    "name": "package0",
+    "paths": {
+      "containment": "/spack0/package0"
+    },
+    "size": 1,
+    "type": "package",
+    "uniq_id": 1,
+    "version": "0.5.2"
+  }
+},
+```
+
+In the above, the field is "version" and it is an arbitrary metadata field in the "metadata" section of a node. For the time being, the match algorithm is the determination of types allowed there. For example, the range algorithm interface is expecting to parse a string in a semantic version format. Different plugins might expect differently.
 
 ## Selection Algorithms
 

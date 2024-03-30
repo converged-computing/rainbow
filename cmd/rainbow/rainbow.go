@@ -14,6 +14,7 @@ import (
 
 	// Register database backends and selection algorithms
 	_ "github.com/converged-computing/rainbow/plugins/algorithms/match"
+	_ "github.com/converged-computing/rainbow/plugins/algorithms/range"
 	_ "github.com/converged-computing/rainbow/plugins/backends/memory"
 	_ "github.com/converged-computing/rainbow/plugins/selection/random"
 )
@@ -85,7 +86,7 @@ func main() {
 	}
 
 	if configCmd.Happened() && configInitCmd.Happened() {
-		err := config.RunInit(*cfg)
+		err := config.RunInit(*cfg, *clusterName, *selectAlgo, *matchAlgo)
 		if err != nil {
 			log.Fatalf("Issue with config: %s\n", err)
 		}

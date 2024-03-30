@@ -91,7 +91,7 @@ func (g *ClusterGraph) depthFirstSearch(
 
 	// Note that in the experimental version we have one task and thus one slot
 	if !g.quiet {
-		fmt.Printf("  🎰️ Slots that need to be satisfied\n")
+		fmt.Printf("  🎰️ Slots that need to be satisfied with matcher %s\n", matcher.Name())
 	}
 	slots := map[string]*v1.Task{}
 

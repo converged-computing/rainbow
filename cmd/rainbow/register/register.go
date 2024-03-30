@@ -2,6 +2,7 @@ package register
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -28,6 +29,9 @@ func Run(
 		return err
 	}
 
+	if clusterName == "" {
+		return fmt.Errorf("s --cluster-name is required")
+	}
 	// Read in the config, if provided, command line takes preference
 	cfg, err := config.NewRainbowClientConfig(
 		cfgFile,
@@ -64,6 +68,10 @@ func Run(
 	if saveSecret && cfgFile != "" {
 		log.Printf("Saving cluster secret to %s\n", cfgFile)
 		cfg.Cluster = config.ClusterCredential{Secret: response.Secret, Name: clusterName}
+
+		// Assume we want to submit to our cluster too
+		newCluster := config.ClusterCredential{Token: response.Token, Name: clusterName}
+		cfg.Clusters = []config.ClusterCredential{newCluster}
 		yaml, err := cfg.ToYaml()
 		if err != nil {
 			return err
