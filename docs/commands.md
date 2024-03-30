@@ -2,6 +2,30 @@
 
 The following commands are currently supported. For Python, see the [README](https://github.com/converged-computing/rainbow/tree/main/python/v1) in the Python directory.
 
+## Run the Server
+
+You can run the server (with defaults) as follows:
+
+```bash
+make server
+```
+```console
+go run cmd/server/server.go --global-token rainbow
+2024/03/30 14:56:26 creating 🌈️ server...
+2024/03/30 14:56:26 🧩️ selection algorithm: random
+2024/03/30 14:56:26 🧩️ graph database: memory
+2024/03/30 14:56:26 ✨️ creating rainbow.db...
+2024/03/30 14:56:26    rainbow.db file created
+2024/03/30 14:56:26    🏓️ creating tables...
+2024/03/30 14:56:26    🏓️ tables created
+2024/03/30 14:56:26 ⚠️ WARNING: global-token is set, use with caution.
+2024/03/30 14:56:26 starting scheduler server: rainbow v0.1.1-draft
+2024/03/30 14:56:26 🧠️ Registering memory graph database...
+2024/03/30 14:56:26 server listening: [::]:50051
+```
+It shows you the commands that are run above with go. You could also build the `rainbow` binary instead with `make build` and use that instead.
+All subsequent commands require a server to be running.
+
 ## Prepare to Register
 
 The registration step happens when a cluster joins the rainbow scheduler. The registering cluster submits a [JGF format](https://github.com/converged-computing/jsongraph-go) resource graph.
@@ -25,8 +49,8 @@ Then we give that directory to compspec, and used the cluster creation plugin to
 compspec create nodes --cluster-name cluster-red --node-dir ./docs/rainbow/cluster/ --nodes-output ./cluster-nodes.json
 ```
 
-That example is provided in [examples](examples/scheduler/cluster-nodes.json). This is the cluster metadata that we need to send over to the rainbow scheduler on the register step,
-discussed next.
+That example is provided in [examples](examples/scheduler/cluster-nodes.json) if you want to look. The high level TLDR of this step is that you need your nodes in JGF format to register, which will
+be shown after the config section, next.
 
 ## Config
 
@@ -40,10 +64,17 @@ This generates the following file.
 
 ```yaml
 scheduler:
-    secret: chocolate-cookied
+    secret: chocolate-cookies
     name: rainbow-cluster
+    algorithms:
+        selection:
+            name: random
+        match:
+            name: match
+cluster: {}
 graphdatabase:
     name: memory
+    host: 127.0.0.1:50051
 clusters: []
 ```
 
@@ -386,10 +417,11 @@ or more likely is defined in the rainbow cluster configuration file. As an examp
 scheduler:
     secret: chocolate-cookies
     name: rainbow-cluster
-    algorithm:
-      name: randon
-      options:
-         key: value
+    algorithms:
+      selection:
+        name: randon
+        options:
+           key: value
 
 graphdatabase:
     name: memory
@@ -412,7 +444,11 @@ Now we will take the same command, but submit with a jobspec directly. This is c
 ```bash
 # terminal 1 for server
 rm -f rainbow.db && make server
+```
 
+#### Match Algorithm (default)
+
+```bash
 # terminal 2 to register cluster, subsystem, and submit job
 make register && make subsystem && go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/scheduler/rainbow-config.yaml --jobspec ./docs/examples/scheduler/jobspec-io.yaml
 ```
@@ -442,6 +478,50 @@ The new portion from the above is seeing that the subsystem "io" is satisfied at
 
 And the work is still assigned to the cluster.
 
+#### Range Algorithm (default)
+
+This algorithm is intended to match a range of versions, either a min, max, or both.
+We have an example subsystem JGF intended for spack, complete with packages, compilers, externals, licenses, and anguish.  In one
+window, start the server:
+
+```bash
+make server
+```
+
+In another terminal register the nodes, the subsystem, and then submit the job with the range algorithm;
+
+```bash
+# Create your rainbow config
+go run cmd/rainbow/rainbow.go config init --cluster-name spack-builder --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --match-algorithm range
+
+# Register your nodes
+go run cmd/rainbow/rainbow.go register cluster --cluster-name spack-builder --nodes-json ./docs/examples/match-algorithms/range/cluster-nodes.json --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --save
+
+# Register the subsystem
+go run cmd/rainbow/rainbow.go register subsystem  --subsystem spack --nodes-json ./docs/examples/match-algorithms/range/spack-subsystem.json --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml
+
+# Submit a job that asked for a valid range
+go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --jobspec ./docs/examples/match-algorithms/range/jobspec-valid-range.yaml --match-algorithm range
+```
+For the above job, you'll see it's satisfied:
+
+```console
+  match: ✅️ there are 1 matches with sufficient resources
+2024/03/30 17:03:35 📝️ received job ior for 1 contender clusters
+2024/03/30 17:03:35 📝️ job ior is assigned to cluster spack-builder
+```
+
+Try submitting a job that can't be satisfied for the range.
+
+```bash
+# Submit a job that asked for a valid range
+go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --jobspec ./docs/examples/match-algorithms/range/jobspec-invalid-range.yaml --match-algorithm range
+```
+```console
+Slots found 0/1 for vertex cluster
+  match: 🎯️ cluster spack-builder does not have sufficient resources and is NOT a match
+  match: 😥️ no clusters could satisfy this request. We are sad
+```
 
 ## Receive Jobs
 

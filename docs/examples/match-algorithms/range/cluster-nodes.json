@@ -1,0 +1,1274 @@
+{
+  "graph": {
+    "directed": true,
+    "nodes": {
+      "0": {
+        "label": "0",
+        "metadata": {
+          "basename": "cluster-red",
+          "exclusive": false,
+          "id": 0,
+          "name": "cluster-red0",
+          "paths": {
+            "containment": "/cluster-red0"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "cluster",
+          "uniq_id": 0,
+          "unit": ""
+        }
+      },
+      "1": {
+        "label": "1",
+        "metadata": {
+          "basename": "rack",
+          "exclusive": false,
+          "id": "0",
+          "name": "rack0",
+          "paths": {
+            "containment": "/cluster-red0/rack0"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "rack",
+          "uniq_id": 1,
+          "unit": ""
+        }
+      },
+      "10": {
+        "label": "10",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "6",
+          "name": "core6",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core6"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 10,
+          "unit": ""
+        }
+      },
+      "11": {
+        "label": "11",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "7",
+          "name": "core7",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core7"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 11,
+          "unit": ""
+        }
+      },
+      "12": {
+        "label": "12",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "8",
+          "name": "core8",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core8"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 12,
+          "unit": ""
+        }
+      },
+      "13": {
+        "label": "13",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "9",
+          "name": "core9",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core9"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 13,
+          "unit": ""
+        }
+      },
+      "14": {
+        "label": "14",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "10",
+          "name": "core10",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core10"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 14,
+          "unit": ""
+        }
+      },
+      "15": {
+        "label": "15",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "11",
+          "name": "core11",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core11"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 15,
+          "unit": ""
+        }
+      },
+      "16": {
+        "label": "16",
+        "metadata": {
+          "basename": "node",
+          "exclusive": false,
+          "id": "1",
+          "name": "node1",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "node",
+          "uniq_id": 16,
+          "unit": ""
+        }
+      },
+      "17": {
+        "label": "17",
+        "metadata": {
+          "basename": "socket",
+          "exclusive": false,
+          "id": "1",
+          "name": "socket1",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "socket",
+          "uniq_id": 17,
+          "unit": ""
+        }
+      },
+      "18": {
+        "label": "18",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "12",
+          "name": "core12",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core12"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 18,
+          "unit": ""
+        }
+      },
+      "19": {
+        "label": "19",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "13",
+          "name": "core13",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core13"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 19,
+          "unit": ""
+        }
+      },
+      "2": {
+        "label": "2",
+        "metadata": {
+          "basename": "node",
+          "exclusive": false,
+          "id": "0",
+          "name": "node0",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "node",
+          "uniq_id": 2,
+          "unit": ""
+        }
+      },
+      "20": {
+        "label": "20",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "14",
+          "name": "core14",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core14"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 20,
+          "unit": ""
+        }
+      },
+      "21": {
+        "label": "21",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "15",
+          "name": "core15",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core15"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 21,
+          "unit": ""
+        }
+      },
+      "22": {
+        "label": "22",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "16",
+          "name": "core16",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core16"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 22,
+          "unit": ""
+        }
+      },
+      "23": {
+        "label": "23",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "17",
+          "name": "core17",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core17"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 23,
+          "unit": ""
+        }
+      },
+      "24": {
+        "label": "24",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "18",
+          "name": "core18",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core18"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 24,
+          "unit": ""
+        }
+      },
+      "25": {
+        "label": "25",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "19",
+          "name": "core19",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core19"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 25,
+          "unit": ""
+        }
+      },
+      "26": {
+        "label": "26",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "20",
+          "name": "core20",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core20"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 26,
+          "unit": ""
+        }
+      },
+      "27": {
+        "label": "27",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "21",
+          "name": "core21",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core21"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 27,
+          "unit": ""
+        }
+      },
+      "28": {
+        "label": "28",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "22",
+          "name": "core22",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core22"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 28,
+          "unit": ""
+        }
+      },
+      "29": {
+        "label": "29",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "23",
+          "name": "core23",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node1/socket1/core23"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 29,
+          "unit": ""
+        }
+      },
+      "3": {
+        "label": "3",
+        "metadata": {
+          "basename": "socket",
+          "exclusive": false,
+          "id": "0",
+          "name": "socket0",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "socket",
+          "uniq_id": 3,
+          "unit": ""
+        }
+      },
+      "30": {
+        "label": "30",
+        "metadata": {
+          "basename": "node",
+          "exclusive": false,
+          "id": "2",
+          "name": "node2",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "node",
+          "uniq_id": 30,
+          "unit": ""
+        }
+      },
+      "31": {
+        "label": "31",
+        "metadata": {
+          "basename": "socket",
+          "exclusive": false,
+          "id": "2",
+          "name": "socket2",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "socket",
+          "uniq_id": 31,
+          "unit": ""
+        }
+      },
+      "32": {
+        "label": "32",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "24",
+          "name": "core24",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core24"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 32,
+          "unit": ""
+        }
+      },
+      "33": {
+        "label": "33",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "25",
+          "name": "core25",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core25"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 33,
+          "unit": ""
+        }
+      },
+      "34": {
+        "label": "34",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "26",
+          "name": "core26",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core26"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 34,
+          "unit": ""
+        }
+      },
+      "35": {
+        "label": "35",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "27",
+          "name": "core27",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core27"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 35,
+          "unit": ""
+        }
+      },
+      "36": {
+        "label": "36",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "28",
+          "name": "core28",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core28"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 36,
+          "unit": ""
+        }
+      },
+      "37": {
+        "label": "37",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "29",
+          "name": "core29",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core29"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 37,
+          "unit": ""
+        }
+      },
+      "38": {
+        "label": "38",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "30",
+          "name": "core30",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core30"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 38,
+          "unit": ""
+        }
+      },
+      "39": {
+        "label": "39",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "31",
+          "name": "core31",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core31"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 39,
+          "unit": ""
+        }
+      },
+      "4": {
+        "label": "4",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "0",
+          "name": "core0",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core0"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 4,
+          "unit": ""
+        }
+      },
+      "40": {
+        "label": "40",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "32",
+          "name": "core32",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core32"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 40,
+          "unit": ""
+        }
+      },
+      "41": {
+        "label": "41",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "33",
+          "name": "core33",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core33"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 41,
+          "unit": ""
+        }
+      },
+      "42": {
+        "label": "42",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "34",
+          "name": "core34",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core34"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 42,
+          "unit": ""
+        }
+      },
+      "43": {
+        "label": "43",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "35",
+          "name": "core35",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node2/socket2/core35"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 43,
+          "unit": ""
+        }
+      },
+      "5": {
+        "label": "5",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "1",
+          "name": "core1",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core1"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 5,
+          "unit": ""
+        }
+      },
+      "6": {
+        "label": "6",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "2",
+          "name": "core2",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core2"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 6,
+          "unit": ""
+        }
+      },
+      "7": {
+        "label": "7",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "3",
+          "name": "core3",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core3"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 7,
+          "unit": ""
+        }
+      },
+      "8": {
+        "label": "8",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "4",
+          "name": "core4",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core4"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 8,
+          "unit": ""
+        }
+      },
+      "9": {
+        "label": "9",
+        "metadata": {
+          "basename": "core",
+          "exclusive": false,
+          "id": "5",
+          "name": "core5",
+          "paths": {
+            "containment": "/cluster-red0/rack0/node0/socket0/core5"
+          },
+          "rank": -1,
+          "size": 1,
+          "type": "core",
+          "uniq_id": 9,
+          "unit": ""
+        }
+      }
+    },
+    "edges": [
+      {
+        "source": "0",
+        "target": "1",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "1",
+        "target": "0",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "1",
+        "target": "2",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "2",
+        "target": "1",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "2",
+        "target": "3",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "2",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "4",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "4",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "5",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "5",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "6",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "6",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "7",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "7",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "8",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "8",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "9",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "9",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "10",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "10",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "11",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "11",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "12",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "12",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "13",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "13",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "14",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "14",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "3",
+        "target": "15",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "15",
+        "target": "3",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "1",
+        "target": "16",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "16",
+        "target": "1",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "16",
+        "target": "17",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "16",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "18",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "18",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "19",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "19",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "20",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "20",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "21",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "21",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "22",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "22",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "23",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "23",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "24",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "24",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "25",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "25",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "26",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "26",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "27",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "27",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "28",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "28",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "17",
+        "target": "29",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "29",
+        "target": "17",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "1",
+        "target": "30",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "30",
+        "target": "1",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "30",
+        "target": "31",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "30",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "32",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "32",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "33",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "33",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "34",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "34",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "35",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "35",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "36",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "36",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "37",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "37",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "38",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "38",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "39",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "39",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "40",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "40",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "41",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "41",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "42",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "42",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      },
+      {
+        "source": "31",
+        "target": "43",
+        "relation": "contains",
+        "metadata": {}
+      },
+      {
+        "source": "43",
+        "target": "31",
+        "relation": "in",
+        "metadata": {}
+      }
+    ]
+  },
+  "name": "cluster-red"
+}

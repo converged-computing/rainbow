@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	defaultSelectionAlgorithm = "random"
-	defaultGraphDatabase      = "memory"
+	DefaultSelectionAlgorithm = "random"
+	DefaultMatchAlgorithm     = "match"
+	DefaultGraphDatabase      = "memory"
 )
 
 // RainbowConfig is a static file that holds configuration parameteres
@@ -36,13 +37,18 @@ type RainbowScheduler struct {
 
 	// Secret to register with the cluster
 	// Absolutely should come from environment
-	Secret    string             `json:"secret" yaml:"secret" envconfig:"RAINBOW_SECRET"`
-	Name      string             `json:"name" yaml:"name" envconfig:"RAINBOW_SCHEDULER_NAME"`
-	Algorithm SelectionAlgorithm `json:"algorithm" yaml:"algorithm"`
+	Secret     string     `json:"secret" yaml:"secret" envconfig:"RAINBOW_SECRET"`
+	Name       string     `json:"name" yaml:"name" envconfig:"RAINBOW_SCHEDULER_NAME"`
+	Algorithms Algorithms `json:"algorithms" yaml:"algorithms"`
 }
 
-type SelectionAlgorithm struct {
-	Name    string            `json:"name" yaml:"name" envconfig:"RAINBOW_SCHDULER_ALGORITHM"`
+type Algorithms struct {
+	Selection Algorithm `json:"selection" yaml:"selection"`
+	Match     Algorithm `json:"match" yaml:"match"`
+}
+
+type Algorithm struct {
+	Name    string            `json:"name" yaml:"name,omitempty"`
 	Options map[string]string `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
@@ -50,7 +56,7 @@ type SelectionAlgorithm struct {
 // When used for a "self" cluster, we have a name and secret
 // When used for a "submit to" cluster, we have a name and token
 type ClusterCredential struct {
-	Name   string `json:"name" yaml:"name"`
+	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
 	Token  string `json:"token,omitempty" yaml:"token,omitempty"`
 	Secret string `json:"secret,omitempty" yaml:"secret,omitempty"`
 }
@@ -69,6 +75,20 @@ func (c *RainbowConfig) ToYaml() (string, error) {
 		return "", err
 	}
 	return string(out), nil
+}
+
+// setAlgorithm sets the algorithms for the rainbow scheduler
+func (c *RainbowConfig) setAlgorithms(selectAlgo, matchAlgo string) {
+	sAlgo := Algorithm{Name: DefaultSelectionAlgorithm, Options: map[string]string{}}
+	mAlgo := Algorithm{Name: DefaultMatchAlgorithm, Options: map[string]string{}}
+	if selectAlgo != "" {
+		mAlgo.Name = selectAlgo
+	}
+	if matchAlgo != "" {
+		mAlgo.Name = matchAlgo
+	}
+	c.Scheduler.Algorithms.Selection = sAlgo
+	c.Scheduler.Algorithms.Match = mAlgo
 }
 
 // ToJson serializes to json
@@ -108,6 +128,7 @@ func NewRainbowClientConfig(
 	secret,
 	database,
 	selectionAlgorithm string,
+	matchAlgorithm string,
 ) (*RainbowConfig, error) {
 
 	config := RainbowConfig{}
@@ -130,17 +151,13 @@ func NewRainbowClientConfig(
 	}
 
 	// By default we use the in-memory (vanilla, simple) database
-	config.GraphDatabase.Name = defaultGraphDatabase
+	config.GraphDatabase.Name = DefaultGraphDatabase
 	if database != "" {
 		config.GraphDatabase.Name = database
 	}
 
 	// Scheduling algorithm defaults to random selection
-	algo := SelectionAlgorithm{Name: defaultSelectionAlgorithm, Options: map[string]string{}}
-	config.Scheduler.Algorithm = algo
-	if selectionAlgorithm == "" {
-		config.Scheduler.Algorithm.Name = selectionAlgorithm
-	}
+	config.setAlgorithms(selectionAlgorithm, matchAlgorithm)
 
 	// Default host, for now is always this
 	if config.GraphDatabase.Host == "" {

@@ -1,28 +1,45 @@
-package memory
+package match
 
 import (
 	"fmt"
 
 	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
+	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
+	"github.com/converged-computing/rainbow/pkg/types"
 )
 
+type MatchType struct{}
+
+var (
+	description = "match type for a subsystem for job assignment"
+	matcherName = "match"
+)
+
+func (s MatchType) Name() string {
+	return matcherName
+}
+
+func (s MatchType) Description() string {
+	return description
+}
+
 // getSlotResource needs assumes a subsystem request as follows:
-/* tasks:
-- command:
-  - ior
-    slot: default
-    count:
-    per_slot: 1
-  resources:
-    io:
-    match:
-    - type: shm
+/* task:
+command:
+- ior
+  slot: default
+  count:
+  per_slot: 1
+resources:
+  io:
+  match:
+  - type: shm
 */
 // it is an explicit match, so we expect the slot to have that exact resource
 // available. This can eventually take a count, but right now is a boolean match
 // and this is done intentionally to satisfy the simplest scheduler experiment
 // prototype where we are more interested in features
-func getSlotResourceNeeds(slot *v1.Task) *SlotResourceNeeds {
+func (m MatchType) GetSlotResourceNeeds(slot *v1.Task) *types.SlotResourceNeeds {
 	sNeeds := map[string]map[string]bool{}
 	for subsystem, needs := range slot.Resources {
 
@@ -71,25 +88,25 @@ func getSlotResourceNeeds(slot *v1.Task) *SlotResourceNeeds {
 		}
 	}
 	// Parse into the slot resource needs
-	needs := []SubsystemNeeds{}
+	needs := []types.SubsystemNeeds{}
 	for subsystem, sneeds := range sNeeds {
-		subsystemNeeds := SubsystemNeeds{Name: subsystem, Attributes: sneeds}
+		subsystemNeeds := types.SubsystemNeeds{Name: subsystem, Attributes: sneeds}
 		needs = append(needs, subsystemNeeds)
 	}
 
 	// If we don't have any needs, the slot is satisfied for that
-	slotNeeds := &SlotResourceNeeds{Subsystems: needs}
+	slotNeeds := &types.SlotResourceNeeds{Subsystems: needs}
 	if len(needs) == 0 {
 		slotNeeds.Satisfied = true
 	}
-	fmt.Printf("      => Assessing needs for slot: %v\n", slotNeeds)
+	// fmt.Printf("      => Assessing needs for slot: %v\n", slotNeeds)
 	return slotNeeds
 }
 
 // checkSubsystemEdge evaluates a node edge in the dominant subsystem for a
 // subsystem attribute. E.g., if the io subsystem provides
 // Vertex (from dominant subsysetem) is only passed in for informational purposes
-func checkSubsystemEdge(slotNeeds *SlotResourceNeeds, edge *Edge, vtx *Vertex) {
+func (m MatchType) CheckSubsystemEdge(slotNeeds *types.SlotResourceNeeds, edge *types.Edge, vtx *types.Vertex) {
 
 	// Return early if we are satisfied
 	if slotNeeds.Satisfied {
@@ -137,4 +154,17 @@ func checkSubsystemEdge(slotNeeds *SlotResourceNeeds, edge *Edge, vtx *Vertex) {
 	// This is going to provide a quick check to determine if the subsystem
 	// is satisfied without needing to parse again
 	slotNeeds.Satisfied = allSatisfied
+}
+
+// Init provides extra initialization functionality, if needed
+// The in memory database can take a backup file if desired
+func (s MatchType) Init(options map[string]string) error {
+	// If an algorithm has options, they can be set here
+	return nil
+}
+
+// Add the selection algorithm to be known to rainbow
+func init() {
+	algo := MatchType{}
+	algorithm.Register(algo)
 }

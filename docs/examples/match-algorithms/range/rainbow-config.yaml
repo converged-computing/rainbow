@@ -1,19 +1,17 @@
 scheduler:
     secret: chocolate-cookies
-    name: keebler
+    name: spack-builder
     algorithms:
         selection:
             name: random
         match:
             name: match
 cluster:
-    name: keebler
-    secret: 3994c1e7-9cc7-4b81-ab75-3b00128eda16
+    name: spack-builder
+    secret: 85e59eea-c427-4f55-9668-4ed418de9be8
 graphdatabase:
     name: memory
     host: 127.0.0.1:50051
-    options:
-        host: 127.0.0.1:50051
 clusters:
-    - name: keebler
+    - name: spack-builder
       token: rainbow

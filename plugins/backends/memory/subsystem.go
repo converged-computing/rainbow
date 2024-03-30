@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	"github.com/converged-computing/jsongraph-go/jsongraph/metadata"
+	"github.com/converged-computing/rainbow/pkg/types"
 )
 
 // NewSubsystem generates a new subsystem graph
 func NewSubsystem(name string) *Subsystem {
-	vertices := map[int]*Vertex{}
+	vertices := map[int]*types.Vertex{}
 	lookup := map[string]int{}
 	metrics := Metrics{ResourceCounts: map[string]int64{}, Name: name}
 	s := Subsystem{
@@ -40,11 +41,11 @@ func (s *Subsystem) AddNode(
 	}
 
 	id := s.counter
-	newEdges := map[int]*Edge{}
-	newSubsystems := map[string]map[int]*Edge{}
+	newEdges := map[int]*types.Edge{}
+	newSubsystems := map[string]map[int]*types.Edge{}
 
 	// Add the subsystem node
-	s.Vertices[id] = &Vertex{
+	s.Vertices[id] = &types.Vertex{
 		Identifier: id,
 		Edges:      newEdges,
 		Size:       size,
@@ -92,7 +93,7 @@ func (s *Subsystem) AddInternalEdge(
 
 	// add edge src --> dest
 	// Right now subsystem references the source
-	newEdge := Edge{
+	newEdge := types.Edge{
 		Weight:    weight,
 		Vertex:    destVertex,
 		Relation:  relation,
@@ -107,7 +108,7 @@ func (s *Subsystem) AddInternalEdge(
 // This would be called by the dominant to add an edge to itself
 func (s *Subsystem) AddSubsystemEdge(
 	src int,
-	dest *Vertex,
+	dest *types.Vertex,
 	weight int,
 	relation string,
 	subsystem string,
@@ -122,7 +123,7 @@ func (s *Subsystem) AddSubsystemEdge(
 
 	// add edge src --> dest
 	// Right now subsystem references the source
-	newEdge := Edge{
+	newEdge := types.Edge{
 		Weight:    weight,
 		Vertex:    dest,
 		Relation:  relation,
@@ -134,7 +135,7 @@ func (s *Subsystem) AddSubsystemEdge(
 	// iterate thrugh subsystem AND dominant subsystem nodes.
 	subsysEdges, ok := srcVertex.Subsystems[subsystem]
 	if !ok {
-		subsysEdges = map[int]*Edge{}
+		subsysEdges = map[int]*types.Edge{}
 		srcVertex.Subsystems[subsystem] = subsysEdges
 	}
 	srcVertex.Subsystems[subsystem][dest.Identifier] = &newEdge

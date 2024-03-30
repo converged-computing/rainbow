@@ -17,10 +17,12 @@ class RegisterRequest(_message.Message):
     def __init__(self, name: _Optional[str] = ..., payload: _Optional[str] = ..., subsystem: _Optional[str] = ...) -> None: ...
 
 class SatisfyRequest(_message.Message):
-    __slots__ = ("payload",)
+    __slots__ = ("payload", "matcher")
     PAYLOAD_FIELD_NUMBER: _ClassVar[int]
+    MATCHER_FIELD_NUMBER: _ClassVar[int]
     payload: str
-    def __init__(self, payload: _Optional[str] = ...) -> None: ...
+    matcher: str
+    def __init__(self, payload: _Optional[str] = ..., matcher: _Optional[str] = ...) -> None: ...
 
 class SatisfyResponse(_message.Message):
     __slots__ = ("clusters", "status")

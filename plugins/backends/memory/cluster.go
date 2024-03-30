@@ -25,6 +25,7 @@ type ClusterGraph struct {
 	// The dominant subsystem is a lookup in the subsystem map
 	// It defaults to nodes (node resources)
 	dominantSubsystem string
+	quiet             bool
 }
 
 // Dominant subsystem gets the dominant subsystem
@@ -96,7 +97,7 @@ func (c *ClusterGraph) validateNodes(nodes *jgf.JsonGraph) (error, int, int) {
 
 // NewClusterGraph creates a new cluster graph with a dominant subsystem
 // We assume the dominant is hard coded to be containment
-func NewClusterGraph(name string, domSubsystem string) *ClusterGraph {
+func NewClusterGraph(name string, domSubsystem string, quiet bool) *ClusterGraph {
 
 	// If not defined, set the dominant subsystem
 	if domSubsystem == "" {
@@ -111,6 +112,7 @@ func NewClusterGraph(name string, domSubsystem string) *ClusterGraph {
 		Name:              name,
 		subsystem:         subsystems,
 		dominantSubsystem: defaultDominantSubsystem,
+		quiet:             quiet,
 	}
 	return g
 }

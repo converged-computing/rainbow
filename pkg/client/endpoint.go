@@ -10,6 +10,7 @@ import (
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
 	"github.com/converged-computing/rainbow/pkg/config"
 	"github.com/converged-computing/rainbow/pkg/graph"
+	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	"github.com/converged-computing/rainbow/pkg/graph/backend"
 	"github.com/converged-computing/rainbow/pkg/utils"
 	"github.com/pkg/errors"
@@ -44,6 +45,13 @@ func (c *RainbowClient) SubmitJob(
 		return response, err
 	}
 
+	// Prepare the subsystem match algorithm
+	matchAlgo, err := algorithm.Get(cfg.Scheduler.Algorithms.Match.Name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	matchAlgo.Init(cfg.Scheduler.Algorithms.Match.Options)
+
 	// TODO we need to have a check here to see what clusters
 	// the user has permission to do. Either that can be represented in
 	// the graph database (and the call goes directly to it) or it
@@ -51,7 +59,7 @@ func (c *RainbowClient) SubmitJob(
 	// (but we limit our search). Likely the first is preferable.
 	// Ask the graphDB if the jobspec can be satisfied
 	// TODO what does a match look like?
-	matches, err := graphDB.Satisfies(job)
+	matches, err := graphDB.Satisfies(job, matchAlgo)
 	if err != nil {
 		return response, err
 	}

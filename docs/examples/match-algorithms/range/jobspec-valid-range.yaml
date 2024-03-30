@@ -16,6 +16,8 @@ task:
   count:
     per_slot: 1
   resources:
-    io:
-      match:
-      - type: shm
+    spack:
+      range:
+      - field: version
+        min: "0.5.1"
+        max: "0.5.5"

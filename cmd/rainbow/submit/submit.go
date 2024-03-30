@@ -18,7 +18,7 @@ func Run(
 	nodes, tasks int,
 	token, jobspec, clusterName,
 	database, cfgFile string,
-	selectionAlgorithm string,
+	selectAlgo, matchAlgo string,
 ) error {
 
 	c, err := client.NewClient(host)
@@ -49,7 +49,7 @@ func Run(
 	}
 
 	// Read in the config, if provided, TODO we need a set of tokens here?
-	cfg, err := config.NewRainbowClientConfig(cfgFile, "", "", database, selectionAlgorithm)
+	cfg, err := config.NewRainbowClientConfig(cfgFile, "", "", database, selectAlgo, matchAlgo)
 	if err != nil {
 		return err
 	}

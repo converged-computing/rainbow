@@ -13,8 +13,10 @@ import (
 	"github.com/converged-computing/rainbow/pkg/types"
 
 	// Register database backends and selection algorithms
-	_ "github.com/converged-computing/rainbow/plugins/algorithms/random"
+	_ "github.com/converged-computing/rainbow/plugins/algorithms/match"
+	_ "github.com/converged-computing/rainbow/plugins/algorithms/range"
 	_ "github.com/converged-computing/rainbow/plugins/backends/memory"
+	_ "github.com/converged-computing/rainbow/plugins/selection/random"
 )
 
 var (
@@ -49,7 +51,8 @@ func main() {
 	host := parser.String("", "host", &argparse.Options{Default: "localhost:50051", Help: "Scheduler server address (host:port)"})
 	clusterName := parser.String("", "cluster-name", &argparse.Options{Help: "Name of cluster to register"})
 	graphDatabase := parser.String("", "graph-database", &argparse.Options{Help: "Graph database backend to use"})
-	selectionAlgorithm := parser.String("", "select-algorithm", &argparse.Options{Default: "random", Help: "Selection algorithm for graph database (defaults to random)"})
+	selectAlgo := parser.String("", "select-algorithm", &argparse.Options{Default: "random", Help: "Selection algorithm for final cluster selection (defaults to random)"})
+	matchAlgo := parser.String("", "match-algorithm", &argparse.Options{Default: "match", Help: "Match algorithm for graph database (defaults to match)"})
 
 	// Receive Jobs
 	clusterSecret := receiveCmd.String("", "request-secret", &argparse.Options{Help: "Cluster 'secret' to retrieve jobs"})
@@ -83,7 +86,7 @@ func main() {
 	}
 
 	if configCmd.Happened() && configInitCmd.Happened() {
-		err := config.RunInit(*cfg)
+		err := config.RunInit(*cfg, *clusterName, *selectAlgo, *matchAlgo)
 		if err != nil {
 			log.Fatalf("Issue with config: %s\n", err)
 		}
@@ -111,7 +114,8 @@ func main() {
 				*cfg,
 				*graphDatabase,
 				*subsystem,
-				*selectionAlgorithm,
+				*selectAlgo,
+				*matchAlgo,
 			)
 			if err != nil {
 				log.Fatalf("Issue with register: %s\n", err)
@@ -143,7 +147,8 @@ func main() {
 			*clusterName,
 			*graphDatabase,
 			*cfg,
-			*selectionAlgorithm,
+			*selectAlgo,
+			*matchAlgo,
 		)
 		if err != nil {
 			log.Fatal(err.Error())

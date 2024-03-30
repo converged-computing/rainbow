@@ -1,0 +1,249 @@
+{
+  "graph": {
+    "directed": true,
+    "nodes": {
+      "spack0": {
+        "label": "spack0",
+        "metadata": {
+          "basename": "spack",
+          "exclusive": false,
+          "id": 0,
+          "name": "spack0",
+          "paths": {
+            "containment": "/spack0"
+          },
+          "size": 1,
+          "type": "spack",
+          "uniq_id": 0
+        }
+      },
+      "spack1": {
+        "label": "spack1",
+        "metadata": {
+          "basename": "package",
+          "exclusive": true,
+          "id": 1,
+          "name": "package0",
+          "paths": {
+            "containment": "/spack0/package0"
+          },
+          "size": 1,
+          "type": "package",
+          "uniq_id": 1,
+          "version": "0.5.2"
+        }
+      },
+      "spack2": {
+        "label": "spack2",
+        "metadata": {
+          "basename": "compiler",
+          "exclusive": true,
+          "id": 2,
+          "name": "compiler0",
+          "paths": {
+            "containment": "/spack0/compiler0"
+          },
+          "size": 1,
+          "type": "compiler",
+          "uniq_id": 2
+        }
+      },
+      "spack3": {
+        "label": "spack3",
+        "metadata": {
+          "basename": "external",
+          "exclusive": true,
+          "id": 3,
+          "name": "external0",
+          "paths": {
+            "containment": "/spack0/external0"
+          },
+          "size": 1,
+          "type": "external",
+          "uniq_id": 3
+        }
+      },
+      "spack4": {
+        "label": "spack4",
+        "metadata": {
+          "basename": "anguish",
+          "exclusive": false,
+          "id": 4,
+          "name": "anguish0",
+          "paths": {
+            "containment": "/spack0/anguish0"
+          },
+          "size": 4,
+          "type": "anguish"
+        }
+      },
+      "spack5": {
+        "label": "spack5",
+        "metadata": {
+          "basename": "license",
+          "exclusive": false,
+          "id": 5,
+          "name": "license0",
+          "paths": {
+            "containment": "/spack0/license0"
+          },
+          "size": 16,
+          "type": "license",
+          "uniq_id": 5
+        }
+      }    
+    },
+    "edges": [
+      {
+        "source": "2",
+        "target": "spack1",
+        "relation": "contains"
+      },
+      {
+        "source": "spack1",
+        "target": "2",
+        "relation": "in"
+      },
+      {
+        "source": "2",
+        "target": "spack2",
+        "relation": "contains"
+      },
+      {
+        "source": "spack2",
+        "target": "2",
+        "relation": "in"
+      },
+      {
+        "source": "2",
+        "target": "spack3",
+        "relation": "contains"
+      },
+      {
+        "source": "spack3",
+        "target": "2",
+        "relation": "in"
+      },
+      {
+        "source": "2",
+        "target": "spack4",
+        "relation": "contains"
+      },
+      {
+        "source": "spack4",
+        "target": "2",
+        "relation": "in"
+      },
+      {
+        "source": "2",
+        "target": "spack5",
+        "relation": "contains"
+      },
+      {
+        "source": "spack5",
+        "target": "2",
+        "relation": "in"
+      },
+      {
+        "source": "16",
+        "target": "spack1",
+        "relation": "contains"
+      },
+      {
+        "source": "spack1",
+        "target": "16",
+        "relation": "in"
+      },
+      {
+        "source": "16",
+        "target": "spack2",
+        "relation": "contains"
+      },
+      {
+        "source": "spack2",
+        "target": "16",
+        "relation": "in"
+      },
+      {
+        "source": "16",
+        "target": "spack3",
+        "relation": "contains"
+      },
+      {
+        "source": "spack3",
+        "target": "16",
+        "relation": "in"
+      },
+      {
+        "source": "16",
+        "target": "spack4",
+        "relation": "contains"
+      },
+      {
+        "source": "spack4",
+        "target": "16",
+        "relation": "in"
+      },
+      {
+        "source": "16",
+        "target": "spack5",
+        "relation": "contains"
+      },
+      {
+        "source": "spack5",
+        "target": "16",
+        "relation": "in"
+      },
+      {
+        "source": "30",
+        "target": "spack1",
+        "relation": "contains"
+      },
+      {
+        "source": "spack1",
+        "target": "30",
+        "relation": "in"
+      },
+      {
+        "source": "30",
+        "target": "spack2",
+        "relation": "contains"
+      },
+      {
+        "source": "spack2",
+        "target": "30",
+        "relation": "in"
+      },
+      {
+        "source": "30",
+        "target": "spack3",
+        "relation": "contains"
+      },
+      {
+        "source": "spack3",
+        "target": "30",
+        "relation": "in"
+      },
+      {
+        "source": "30",
+        "target": "spack4",
+        "relation": "contains"
+      },
+      {
+        "source": "spack4",
+        "target": "30",
+        "relation": "in"
+      },
+      {
+        "source": "30",
+        "target": "spack5",
+        "relation": "contains"
+      },
+      {
+        "source": "spack5",
+        "target": "30",
+        "relation": "in"
+      }
+    ]
+  }
+}
