@@ -10,8 +10,8 @@ import (
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
 	"github.com/converged-computing/rainbow/pkg/config"
 	"github.com/converged-computing/rainbow/pkg/database"
-	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	"github.com/converged-computing/rainbow/pkg/graph/backend"
+	"github.com/converged-computing/rainbow/pkg/graph/selection"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -42,8 +42,8 @@ type Server struct {
 	host        string
 
 	// graph database handle
-	graph     backend.GraphBackend
-	algorithm algorithm.SelectionAlgorithm
+	graph              backend.GraphBackend
+	selectionAlgorithm selection.SelectionAlgorithm
 }
 
 // NewServer creates a new "scheduler" server
@@ -66,12 +66,12 @@ func NewServer(
 	}
 
 	// Prepare the selection algorithm
-	algo, err := algorithm.Get(cfg.Scheduler.Algorithm.Name)
+	selectAlgo, err := selection.Get(cfg.Scheduler.Algorithms.Selection.Name)
 	if err != nil {
 		log.Fatal(err)
 	}
-	algo.Init(cfg.Scheduler.Algorithm.Options)
-	log.Printf("🧩️ selection algorithm: %v", algo.Name())
+	selectAlgo.Init(cfg.Scheduler.Algorithms.Selection.Options)
+	log.Printf("🧩️ selection algorithm: %v", selectAlgo.Name())
 
 	// Load the graph backend!
 	graphDB, err := backend.Get(cfg.GraphDatabase.Name)
@@ -79,7 +79,7 @@ func NewServer(
 		log.Fatal(err)
 	}
 
-	// Run init with any options from the config
+	// Run init with any options from the config, and the match algorithm
 	graphDB.Init(cfg.GraphDatabase.Options)
 	log.Printf("🧩️ graph database: %v", graphDB.Name())
 
@@ -90,14 +90,14 @@ func NewServer(
 	}
 
 	return &Server{
-		db:          db,
-		name:        cfg.Scheduler.Name,
-		graph:       graphDB,
-		version:     version,
-		secret:      cfg.Scheduler.Secret,
-		globalToken: globalToken,
-		algorithm:   algo,
-		host:        host,
+		db:                 db,
+		name:               cfg.Scheduler.Name,
+		graph:              graphDB,
+		version:            version,
+		secret:             cfg.Scheduler.Secret,
+		globalToken:        globalToken,
+		selectionAlgorithm: selectAlgo,
+		host:               host,
 	}, nil
 }
 

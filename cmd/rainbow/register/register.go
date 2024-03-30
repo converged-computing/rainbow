@@ -20,6 +20,7 @@ func Run(
 	graphDatabase,
 	subsystem,
 	selectionAlgorithm string,
+	matchAlgorithm string,
 ) error {
 
 	c, err := client.NewClient(host)
@@ -34,6 +35,7 @@ func Run(
 		secret,
 		graphDatabase,
 		selectionAlgorithm,
+		matchAlgorithm,
 	)
 	if err != nil {
 		return err

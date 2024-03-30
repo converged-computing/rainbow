@@ -2,6 +2,30 @@
 
 The following commands are currently supported. For Python, see the [README](https://github.com/converged-computing/rainbow/tree/main/python/v1) in the Python directory.
 
+## Run the Server
+
+You can run the server (with defaults) as follows:
+
+```bash
+make server
+```
+```console
+go run cmd/server/server.go --global-token rainbow
+2024/03/30 14:56:26 creating 🌈️ server...
+2024/03/30 14:56:26 🧩️ selection algorithm: random
+2024/03/30 14:56:26 🧩️ graph database: memory
+2024/03/30 14:56:26 ✨️ creating rainbow.db...
+2024/03/30 14:56:26    rainbow.db file created
+2024/03/30 14:56:26    🏓️ creating tables...
+2024/03/30 14:56:26    🏓️ tables created
+2024/03/30 14:56:26 ⚠️ WARNING: global-token is set, use with caution.
+2024/03/30 14:56:26 starting scheduler server: rainbow v0.1.1-draft
+2024/03/30 14:56:26 🧠️ Registering memory graph database...
+2024/03/30 14:56:26 server listening: [::]:50051
+```
+It shows you the commands that are run above with go. You could also build the `rainbow` binary instead with `make build` and use that instead.
+All subsequent commands require a server to be running.
+
 ## Prepare to Register
 
 The registration step happens when a cluster joins the rainbow scheduler. The registering cluster submits a [JGF format](https://github.com/converged-computing/jsongraph-go) resource graph.
@@ -25,8 +49,8 @@ Then we give that directory to compspec, and used the cluster creation plugin to
 compspec create nodes --cluster-name cluster-red --node-dir ./docs/rainbow/cluster/ --nodes-output ./cluster-nodes.json
 ```
 
-That example is provided in [examples](examples/scheduler/cluster-nodes.json). This is the cluster metadata that we need to send over to the rainbow scheduler on the register step,
-discussed next.
+That example is provided in [examples](examples/scheduler/cluster-nodes.json) if you want to look. The high level TLDR of this step is that you need your nodes in JGF format to register, which will
+be shown after the config section, next.
 
 ## Config
 
@@ -40,10 +64,17 @@ This generates the following file.
 
 ```yaml
 scheduler:
-    secret: chocolate-cookied
+    secret: chocolate-cookies
     name: rainbow-cluster
+    algorithms:
+        selection:
+            name: random
+        match:
+            name: match
+cluster: {}
 graphdatabase:
     name: memory
+    host: 127.0.0.1:50051
 clusters: []
 ```
 
@@ -386,10 +417,11 @@ or more likely is defined in the rainbow cluster configuration file. As an examp
 scheduler:
     secret: chocolate-cookies
     name: rainbow-cluster
-    algorithm:
-      name: randon
-      options:
-         key: value
+    algorithms:
+      selection:
+        name: randon
+        options:
+           key: value
 
 graphdatabase:
     name: memory

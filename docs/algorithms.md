@@ -1,16 +1,26 @@
 # Algorithms
 
-This is a brief summary of notes about current algorithms.
+This is a brief summary of notes about current interfaces that support algorithms. While algorithms are an important part of rainbow, they are implemented via interfaces. There are currently three kinds of interfaces:
 
-## Memory Graph
+ - [Backends](#graph-backends) are graph database backends. These backends use match algorithms directly
+ - [Match Algorithms](#match-algorithms) are used by the graph databases to determine how to match a subsystem to a slot. Each graph backend can have a default and (likely) support a subset
+ - [Selection](#selection-algorithms) are the last set that are given a set of cluster matches and allowed to decide on a final assignment, usually from stateful data.
+
+These sections will go through the different interfaces and algorithms afforded by each.
+
+## Graph Backends
+
+We currently only support a custom memory graph backend. It would be good to get fluxion in here soon, when it's ready.
+
+### Memory Graph
 
 The "memory" graph backend is an in-memory graph database that is a custom implementation (by @vsoch). Although it is primarily intended for learning, it serves as a good base for development and prototyping too, and warrants a discussion of algorithms involved. For design, see the [design](design.md) document. This will detail basics about the search.
 
-### Depth First Search
+#### Depth First Search
 
 While Fluxion uses depth first search and up (to support an adjacency list), since we are just using this graph for prototyping, we instead use recursion, which means we can traverse (depth) and not need to find our way back up, because we can return from a recursive call.
 
-#### 1. Quick Check
+##### 1. Quick Check
 
 We start with a hieuristic that says "if I know the totals that are needed for this Jobspec are not available across the cluster, bail out before doing any search." That works as follows.
 
@@ -21,13 +31,13 @@ We start with a hieuristic that says "if I know the totals that are needed for t
 
 At the end, we have a summary of the total resources requested by the jobspec, and do a quick check to see if any clusters have less than that amount (the totals we already have cached from registration) OR if the clusters are missing a resource entirely. Note that this is only for the dominant subsystem. If a cluster passes these checks, it proceeds into depth first search.
 
-#### 2. Depth First Search
+##### 2. Depth First Search
 
 Depth first search is going to do checks from the perspective of a slot, because this (as I understand it) is the level where we are "pinning" the request. Thus, we start our search by creating a lookup of slots, which we do from the "tasks" section of the jobspec. We do this because as we are traversing we are going to be randomly hitting slots defined by the user, and we need to be able to look up details about it.
 
 Note that this search is still rooted in the dominant subsystem, and for other subsystem resources (e.g., IO) these are going to linked off of vertices here. For each cluster in our matches, we then start at the root, which is generally just a node named by the cluster. We get that vertex, because since this memory database has an object oriented design, all children vertices are going to be edges off of that.
 
-##### findSlots
+###### findSlots
 
 We then define a recursive function `findSlots` that is going to recurse into a slot resource and recurse into child resources under that to count what it finds. For example, if the Jobspec is saying that it wants some number of cores per slot, the `findSlots` function will start at a vertex where the slot is, and then figure out if we have that number. It returns a number that represents that count. Specifically, the function works as follows:
 
@@ -39,7 +49,7 @@ We then define a recursive function `findSlots` that is going to recurse into a 
 
 The function `findSlots` will (should) return with the number of matches for a specific resource type below a vertex in the graph, allowing us to determine if a subtree can match a request that is specific to a slot.
 
-##### satisfies
+###### satisfies
 
 Satisfies is a recursive function that determines if a vertex can satisfy a resource need.
 Given a resource and a vertex root, it returns the count of vertices under the root that satisfy the request. This function uses `findSlots` because as it is traversing, when it finds a `resource.Type`
@@ -51,7 +61,7 @@ of type "slot" it will call that function. Akin to `findSlots`, it works as foll
 
 The result of satisfies is returning the count for some resource that is satisfied starting at some root, accounting for slots too.
 
-##### traverseResource
+###### traverseResource
 
 The traverse resource is the main (also recursive function) to handle traversing the graph. It starts at the top level resource from the Jobspec, and instead of returning a count, returns a boolean to indicate if the match is a yes or no. It has two cases:
 
@@ -75,7 +85,7 @@ if isMatch is true here, add the cluster to matches
 
 At this point, the basic list of clusters is returned to the calling function (the interface in rainbow) and passed on to a selection algorithm, which can take some logic about the clusters (likely state) and make a final decision. We currently just randomly select from the set (random is the only selection algorithm available, mainly for development).
 
-## Jobspec Resources
+#### Jobspec Resources
 
 While we need to have more [discussion](https://github.com/flux-framework/flux-sched/discussions/1153#discussioncomment-8726678) on what constitutes a request for subsystem resources, I am taking a simple approach that will satisfy an initial need to run experiments with compatibility metadata (relevant to subsystems) that use a scheduler. The approach I am taking is the following. You can read about the [design](design.md) and I'll repeat the high level points here. When we register a subsystem, it is a separate graph that (at the highest level) is still organized by cluster name. However, each node in the graph needs to be attached to another node known to itself, or to a vertex in the dominant subsystem graph. When asking for a subsystem resource, we are asking for a check at a specific vertex (defined by the slot) that is relevant for a specific subsystem and resource type. We do this by way of defining "resources" under a task, as shown below:
 
@@ -91,8 +101,8 @@ resources:
     with:
     - count: 2
       type: core
-tasks:
-- command:
+task:
+  command:
   - ior
   slot: default
   count:
@@ -106,5 +116,33 @@ tasks:
 In the above, we are saying that when we find a slot, we need to see if the vertex has an edge to the "ior" subsystem with this particular kind of storage (shared memory). If it does, it's a match. Note that this basic structure is currently enforced - the top level under resources are keys for subsystems, under those keys are algorithm types, of which the current only available option is to "match," which means an exact match of resource types. This is the "does the slot have features, yes or no" approach, and is done intentionally to satisfy simple experiments that describe subsystem resources as present or not. Different algorithm types can be defined here that implement different logic (taking into account counts, or actually traversing the subsystem graph at that vertex, which currently is not done).
 
 I understand this is likely not perfect for what everyone wants, but I believe it to be a reasonable first shot, and within the ability of what I can prototype without having fluxion ready yet.
+
+## Match Algorithms
+
+### Match
+
+The expliciy "match" type is going to look exactly at the type of a subsystem node, and return true (match) if it matches what the subsystem needs. For example, given this task:
+
+```yaml
+task:
+  command:
+  - ior
+  slot: default
+  count:
+    per_slot: 1
+  resources:
+    io:
+      match:
+      - type: shm
+```
+
+We would look for a node of type "shm" in the io subsystem that is directly attached (an edge) to a node in the dominant subsystem graph.
+
+
+## Selection Algorithms
+
+### Random
+
+This algorithm speaks for itself. Given a listing of contender clusters (where all clusters have a match) we randomly choose.
 
 [home](/README.md#rainbow-scheduler)

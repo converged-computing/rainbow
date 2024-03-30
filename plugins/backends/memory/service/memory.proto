@@ -17,6 +17,7 @@ message RegisterRequest {
 
 message SatisfyRequest {
   string payload = 1;
+  string matcher = 2;
 }
 
 message SatisfyResponse {

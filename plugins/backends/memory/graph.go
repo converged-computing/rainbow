@@ -14,6 +14,7 @@ import (
 	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 	"github.com/converged-computing/rainbow/pkg/graph"
+	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	"github.com/converged-computing/rainbow/pkg/utils"
 	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 )
@@ -23,6 +24,7 @@ type Graph struct {
 	Clusters   map[string]*ClusterGraph
 	lock       sync.RWMutex
 	backupFile string
+	quiet      bool
 
 	// The dominant subsystem for all clusters, if desired to set
 	dominantSubsystem string
@@ -97,7 +99,7 @@ func (g *Graph) LoadClusterNodes(
 	}
 
 	// Create a new ClusterGraph
-	clusterG := NewClusterGraph(clusterName, subsystem)
+	clusterG := NewClusterGraph(clusterName, subsystem, g.quiet)
 	err := clusterG.LoadClusterNodes(nodes, subsystem)
 	if err != nil {
 		return err
@@ -110,7 +112,10 @@ func (g *Graph) LoadClusterNodes(
 // 1. Read in and populate the payload into a jobspec
 // 2. Determine by way of a depth first search if we can satisfy
 // 3. Return the names of the cluster
-func (g *Graph) Satisfies(payload string) (*service.SatisfyResponse, error) {
+func (g *Graph) Satisfies(
+	payload string,
+	matcher algorithm.MatchAlgorithm,
+) (*service.SatisfyResponse, error) {
 	response := service.SatisfyResponse{}
 
 	// Serialize back into Jobspec
@@ -121,13 +126,16 @@ func (g *Graph) Satisfies(payload string) (*service.SatisfyResponse, error) {
 	}
 
 	// Tell the user /logs we are looking for a match
-	fmt.Printf("\n🍇️ Satisfy request to Graph 🍇️\n")
-	fmt.Printf(" jobspec: %s\n", payload)
+	if !g.quiet {
+		fmt.Printf("\n🍇️ Satisfy request to Graph 🍇️\n")
+		fmt.Printf(" jobspec: %s\n", payload)
+	}
 	matches := []string{}
+	notMatches := []string{}
 
 	// Determine if each cluster can match
 	for clusterName, clusterG := range g.Clusters {
-		isMatch, err := clusterG.DFSForMatch(&jobspec)
+		isMatch, err := clusterG.DFSForMatch(&jobspec, matcher)
 
 		// Return early if we hit an error
 		if err != nil {
@@ -137,15 +145,20 @@ func (g *Graph) Satisfies(payload string) (*service.SatisfyResponse, error) {
 		if isMatch {
 			matches = append(matches, clusterName)
 		} else {
-			fmt.Printf("  match: 🎯️ cluster %s does not have sufficient resources and is NOT a match\n", clusterName)
+			notMatches = append(notMatches, clusterName)
+			if !g.quiet {
+				fmt.Printf("  match: 🎯️ cluster %s does not have sufficient resources and is NOT a match\n", clusterName)
+			}
 		}
+
 	}
 	if len(matches) == 0 {
 		fmt.Println("  match: 😥️ no clusters could satisfy this request. We are sad")
-	}
-	// Show all matches at once
-	for _, match := range matches {
-		fmt.Printf("  match: ✅️ cluster %s has enough resources and is a match\n", match)
+	} else {
+		fmt.Printf("  match: ✅️ there are %d matches with sufficient resources\n", len(matches))
+		if len(notMatches) > 0 {
+			fmt.Printf("         🎯️ there are %d clusters that do not match\n", len(notMatches))
+		}
 	}
 	// Add the matches to the response
 	response.Clusters = matches

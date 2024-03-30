@@ -7,6 +7,7 @@ import (
 	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 
 	"github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
+	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	"google.golang.org/grpc"
 )
 
@@ -29,8 +30,8 @@ type GraphBackend interface {
 	Description() string
 	Init(map[string]string) error
 
-	// TODO we need a jobspec for here
-	Satisfies(*js.Jobspec) ([]string, error)
+	// Determine if a jobspec can be satified in the graph
+	Satisfies(*js.Jobspec, algorithm.MatchAlgorithm) ([]string, error)
 
 	// Register an additional grpc server
 	RegisterService(*grpc.Server) error

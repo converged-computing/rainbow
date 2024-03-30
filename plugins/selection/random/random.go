@@ -3,7 +3,7 @@ package random
 import (
 	"math/rand"
 
-	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
+	"github.com/converged-computing/rainbow/pkg/graph/selection"
 )
 
 // Random selection of a cluster
@@ -46,5 +46,5 @@ func (s RandomSelection) Init(options map[string]string) error {
 // Add the selection algorithm to be known to rainbow
 func init() {
 	algo := RandomSelection{}
-	algorithm.Register(algo)
+	selection.Register(algo)
 }

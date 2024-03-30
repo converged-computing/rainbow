@@ -27,7 +27,7 @@ func Run(
 	}
 
 	// Read in the config, if provided, TODO we need a set of tokens here?
-	cfg, err := config.NewRainbowClientConfig(cfgFile, cluster, secret, "", "")
+	cfg, err := config.NewRainbowClientConfig(cfgFile, cluster, secret, "", "", "")
 	if err != nil {
 		return err
 	}

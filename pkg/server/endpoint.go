@@ -120,7 +120,7 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 	log.Printf("📝️ received job %s for %d contender clusters", in.Name, len(clusters))
 
 	// Use the algorithm to select a final cluster
-	selected, err := s.algorithm.Select(clusters)
+	selected, err := s.selectionAlgorithm.Select(clusters)
 	if err != nil {
 		return nil, err
 	}

@@ -10,6 +10,7 @@ import (
 	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 
+	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	"github.com/converged-computing/rainbow/pkg/graph/backend"
 	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 	"google.golang.org/grpc"
@@ -72,17 +73,13 @@ func (m MemoryGraph) RegisterService(s *grpc.Server) error {
 	return nil
 }
 
-// Add the backend to be known to rainbow
-func init() {
-
-	graph := MemoryGraph{}
-	backend.Register(graph)
-}
-
 // Satisfies - determine what clusters satisfy a jobspec request
 // Since this is called from the client function, it's technically
 // running from the client (not from the server)
-func (g MemoryGraph) Satisfies(jobspec *js.Jobspec) ([]string, error) {
+func (g MemoryGraph) Satisfies(
+	jobspec *js.Jobspec,
+	matcher algorithm.MatchAlgorithm,
+) ([]string, error) {
 
 	matches := []string{}
 	var opts []grpc.DialOption
@@ -110,10 +107,19 @@ func (g MemoryGraph) Satisfies(jobspec *js.Jobspec) ([]string, error) {
 
 // Init provides extra initialization functionality, if needed
 // The in memory database can take a backup file if desired
-func (g MemoryGraph) Init(options map[string]string) error {
+func (g MemoryGraph) Init(
+	options map[string]string,
+) error {
 	backupFile, ok := options["backupFile"]
 	if ok {
 		graphClient.backupFile = backupFile
+	}
+
+	quiet, ok := options["quiet"]
+	if ok {
+		if quiet == "true" || quiet == "yes" {
+			graphClient.quiet = true
+		}
 	}
 
 	// Warning: this assumes one client running with one graph host
@@ -122,4 +128,11 @@ func (g MemoryGraph) Init(options map[string]string) error {
 		memoryHost = host
 	}
 	return nil
+}
+
+// Add the backend to be known to rainbow
+func init() {
+
+	graph := MemoryGraph{}
+	backend.Register(graph)
 }

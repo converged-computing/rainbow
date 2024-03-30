@@ -3,6 +3,8 @@ package memory
 import (
 	"context"
 
+	"github.com/converged-computing/rainbow/pkg/config"
+	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 )
 
@@ -21,7 +23,15 @@ func (MemoryServer) Register(c context.Context, req *service.RegisterRequest) (*
 
 // Satisfy determines if the graph can satisfy a request
 func (MemoryServer) Satisfy(c context.Context, req *service.SatisfyRequest) (*service.SatisfyResponse, error) {
-	response, err := graphClient.Satisfies(req.Payload)
+	if req.Matcher == "" {
+		req.Matcher = config.DefaultMatchAlgorithm
+	}
+	// Instantiate the matcher
+	matcher, err := algorithm.Get(req.Matcher)
+	if err != nil {
+		return nil, err
+	}
+	response, err := graphClient.Satisfies(req.Payload, matcher)
 	if err != nil {
 		return nil, err
 	}

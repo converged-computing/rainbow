@@ -1,11 +1,14 @@
 scheduler:
     secret: chocolate-cookies
     name: keebler
-    algorithm:
-        name: random
+    algorithms:
+        selection:
+            name: random
+        match:
+            name: match
 cluster:
     name: keebler
-    secret: d8d50175-4d9f-4dc0-8f95-4893d26618ac
+    secret: a5a8ebd8-6b22-44d4-aafe-6e81f92124ce
 graphdatabase:
     name: memory
     host: 127.0.0.1:50051

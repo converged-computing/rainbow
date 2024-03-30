@@ -31,7 +31,7 @@ func RegisterSubsystem(
 		return fmt.Errorf("a subsystem name is required to register")
 	}
 	// Read in the config, if provided, command line takes preference
-	cfg, err := config.NewRainbowClientConfig(cfgFile, "", "", "", "")
+	cfg, err := config.NewRainbowClientConfig(cfgFile, "", "", "", "", "")
 	if err != nil {
 		return err
 	}
