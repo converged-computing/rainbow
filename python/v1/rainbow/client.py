@@ -161,7 +161,7 @@ class RainbowClient:
         it custom with your own special logic.
         """
         # Ask the database backend if our jobspec can be satisfied
-        response = self.backend.satisfies(jobspec)
+        response = self.backend.satisfies(jobspec, self.cfg.match_algorithm)
         matches = response.clusters
 
         # No matches?

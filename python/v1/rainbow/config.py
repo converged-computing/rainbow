@@ -11,7 +11,7 @@ def new_rainbow_config(host, cluster, secret, scheduler_name="rainbow"):
         "scheduler": {
             "name": scheduler_name,
             "secret": secret,
-            "algorithm": {"name": "random"},
+            "algorithms": {"selection": {"name": "random"}, "match": {"name": "match"}},
         },
         "cluster": {
             "name": cluster,
@@ -51,6 +51,34 @@ class RainbowConfig:
         if self._cfg is None:
             self.load()
         return self._cfg
+
+    @property
+    def match_algorithm(self):
+        """
+        Get the match algorithm
+        """
+        matcher = self._cfg.get("scheduler", {}).get("algorithms", {}).get("match", {}).get("name")
+        if not matcher:
+            matcher = "match"
+        return matcher
+
+    def set_match_algorithm(self, name):
+        """
+        Get the match algorithm
+        """
+        self._set_algorithm("match", name)
+
+    def set_selection_algorithm(self, name):
+        """
+        Get the match algorithm
+        """
+        self._set_algorithm("selection", name)
+
+    def _set_algorithm(self, typ, name):
+        """
+        Get the match algorithm
+        """
+        self._cfg["scheduler"]["algorithms"][typ]["name"] = name
 
     def load(self, config_file=None):
         """

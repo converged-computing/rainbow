@@ -74,7 +74,7 @@ func (req *RangeRequest) Satisfies(value string) (bool, error) {
 	}
 	if req.Min != "" {
 		// Is the version provided greater than the min requested?
-		c, err := semver.NewConstraint(fmt.Sprintf("> %s", req.Min))
+		c, err := semver.NewConstraint(fmt.Sprintf(">= %s", req.Min))
 		if err != nil {
 			// fmt.Printf("      => Error parsing min constraint %s\n", err)
 			return false, err
@@ -89,7 +89,7 @@ func (req *RangeRequest) Satisfies(value string) (bool, error) {
 	}
 	if req.Max != "" {
 		// Is the version provided less than the max requested?
-		c, err := semver.NewConstraint(fmt.Sprintf("< %s", req.Max))
+		c, err := semver.NewConstraint(fmt.Sprintf("<= %s", req.Max))
 		if err != nil {
 			// fmt.Printf("      => Error parsing max constraint %s\n", err)
 			return false, err

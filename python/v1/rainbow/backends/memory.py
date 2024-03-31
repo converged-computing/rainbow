@@ -15,13 +15,13 @@ class MemoryBackend(GraphBackend):
     This graph database backend is primarily for development.
     """
 
-    def satisfies(self, jobspec):
+    def satisfies(self, jobspec, matcher="match"):
         """
         Determine if a jobspec can be satisfied by the graph.
         """
         # Prepare a satisfy request with the jobspec
         # TODO if auth is in the graph, that needs to be done here too
-        request = memory_pb2.SatisfyRequest(payload=jobspec.to_str())
+        request = memory_pb2.SatisfyRequest(payload=jobspec.to_str(), matcher=matcher)
 
         # Host should be set from the database_options from the client
         with grpc.insecure_channel(self.host) as channel:

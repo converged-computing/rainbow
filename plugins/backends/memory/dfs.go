@@ -54,7 +54,7 @@ func (g *ClusterGraph) DFSForMatch(
 	}
 
 	// Get the summary metrics for the subsystem
-	fmt.Println(ss.Metrics.ResourceCounts)
+	// fmt.Println(ss.Metrics.ResourceCounts)
 
 	isMatch := true
 	for resourceType, needed := range totals {
@@ -90,9 +90,7 @@ func (g *ClusterGraph) depthFirstSearch(
 ) (bool, error) {
 
 	// Note that in the experimental version we have one task and thus one slot
-	if !g.quiet {
-		fmt.Printf("  🎰️ Slots that need to be satisfied with matcher %s\n", matcher.Name())
-	}
+	//	fmt.Printf("  🎰️ Slots that need to be satisfied with matcher %s\n", matcher.Name())
 	slots := map[string]*v1.Task{}
 
 	// If a slot isn't defined for the task, assume the slot is at the top level
@@ -106,9 +104,7 @@ func (g *ClusterGraph) depthFirstSearch(
 	// If we don't have jobspec.Task.Resources, no slot to search for.
 	// Return early based on top level counts
 	if len(jobspec.Task.Resources) == 0 {
-		if !g.quiet {
-			fmt.Printf("  🎰️ No resources defined, top level counts satisfied so cluster is match\n")
-		}
+		// fmt.Printf("  🎰️ No resources defined, top level counts satisfied so cluster is match\n")
 		return true, nil
 	}
 
@@ -143,22 +139,18 @@ func (g *ClusterGraph) depthFirstSearch(
 		}
 
 		// Subsystem edges are here, separate from dominant ones (so search is smaller)
-		for sName, edges := range vtx.Subsystems {
+		for _, edges := range vtx.Subsystems {
 			// fmt.Printf("      => Searching for %s and resource type %s in subsystem %v with %d subsystem edges\n", lookingFor, resource.Type, sName, len(edges))
 
 			for _, child := range edges {
-				if !g.quiet {
-					fmt.Printf("         Found subsystem edge %s with type %s\n", sName, child.Vertex.Type)
-				}
+				// fmt.Printf("         Found subsystem edge %s with type %s\n", sName, child.Vertex.Type)
 				// Check if the subsystem edge satisfies the needs of the slot
 				// This will update the slotNeeds.Satisfied
 				matcher.CheckSubsystemEdge(slotNeeds, child, vtx)
 
 				// Return early if minimum needs are satsified
 				if slotNeeds.Satisfied {
-					if !g.quiet {
-						fmt.Printf("         Minimum slot needs are satisfied at %s for %s at %s, returning early.\n", vtx.Type, child.Subsystem, child.Vertex.Type)
-					}
+					// fmt.Printf("         Minimum slot needs are satisfied at %s for %s at %s, returning early.\n", vtx.Type, child.Subsystem, child.Vertex.Type)
 					return slotsFound + vtx.Size
 				}
 			}

@@ -12,11 +12,23 @@ rainbow_config_v1 = {
             "properties": {
                 "name": {"type": "string"},
                 "secret": {"type": "string"},
-                "algorithm": {
+                "algorithms": {
                     "type": "object",
                     "properties": {
-                        "name": {"type": "string"},
-                        "options": {"type": "object"},
+                        "selection": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "options": {"type": "object"},
+                            },
+                        },
+                        "match": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "options": {"type": "object"},
+                            },
+                        },
                     },
                 },
                 "user": {"type": "object"},
