@@ -78,7 +78,7 @@ func (req *RangeRequest) Satisfies(value string) (bool, error) {
 		// Is the version provided greater than the min requested?
 		c, err := semver.NewConstraint(fmt.Sprintf(">= %s", req.Min))
 		if err != nil {
-			//	rlog.Debug("      => Error parsing min constraint %s\n", err)
+			rlog.Debugf("      => Error parsing min constraint %s\n", err)
 			return false, err
 		}
 		// Check if the version meets the constraints. The a variable will be true.
@@ -93,13 +93,13 @@ func (req *RangeRequest) Satisfies(value string) (bool, error) {
 		// Is the version provided less than the max requested?
 		c, err := semver.NewConstraint(fmt.Sprintf("<= %s", req.Max))
 		if err != nil {
-			//	rlog.Debug("      => Error parsing max constraint %s\n", err)
+			rlog.Debugf("      => Error parsing max constraint %s\n", err)
 			return false, err
 		}
 		// Check if the version meets the constraints. The a variable will be true.
 		satisfied := c.Check(matchVersion)
 		if !satisfied {
-			//	rlog.Debug("      => Not satisfied\n")
+			rlog.Debug("      => Not satisfied")
 			return false, err
 		}
 	}
@@ -193,7 +193,7 @@ func (m RangeType) GetSlotResourceNeeds(slot *v1.Task) *types.SlotResourceNeeds 
 	if len(needs) == 0 {
 		slotNeeds.Satisfied = true
 	}
-	//	rlog.Debug("      => Assessing needs for slot: %v\n", slotNeeds)
+	rlog.Debugf("      => Assessing needs for slot: %v\n", slotNeeds)
 	return slotNeeds
 }
 
