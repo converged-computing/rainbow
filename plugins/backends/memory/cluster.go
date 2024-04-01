@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
+	rlog "github.com/converged-computing/rainbow/pkg/logger"
 )
 
 var (
@@ -25,7 +26,6 @@ type ClusterGraph struct {
 	// The dominant subsystem is a lookup in the subsystem map
 	// It defaults to nodes (node resources)
 	dominantSubsystem string
-	quiet             bool
 }
 
 // Dominant subsystem gets the dominant subsystem
@@ -72,13 +72,14 @@ func (g *ClusterGraph) LoadClusterNodes(
 		if !ok {
 			return fmt.Errorf("destination %s is defined as an edge, but missing as node in graph", edge.Label)
 		}
-		// fmt.Printf("Adding edge from %s -%s-> %s\n", ss.Vertices[src].Type, edge.Relation, ss.Vertices[dest].Type)
+		rlog.Debugf("Adding edge from %s -%s-> %s\n", ss.Vertices[src].Type, edge.Relation, ss.Vertices[dest].Type)
 		err := ss.AddInternalEdge(src, dest, 0, edge.Relation, subsystem)
 		if err != nil {
 			return err
 		}
 	}
 	log.Printf("We have made an in memory graph (subsystem %s) with %d vertices!", subsystem, ss.CountVertices())
+
 	// Show metrics
 	ss.Metrics.Show()
 	return nil
@@ -97,7 +98,7 @@ func (c *ClusterGraph) validateNodes(nodes *jgf.JsonGraph) (error, int, int) {
 
 // NewClusterGraph creates a new cluster graph with a dominant subsystem
 // We assume the dominant is hard coded to be containment
-func NewClusterGraph(name string, domSubsystem string, quiet bool) *ClusterGraph {
+func NewClusterGraph(name string, domSubsystem string) *ClusterGraph {
 
 	// If not defined, set the dominant subsystem
 	if domSubsystem == "" {
@@ -112,7 +113,6 @@ func NewClusterGraph(name string, domSubsystem string, quiet bool) *ClusterGraph
 		Name:              name,
 		subsystem:         subsystems,
 		dominantSubsystem: defaultDominantSubsystem,
-		quiet:             quiet,
 	}
 	return g
 }

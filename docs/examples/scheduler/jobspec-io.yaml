@@ -18,4 +18,5 @@ task:
   resources:
     io:
       match:
-      - type: shm
+      - field: type
+        value: shm

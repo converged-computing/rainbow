@@ -5,8 +5,7 @@ import logging
 import json
 import argparse
 from rainbow.client import RainbowClient
-import rainbow.jobspec.converter as converter
-import rainbow.jobspec as js
+from jobspec.core import Jobspec
 
 def get_parser():
     parser = argparse.ArgumentParser(description="🌈️ Rainbow scheduler submit")
@@ -25,7 +24,7 @@ def main():
 
     # Generate the jobspec here so we can json dump it for the user
     # Note that this can be done with cli.submit_job(command, nodes, tasks)
-    jobspec = js.Jobspec(args.jobspec)
+    jobspec = Jobspec(args.jobspec)
     print(json.dumps(jobspec.jobspec, indent=4))
     response = cli.submit_jobspec(jobspec)
     print(response)

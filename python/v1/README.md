@@ -222,7 +222,7 @@ options:
 And then request and accept jobs:
 
 ```console
- python examples/flux/receive-jobs.py --config-path ./rainbow-config.yaml
+python examples/flux/receive-jobs.py --config-path ./rainbow-config.yaml
 Status: REQUEST_JOBS_SUCCESS
 Received 1 jobs to accept...
 ```

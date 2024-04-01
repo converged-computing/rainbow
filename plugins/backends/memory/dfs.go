@@ -5,6 +5,7 @@ import (
 
 	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
+	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"
 )
 
@@ -53,9 +54,6 @@ func (g *ClusterGraph) DFSForMatch(
 		checkResource(&resource)
 	}
 
-	// Get the summary metrics for the subsystem
-	// fmt.Println(ss.Metrics.ResourceCounts)
-
 	isMatch := true
 	for resourceType, needed := range totals {
 
@@ -90,7 +88,7 @@ func (g *ClusterGraph) depthFirstSearch(
 ) (bool, error) {
 
 	// Note that in the experimental version we have one task and thus one slot
-	//	fmt.Printf("  🎰️ Slots that need to be satisfied with matcher %s\n", matcher.Name())
+	rlog.Debugf("  🎰️ Slots that need to be satisfied with matcher %s\n", matcher.Name())
 	slots := map[string]*v1.Task{}
 
 	// If a slot isn't defined for the task, assume the slot is at the top level
@@ -104,20 +102,18 @@ func (g *ClusterGraph) depthFirstSearch(
 	// If we don't have jobspec.Task.Resources, no slot to search for.
 	// Return early based on top level counts
 	if len(jobspec.Task.Resources) == 0 {
-		// fmt.Printf("  🎰️ No resources defined, top level counts satisfied so cluster is match\n")
+		rlog.Debugf("  🎰️ No resources defined, top level counts satisfied so cluster is match\n")
 		return true, nil
 	}
 
 	// From this point on we assume we MUST satisfy the slot
 	// Sanity check what we are trying to match
 	for rname, rslot := range jobspec.Task.Resources {
-		fmt.Printf("     %s: %s\n", rname, rslot)
+		rlog.Verbosef("     %s: %s\n", rname, rslot)
 	}
 
 	// Look through our potential matching clusters
-	if !g.quiet {
-		fmt.Printf("\n  🔍️ Exploring cluster %s deeper with depth first search\n", g.Name)
-	}
+	rlog.Debugf("\n  🔍️ Exploring cluster %s deeper with depth first search\n", g.Name)
 	// This is the root vertex of the cluster "cluster" we start with it
 	// We can store this instead, but for now we can assume the index 0
 	// is the root, as it is the first one made / added
@@ -139,18 +135,18 @@ func (g *ClusterGraph) depthFirstSearch(
 		}
 
 		// Subsystem edges are here, separate from dominant ones (so search is smaller)
-		for _, edges := range vtx.Subsystems {
-			// fmt.Printf("      => Searching for %s and resource type %s in subsystem %v with %d subsystem edges\n", lookingFor, resource.Type, sName, len(edges))
+		for sName, edges := range vtx.Subsystems {
+			rlog.Debugf("      => Searching for %s and resource type %s in subsystem %v with %d subsystem edges\n", lookingFor, resource.Type, sName, len(edges))
 
-			for _, child := range edges {
-				// fmt.Printf("         Found subsystem edge %s with type %s\n", sName, child.Vertex.Type)
+			for eName, child := range edges {
+				rlog.Debugf("         Found subsystem edge %s with type %s\n", eName, child.Vertex.Type)
 				// Check if the subsystem edge satisfies the needs of the slot
 				// This will update the slotNeeds.Satisfied
 				matcher.CheckSubsystemEdge(slotNeeds, child, vtx)
 
 				// Return early if minimum needs are satsified
 				if slotNeeds.Satisfied {
-					// fmt.Printf("         Minimum slot needs are satisfied at %s for %s at %s, returning early.\n", vtx.Type, child.Subsystem, child.Vertex.Type)
+					rlog.Debugf("         Minimum slot needs are satisfied at %s for %s at %s, returning early.\n", vtx.Type, child.Subsystem, child.Vertex.Type)
 					return slotsFound + vtx.Size
 				}
 			}
@@ -158,7 +154,7 @@ func (g *ClusterGraph) depthFirstSearch(
 
 		// Otherwise, we haven't found the right level of the graph, keep going
 		for _, child := range vtx.Edges {
-			//fmt.Printf("      => Searching for %s and resource type %s %s->%s\n", lookingFor, resource.Type, child.Relation, child.Vertex.Type)
+			rlog.Debugf("      => Searching for %s and resource type %s %s->%s\n", lookingFor, resource.Type, child.Relation, child.Vertex.Type)
 
 			// Only keep going if we aren't stopping here
 			// This is also traversing the dominant subsystem
@@ -170,10 +166,10 @@ func (g *ClusterGraph) depthFirstSearch(
 		// Stop here is true when we are at the slot -> one level below, and
 		// have done the subsystem assessment on this level.
 		if slotNeeds.Satisfied {
-			//fmt.Printf("         slotNeeds are satsified for %v, returning %d slots matched\n", slotNeeds.Subsystems, slotsFound)
+			rlog.Debugf("         slotNeeds are satsified for %v, returning %d slots matched\n", slotNeeds.Subsystems, slotsFound)
 			return slotsFound
 		}
-		//fmt.Printf("         slotNeeds are not satsified for %v, returning 0 slots matched\n", slotNeeds.Subsystems)
+		rlog.Debugf("         slotNeeds are not satsified for %v, returning 0 slots matched\n", slotNeeds.Subsystems)
 		return 0
 	}
 
@@ -211,9 +207,7 @@ func (g *ClusterGraph) depthFirstSearch(
 			if resource.With != nil {
 				for _, subresource := range resource.With {
 					slotsFound += findSlots(vertex, &subresource, slotResourceNeeds, slotsFound)
-					if !g.quiet {
-						fmt.Printf("Slots found %d/%d for vertex %s\n", slotsFound, slotsNeeded, vertex.Type)
-					}
+					rlog.Debugf("Slots found %d/%d for vertex %s\n", slotsFound, slotsNeeded, vertex.Type)
 				}
 			}
 			// The slot is satisfied and we can continue searching resources

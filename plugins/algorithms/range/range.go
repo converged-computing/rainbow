@@ -9,6 +9,8 @@ import (
 	semver "github.com/Masterminds/semver/v3"
 	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
+
+	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"
 )
 
@@ -69,20 +71,20 @@ func (req *RangeRequest) Satisfies(value string) (bool, error) {
 	// We already have the value for the field from the graph, now just use semver to match
 	matchVersion, err := semver.NewVersion(value)
 	if err != nil {
-		// fmt.Printf("      => Error parsing semver for match value %s\n", err)
+		rlog.Debugf("      => Error parsing semver for match value %s\n", err)
 		return false, err
 	}
 	if req.Min != "" {
 		// Is the version provided greater than the min requested?
 		c, err := semver.NewConstraint(fmt.Sprintf(">= %s", req.Min))
 		if err != nil {
-			// fmt.Printf("      => Error parsing min constraint %s\n", err)
+			//	rlog.Debug("      => Error parsing min constraint %s\n", err)
 			return false, err
 		}
 		// Check if the version meets the constraints. The a variable will be true.
 		satisfied := c.Check(matchVersion)
 		if !satisfied {
-			// fmt.Printf("      => Not satisfied\n")
+			rlog.Debugf("      => Not satisfied\n")
 			return false, err
 
 		}
@@ -91,13 +93,13 @@ func (req *RangeRequest) Satisfies(value string) (bool, error) {
 		// Is the version provided less than the max requested?
 		c, err := semver.NewConstraint(fmt.Sprintf("<= %s", req.Max))
 		if err != nil {
-			// fmt.Printf("      => Error parsing max constraint %s\n", err)
+			//	rlog.Debug("      => Error parsing max constraint %s\n", err)
 			return false, err
 		}
 		// Check if the version meets the constraints. The a variable will be true.
 		satisfied := c.Check(matchVersion)
 		if !satisfied {
-			// fmt.Printf("      => Not satisfied\n")
+			//	rlog.Debug("      => Not satisfied\n")
 			return false, err
 		}
 	}
@@ -191,7 +193,7 @@ func (m RangeType) GetSlotResourceNeeds(slot *v1.Task) *types.SlotResourceNeeds 
 	if len(needs) == 0 {
 		slotNeeds.Satisfied = true
 	}
-	fmt.Printf("      => Assessing needs for slot: %v\n", slotNeeds)
+	//	rlog.Debug("      => Assessing needs for slot: %v\n", slotNeeds)
 	return slotNeeds
 }
 
@@ -210,41 +212,40 @@ func (m RangeType) CheckSubsystemEdge(
 	}
 
 	// Determine if our slot needs can be met
-	// fmt.Printf("Looking at edge %s->%s\n", edge.Relation, edge.Vertex.Type)
+	rlog.Debugf("Looking at edge %s->%s\n", edge.Relation, edge.Vertex.Type)
 
 	// TODO Keep a record if all are satisfied so we stop searching
 	// earlier if this is the case on subsequent calls
 	for i, subsys := range slotNeeds.Subsystems {
 
-		//fmt.Printf("      => Looking in subsystem %s\n", edge.Subsystem)
+		rlog.Debugf("      => Looking in subsystem %s\n", edge.Subsystem)
 
 		// The subsystem has an edge defined here!
 		if subsys.Name == edge.Subsystem {
-			// fmt.Printf("      => Found matching subsystem %s for %s\n", subsys.Name, edge.Subsystem)
+			rlog.Debugf("      => Found matching subsystem %s for %s\n", subsys.Name, edge.Subsystem)
 
 			// This would match the top level subsystem name
 			for k := range subsys.Attributes {
-				// fmt.Printf("      => Looking at edge %s '%s' for %s that needs %s\n", edge.Subsystem, edge.Vertex.Type, subsys.Name, k)
+				rlog.Debugf("      => Looking at edge %s '%s' for %s that needs %s\n", edge.Subsystem, edge.Vertex.Type, subsys.Name, k)
 
 				// We care if the attribute is marked as a range
 				if strings.HasPrefix(k, "range") {
-
-					// fmt.Printf("      => Found %s and inspecting edge metadata %v\n", k, edge.Vertex.Metadata.Elements)
-
+					rlog.Debugf("      => Found %s and inspecting edge metadata %v\n", k, edge.Vertex.Metadata.Elements)
 					req := NewRangeRequest(k)
+
 					// Get the field requested by the jobspec
 					toMatch, err := edge.Vertex.Metadata.GetStringElement(req.Field)
 					if err != nil {
 						continue
 					}
 
-					// fmt.Printf("      => Found field requested for range match %s\n", toMatch)
+					rlog.Debugf("      => Found field requested for range match %s\n", toMatch)
 					satisfied, err := req.Satisfies(toMatch)
 					if err != nil {
 						continue
 					}
 					if satisfied {
-						fmt.Printf("      => Resource '%s' has edge '%s' satisfies subsystem %s %s\n", vtx.Type, edge.Vertex.Type, subsys.Name, k)
+						rlog.Debugf("      => Resource '%s' has edge '%s' satisfies subsystem %s %s\n", vtx.Type, edge.Vertex.Type, subsys.Name, k)
 						subsys.Attributes[k] = true
 					}
 				}

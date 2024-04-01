@@ -116,13 +116,6 @@ func (g MemoryGraph) Init(
 		graphClient.backupFile = backupFile
 	}
 
-	quiet, ok := options["quiet"]
-	if ok {
-		if quiet == "true" || quiet == "yes" {
-			graphClient.quiet = true
-		}
-	}
-
 	// Warning: this assumes one client running with one graph host
 	host, ok := options["host"]
 	if ok {

@@ -7,6 +7,7 @@ require (
 	github.com/akamensky/argparse v1.4.0
 	github.com/compspec/jobspec-go v0.0.0-20240319000127-8020a01a65da
 	github.com/converged-computing/jsongraph-go v0.0.0-20240229082022-c6887a5a00fe
+	github.com/fatih/color v1.16.0
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/pkg/errors v0.9.1
@@ -17,6 +18,8 @@ require (
 
 require (
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect

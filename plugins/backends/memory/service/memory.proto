@@ -30,6 +30,9 @@ message SatisfyResponse {
 
   repeated string clusters = 1;
   ResultType status = 2;
+  int32 total_clusters = 3;
+  int32 total_matches = 4;
+  int32 total_mismatches = 5;
 }
 
 

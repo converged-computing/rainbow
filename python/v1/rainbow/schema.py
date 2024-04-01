@@ -39,6 +39,7 @@ rainbow_config_v1 = {
             "description": "metadata for the rainbow graph database",
             "type": "object",
             "properties": {
+                "host": {"type": "string"},
                 "name": {"type": "string"},
                 "options": {"type": "object"},
             },

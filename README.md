@@ -13,7 +13,6 @@ For more information:
 
 ## TODO
 
-- nice logger with actual levels that I like
 - subsystems
   - make also a function to delete subsystems
 - ephemeral case - actual nodes don't exist, but instead rules for requests and limits. Need to develop this and means to authenticate to use it.

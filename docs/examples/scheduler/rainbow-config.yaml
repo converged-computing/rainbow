@@ -8,7 +8,7 @@ scheduler:
             name: match
 cluster:
     name: keebler
-    secret: 3994c1e7-9cc7-4b81-ab75-3b00128eda16
+    secret: 79643f8e-6408-4cd1-bd1a-76aa499d5864
 graphdatabase:
     name: memory
     host: 127.0.0.1:50051
