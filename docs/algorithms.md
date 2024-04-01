@@ -121,7 +121,7 @@ I understand this is likely not perfect for what everyone wants, but I believe i
 
 ### Match
 
-The expliciy "match" type is going to look exactly at the type of a subsystem node, and return true (match) if it matches what the subsystem needs. For example, given this task:
+The expliciy "match" type is going to look exactly at some exact value for a field in the metadata. It will return true (match) if it matches what the subsystem needs. For example, given this task:
 
 ```yaml
 task:
@@ -133,10 +133,11 @@ task:
   resources:
     io:
       match:
-      - type: shm
+      - field: type
+        value: shm
 ```
 
-We would look for a node of type "shm" in the io subsystem that is directly attached (an edge) to a node in the dominant subsystem graph.
+We would look for a node with field "type" and value "shm" in the io subsystem that is directly attached (an edge) to a node in the dominant subsystem graph.
 
 ### Range
 

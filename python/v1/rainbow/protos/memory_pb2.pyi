@@ -25,7 +25,7 @@ class SatisfyRequest(_message.Message):
     def __init__(self, payload: _Optional[str] = ..., matcher: _Optional[str] = ...) -> None: ...
 
 class SatisfyResponse(_message.Message):
-    __slots__ = ("clusters", "status")
+    __slots__ = ("clusters", "status", "total_clusters", "total_matches", "total_mismatches")
     class ResultType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = ()
         RESULT_TYPE_UNSPECIFIED: _ClassVar[SatisfyResponse.ResultType]
@@ -36,9 +36,15 @@ class SatisfyResponse(_message.Message):
     RESULT_TYPE_ERROR: SatisfyResponse.ResultType
     CLUSTERS_FIELD_NUMBER: _ClassVar[int]
     STATUS_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_CLUSTERS_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_MATCHES_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_MISMATCHES_FIELD_NUMBER: _ClassVar[int]
     clusters: _containers.RepeatedScalarFieldContainer[str]
     status: SatisfyResponse.ResultType
-    def __init__(self, clusters: _Optional[_Iterable[str]] = ..., status: _Optional[_Union[SatisfyResponse.ResultType, str]] = ...) -> None: ...
+    total_clusters: int
+    total_matches: int
+    total_mismatches: int
+    def __init__(self, clusters: _Optional[_Iterable[str]] = ..., status: _Optional[_Union[SatisfyResponse.ResultType, str]] = ..., total_clusters: _Optional[int] = ..., total_matches: _Optional[int] = ..., total_mismatches: _Optional[int] = ...) -> None: ...
 
 class Response(_message.Message):
     __slots__ = ("status",)

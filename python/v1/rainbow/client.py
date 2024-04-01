@@ -8,6 +8,7 @@ import jobspec.core.converter as converter
 import rainbow.backends as backends
 import rainbow.config as config
 import rainbow.defaults as defaults
+import rainbow.types as types
 import rainbow.utils as utils
 from rainbow.protos import rainbow_pb2, rainbow_pb2_grpc
 
@@ -161,13 +162,13 @@ class RainbowClient:
         it custom with your own special logic.
         """
         # Ask the database backend if our jobspec can be satisfied
-        response = self.backend.satisfies(jobspec)
-        matches = response.clusters
+        satisfy_response = self.backend.satisfies(jobspec, self.cfg.match_algorithm)
+        matches = satisfy_response.clusters
 
         # No matches?
         if not matches:
             print("No clusters match the request")
-            return response
+            return satisfy_response
 
         # TODO these need to have (again) the token and name checked
         # This is backwards because we check the token AFTER getting it, and it needs
@@ -179,7 +180,7 @@ class RainbowClient:
                 rainbow_pb2.SubmitJobRequest.Cluster(name=match["name"], token=match["token"])
             )
 
-        # THEN contact rainbwo with clusters
+        # THEN contact rainbow with clusters
         # These are submit variables. A more substantial submit script would have argparse, etc.
         submitRequest = rainbow_pb2.SubmitJobRequest(
             name=jobspec.name,
@@ -190,7 +191,15 @@ class RainbowClient:
         with grpc.insecure_channel(self.host) as channel:
             stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
             response = stub.SubmitJob(submitRequest)
-        return response
+
+        res = types.SatisfyResponse(
+            cluster=response.cluster,
+            total_matches=satisfy_response.total_matches,
+            total_mismatches=satisfy_response.total_mismatches,
+            total_clusters=satisfy_response.total_clusters,
+            status=response.status,
+        )
+        return res
 
     def submit_job(self, command, nodes=1, tasks=1):
         """

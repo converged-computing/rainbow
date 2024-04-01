@@ -11,7 +11,7 @@ resources:
       type: core
 task:
   command:
-  - ior
+  - spack
   slot: default
   count:
     per_slot: 1

@@ -2,9 +2,11 @@ package match
 
 import (
 	"fmt"
+	"strings"
 
 	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
+	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"
 )
 
@@ -15,12 +17,37 @@ var (
 	matcherName = "match"
 )
 
+type MatchRequest struct {
+	Field string
+	Value string
+}
+
 func (s MatchType) Name() string {
 	return matcherName
 }
 
 func (s MatchType) Description() string {
 	return description
+}
+
+// Compress the match request into a parseable field
+func (req *MatchRequest) Compress() string {
+	value := fmt.Sprintf("match||field=%s", req.Field)
+	value = fmt.Sprintf("%s||value=%s", value, req.Value)
+	return value
+}
+
+func NewMatchRequest(value string) *MatchRequest {
+	req := MatchRequest{}
+	pieces := strings.Split(value, "||")
+	for _, piece := range pieces {
+		if strings.HasPrefix(piece, "field=") {
+			req.Field = strings.ReplaceAll(piece, "field=", "")
+		} else if strings.HasPrefix(piece, "value=") {
+			req.Value = strings.ReplaceAll(piece, "value=", "")
+		}
+	}
+	return &req
 }
 
 // getSlotResource needs assumes a subsystem request as follows:
@@ -68,22 +95,29 @@ func (m MatchType) GetSlotResourceNeeds(slot *v1.Task) *types.SlotResourceNeeds 
 			if !ok {
 				continue
 			}
+
+			req := MatchRequest{}
 			for key, value := range entry {
 				value, ok := value.(string)
 
-				// This algorithm only knows how to match based on type
-				if key != "type" {
-					continue
+				// We only know how to parse these
+				if key == "field" && ok {
+					req.Field = value
+				} else if key == "value" && ok {
+					req.Value = value
 				}
-				if ok {
-					_, ok := sNeeds[subsystem]
-					if !ok {
-						sNeeds[subsystem] = map[string]bool{}
-					}
+			}
 
-					// This sets the starting state that the value is not satisfied
-					sNeeds[subsystem][value] = false
+			// If we get here and we have a field and at LEAST
+			// one of min or max, we can add to to our needs
+			// This is a bit janky - compressing with || separators
+			if req.Field != "" && (req.Value != "") {
+				_, ok := sNeeds[subsystem]
+				if !ok {
+					sNeeds[subsystem] = map[string]bool{}
 				}
+				// This sets the starting state that the range is not satisfied
+				sNeeds[subsystem][req.Compress()] = false
 			}
 		}
 	}
@@ -99,7 +133,7 @@ func (m MatchType) GetSlotResourceNeeds(slot *v1.Task) *types.SlotResourceNeeds 
 	if len(needs) == 0 {
 		slotNeeds.Satisfied = true
 	}
-	// fmt.Printf("      => Assessing needs for slot: %v\n", slotNeeds)
+	rlog.Debugf("      => Assessing needs for slot: %v\n", slotNeeds)
 	return slotNeeds
 }
 
@@ -116,26 +150,42 @@ func (m MatchType) CheckSubsystemEdge(slotNeeds *types.SlotResourceNeeds, edge *
 	// Nested for loops are not great - this will be improved with a more robust graph
 	// that isn't artisinal avocado toast developed by me :)
 
-	fmt.Printf("Looking at edge %s->%s\n", edge.Relation, edge.Vertex.Type)
+	rlog.Debugf("Looking at edge %s->%s\n", edge.Relation, edge.Vertex.Type)
 
 	// TODO Keep a record if all are satisfied so we stop searching
 	// earlier if this is the case on subsequent calls
 	for i, subsys := range slotNeeds.Subsystems {
 
-		fmt.Printf("      => Looking in subsystem %s\n", edge.Subsystem)
+		rlog.Debugf("      => Looking in subsystem %s\n", edge.Subsystem)
 
 		// The subsystem has an edge defined here!
 		if subsys.Name == edge.Subsystem {
-			fmt.Printf("      => Found matching subsystem %s for %s\n", subsys.Name, edge.Subsystem)
+			rlog.Debugf("      => Found matching subsystem %s for %s\n", subsys.Name, edge.Subsystem)
 
 			// Yuck, this needs to be a query! Oh well.
 			for k := range subsys.Attributes {
-				// fmt.Printf("      => Looking at edge %s '%s' for %s that needs %s\n", edge.Subsystem, edge.Vertex.Type, subsys.Name, k)
+				rlog.Debugf("      => Looking at edge %s '%s' for %s that needs %s\n", edge.Subsystem, edge.Vertex.Type, subsys.Name, k)
 
-				if edge.Vertex.Type == k {
-					fmt.Printf("      => Resource '%s' has edge '%s' satisfies subsystem %s %s\n", vtx.Type, edge.Vertex.Type, subsys.Name, k)
-					subsys.Attributes[k] = true
+				// We care if the attribute is marked as a range
+				if strings.HasPrefix(k, "match") {
+
+					rlog.Debugf("      => Found %s and inspecting edge metadata %v\n", k, edge.Vertex.Metadata.Elements)
+					req := NewMatchRequest(k)
+					// Get the field requested by the jobspec
+					toMatch, err := edge.Vertex.Metadata.GetStringElement(req.Field)
+					if err != nil {
+						continue
+					}
+
+					rlog.Debugf("      => Found field requested for range match %s\n", toMatch)
+					// These are the conditions of being satisifed, the value we got from the vertex
+					// matches the value provided in the slot request
+					if toMatch == req.Value {
+						rlog.Debugf("      => Resource '%s' has edge '%s' satisfies subsystem %s %s\n", vtx.Type, edge.Vertex.Type, subsys.Name, k)
+						subsys.Attributes[k] = true
+					}
 				}
+
 			}
 		}
 		slotNeeds.Subsystems[i] = subsys

@@ -8,7 +8,7 @@ scheduler:
             name: match
 cluster:
     name: spack-builder
-    secret: 85e59eea-c427-4f55-9668-4ed418de9be8
+    secret: 37e5b798-189f-4c38-bc1c-0a14877acbcf
 graphdatabase:
     name: memory
     host: 127.0.0.1:50051

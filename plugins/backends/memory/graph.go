@@ -15,6 +15,7 @@ import (
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 	"github.com/converged-computing/rainbow/pkg/graph"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
+	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/utils"
 	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 )
@@ -24,7 +25,6 @@ type Graph struct {
 	Clusters   map[string]*ClusterGraph
 	lock       sync.RWMutex
 	backupFile string
-	quiet      bool
 
 	// The dominant subsystem for all clusters, if desired to set
 	dominantSubsystem string
@@ -99,7 +99,7 @@ func (g *Graph) LoadClusterNodes(
 	}
 
 	// Create a new ClusterGraph
-	clusterG := NewClusterGraph(clusterName, subsystem, g.quiet)
+	clusterG := NewClusterGraph(clusterName, subsystem)
 	err := clusterG.LoadClusterNodes(nodes, subsystem)
 	if err != nil {
 		return err
@@ -126,10 +126,8 @@ func (g *Graph) Satisfies(
 	}
 
 	// Tell the user /logs we are looking for a match
-	if !g.quiet {
-		fmt.Printf("\n🍇️ Satisfy request to Graph 🍇️\n")
-		fmt.Printf(" jobspec: %s\n", payload)
-	}
+	rlog.Debugf("\n🍇️ Satisfy request to Graph 🍇️\n")
+	rlog.Debugf(" jobspec: %s\n", payload)
 	matches := []string{}
 	notMatches := []string{}
 
@@ -146,9 +144,7 @@ func (g *Graph) Satisfies(
 			matches = append(matches, clusterName)
 		} else {
 			notMatches = append(notMatches, clusterName)
-			if !g.quiet {
-				fmt.Printf("  match: 🎯️ cluster %s does not have sufficient resources and is NOT a match\n", clusterName)
-			}
+			// fmt.Printf("  match: 🎯️ cluster %s does not have sufficient resources and is NOT a match\n", clusterName)
 		}
 
 	}
@@ -162,6 +158,9 @@ func (g *Graph) Satisfies(
 	}
 	// Add the matches to the response
 	response.Clusters = matches
+	response.TotalClusters = int32(len(g.Clusters))
+	response.TotalMatches = int32(len(matches))
+	response.TotalMismatches = int32(len(notMatches))
 	response.Status = service.SatisfyResponse_RESULT_TYPE_SUCCESS
 	return &response, nil
 }

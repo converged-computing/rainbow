@@ -35,13 +35,6 @@ func (g *ClusterGraph) addNodes(
 	defer g.lock.Unlock()
 	log.Printf("Preparing to load %d nodes and %d edges\n", nNodes, nEdges)
 
-	// Get the root vertex, every new subsystem starts there!
-	// The root vertex is named according to the subsystem
-	//	root, exists := ss.GetNode(subsystem)
-	//	if !exists {
-	//		return ss, lookup, fmt.Errorf("root node does not exist for subsystem %s, this should not happen", subsystem)
-	//	}
-
 	// Create an empty resource counter for the subsystem
 	ss.Metrics.NewResource(subsystem)
 
