@@ -15,6 +15,6 @@ task:
   slot: default
   count:
     per_slot: 1
-  attributes:
-    parameter:
-      seconds_per_gb: 0.4
+attributes:
+  parameter:
+    seconds_per_gb: 0.4

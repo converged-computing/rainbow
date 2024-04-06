@@ -261,14 +261,14 @@ scheduler:
                   - priority: 1 
                     steps:
                     - filter: "nodes_free > 0"
-                    - calc: "build_cost=(cost_per_node_hour * (memory_per_node * seconds_per_gb)/60/60))"
+                    - calc: "build_cost=(cost_per_node_hour * (memory_per_node * seconds_per_gb)/60/60)"
                     - sort_descending: build_cost 
                     - select: random
                   - priority: 2
                     steps:
                     - filter: "nodes_free > 0"
                     - calc: "memory_min=min(100, memory_per_node - 100)"
-                    - calc: "build_cost=(cost_per_node_hour * (memory_min * seconds_per_gb)/60/60))"
+                    - calc: "build_cost=(cost_per_node_hour * (memory_min * seconds_per_gb)/60/60)"
                     - sort_descending: build_cost 
                     - select: random
 ```

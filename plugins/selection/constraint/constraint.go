@@ -2,7 +2,6 @@ package constraint
 
 import (
 	"fmt"
-	"math/rand"
 	"sort"
 
 	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
@@ -29,24 +28,24 @@ We go through each priority once, and if there are no results left,
 try the next in the list until we run out
 */
 
-type RandomSelection struct{}
+type ConstraintSelection struct{}
 
 var (
 	description  = "selection based on prioritized constraints"
 	selectorName = "constraint"
 )
 
-func (s RandomSelection) Name() string {
+func (s ConstraintSelection) Name() string {
 	return selectorName
 }
 
-func (s RandomSelection) Description() string {
+func (s ConstraintSelection) Description() string {
 	return description
 }
 
 // Select randomly chooses a cluster from the set
 // This should not receive an empty list, but we check anyway
-func (s RandomSelection) Select(
+func (s ConstraintSelection) Select(
 	contenders []string,
 	states map[string]types.ClusterState,
 	jobspec string,
@@ -84,6 +83,11 @@ func (s RandomSelection) Select(
 
 		// Copy contenders
 		clusters := utils.Copy(matches)
+
+		// TODO we might also want to copy states, as calc
+		// for a priority level can change it. I'm assuming now that
+		// if the change happens, it will overwrite an existing or
+		// simply create a new variable name
 		rlog.Debugf("    priority %d: %d initial clusters\n", priority.Priority, len(clusters))
 
 		// indicator to tell us to break from two loops
@@ -109,42 +113,53 @@ func (s RandomSelection) Select(
 						nextPriority = true
 						break
 					}
+				} else if stepName == "calc" {
+					rlog.Debugf("    calc: %s\n", logic)
+					states, err = calcStep(logic, states, &jspec)
+					if err != nil {
+						return "", err
+					}
+				} else if stepName == "sort_descending" {
+					clusters, err := sortDescending(logic, states, &jspec)
+					if err != nil {
+						return "", err
+					}
+					rlog.Debugf("    sort_descending: %d clusters\n", len(clusters))
+					if len(clusters) == 0 {
+						nextPriority = true
+						break
+					}
+				} else if stepName == "sort_ascending" {
+					clusters, err := sortAscending(logic, states, &jspec)
+					if err != nil {
+						return "", err
+					}
+					rlog.Debugf("    sort_ascending: %d clusters\n", len(clusters))
+					if len(clusters) == 0 {
+						nextPriority = true
+						break
+					}
+				} else if stepName == "select" {
+					cluster, err := finalSelect(clusters, logic)
+					if err != nil {
+						return "", err
+					}
+					// We found a match!
+					if cluster != "" {
+						rlog.Debugf("    select: clusters %s is selected\n", cluster)
+						return cluster, nil
+					}
 				}
 			}
 		}
 	}
-
-	// The states
-	/*
-		                  - priority: 1
-		                    steps:
-		                    - filter: "nodes_free > 0"
-		                    - calc: "build_cost=(cost_per_node_hour * (memory_gb_per_node * seconds_per_gb)/60/60))"
-		                    - sort_descending: build_cost
-		                    - select: random
-		                  - priority: 2
-		                    steps:
-		                    - filter: "nodes_free > 0"
-		                    - calc: "memory_min=min(100, memory_gb_per_node - 100)"
-		                    - calc: "build_cost=(cost_per_node_hour * (memory_min * seconds_per_gb)/60/60))"
-		                    - sort_descending: build_cost
-		                    - select: random
-
-
-			// TODO: can match / satisfy return subsystem metrics?
-			// need to add jobspec attributes into the input of select
-			// need to then parse the above and use https://github.com/Knetic/govaluate
-			// to do the steps in the equation.
-			// going back to sleep for a bit first*/
-
-	// Select a random number the length of the slice
-	idx := rand.Intn(len(contenders))
-	return contenders[idx], nil
+	// If we get here, there were no matches
+	return "", nil
 }
 
 // Init provides extra initialization functionality, if needed
 // The in memory database can take a backup file if desired
-func (s RandomSelection) Init(options map[string]string) error {
+func (s ConstraintSelection) Init(options map[string]string) error {
 	// This algorithm requires priorities to be set
 	priorities, ok := options["priorities"]
 	if !ok {
@@ -164,6 +179,6 @@ func (s RandomSelection) Init(options map[string]string) error {
 
 // Add the selection algorithm to be known to rainbow
 func init() {
-	algo := RandomSelection{}
+	algo := ConstraintSelection{}
 	selection.Register(algo)
 }

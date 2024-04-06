@@ -65,8 +65,18 @@ func Debugf(message ...any) error {
 	err := logger.logFormat(LevelDebug, message...)
 	color.Unset()
 	return err
-
 }
+
+// Print error as a warning, return error for function calling
+func ErrorPrintf(message ...any) error {
+	color.Set(color.FgYellow)
+	logger.logFormat(LevelWarning, message...)
+	color.Unset()
+	prolog := message[0].(string)
+	rest := message[1:]
+	return fmt.Errorf(prolog, rest...)
+}
+
 func Verbosef(message ...any) error {
 	color.Set(color.FgMagenta)
 	err := logger.logFormat(LevelVerbose, message...)
