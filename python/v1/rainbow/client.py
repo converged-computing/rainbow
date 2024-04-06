@@ -104,6 +104,30 @@ class RainbowClient:
             response = stub.Register(registerRequest)
         return response
 
+    def update_state(self, cluster, state_file, secret):
+        """
+        Update a cluster state
+        """
+        if not cluster:
+            raise ValueError("A cluster name is required to register")
+        if not secret:
+            raise ValueError("A secret is required to register")
+        if not os.path.exists(state_file):
+            raise ValueError(f"State metadata file {state_file} does not exist.")
+
+        payload = utils.read_file(state_file)
+
+        # These are the variables for our cluster - name for now
+        request = rainbow_pb2.UpdateStateRequest(
+            cluster=cluster,
+            secret=secret,
+            payload=payload,
+        )
+        with grpc.insecure_channel(self.host) as channel:
+            stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
+            response = stub.UpdateState(request)
+        return response
+
     def register_subsystem(self, cluster, subsystem, secret, nodes):
         """
         Register subsystem nodes to rainbow

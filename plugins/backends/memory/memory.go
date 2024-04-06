@@ -12,6 +12,7 @@ import (
 
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	"github.com/converged-computing/rainbow/pkg/graph/backend"
+	"github.com/converged-computing/rainbow/pkg/types"
 	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -53,6 +54,26 @@ func (m MemoryGraph) AddCluster(
 }
 
 // Add subsystem adds a new subsystem to the graph!
+func (m MemoryGraph) UpdateState(
+	name string,
+	payload string,
+) error {
+	// Load state into interface
+	state := types.ClusterState{}
+	err := json.Unmarshal([]byte(payload), &state)
+	if err != nil {
+		return err
+	}
+	return graphClient.UpdateState(name, &state)
+}
+
+// GetStates for a list of clusters
+func (m MemoryGraph) GetStates(names []string) (map[string]types.ClusterState, error) {
+	return graphClient.GetStates(names)
+}
+
+// UpdateState of a cluster in the graph.
+// This is used for selection algorithms
 func (m MemoryGraph) AddSubsystem(
 	name string,
 	nodes *jgf.JsonGraph,

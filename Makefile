@@ -79,6 +79,10 @@ test: tidy ## Runs unit tests
 server: ## Runs uncompiled version of the server
 	go run cmd/server/server.go --global-token rainbow
 
+.PHONY: server-verbose
+server-verbose: ## Runs uncompiled version of the server
+	go run cmd/server/server.go --loglevel 6 --global-token rainbow
+
 .PHONY: stream
 stream: ## Runs the interface client
 	go run cmd/stream/stream.go
@@ -88,8 +92,12 @@ register: ## Run mock registration
 	go run cmd/rainbow/rainbow.go register cluster --cluster-name keebler --nodes-json ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/scheduler/rainbow-config.yaml --save
 
 .PHONY: subsystem
-subsystem: ## Run mock registration
+subsystem: ## Register subsystem
 	go run cmd/rainbow/rainbow.go register subsystem --subsystem io --nodes-json ./docs/examples/scheduler/cluster-io-subsystem.json --config-path ./docs/examples/scheduler/rainbow-config.yaml
+
+.PHONY: update-state
+update-state: ## Update state
+	go run cmd/rainbow/rainbow.go update state --state-file ./docs/examples/scheduler/cluster-state.json --config-path ./docs/examples/scheduler/rainbow-config.yaml
 
 .PHONY: tag
 tag: ## Creates release tag

@@ -100,6 +100,38 @@ In the server window you'll see the subsystem added:
 }
 ```
 
+### Update State
+
+While we likely will have clusters sending back state when they accept jobs, for now we have a separate endpoint to do a one-off request to update the state. You can test that here.
+
+```bash
+python ./examples/flux/update-state.py keebler --config-path ./rainbow-config.yaml
+```
+```console
+status: UPDATE_STATE_SUCCESS
+```
+
+In the server terminal (depending on your level of logging) you'll see the state update.
+
+```console
+2024/04/05 18:45:16 We have made an in memory graph (subsystem io) with 7 vertices, with 15 connections to the dominant!
+Metrics for subsystem io{
+ "io": 1,
+ "mtl1unit": 1,
+ "mtl2unit": 1,
+ "mtl3unit": 1,
+ "nvme": 1,
+ "shm": 1
+}
+2024/04/05 18:47:18 📝️ received state update: keebler
+Updating state cost-per-node to 12
+Updating state max-jobs to 100
+```
+
+Note that the path to the state metadata file is provided as a default to make the demo simple.
+This state metadata will be provided to the selection algorithm to use as needed to make choice for
+a final cluster.
+
 ### Submit Job (Simple)
 
 Now let's submit a job to our faux cluster. We need to provide the token we received above. Remember that this is a two stage process:

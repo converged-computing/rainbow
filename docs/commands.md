@@ -7,7 +7,11 @@ The following commands are currently supported. For Python, see the [README](htt
 You can run the server (with defaults) as follows:
 
 ```bash
+# Regular logging
 make server
+
+# Verbose logging
+make server-verbose
 ```
 ```console
 go run cmd/server/server.go --global-token rainbow
@@ -179,6 +183,40 @@ the following reasons:
 
 In Computer Science I think they are used interchangeably. For next steps we will be updating the memory graph database to be a little more meaty (adding proper metadata and likely a summary of resources at the top as a quick "does it satisfy" heuristic)
 and then working on the next interaction, the client submit command, which is going to hit the `Satisfies` endpoint. I will write up more about the database and submit design after that.
+
+## Update State
+
+A cluster state is intended to be a superficial view of the cluster status. It's not considered a subsystem because (for the time being) we are only considering a flat listing of key value pairs that describe a cluster. The data is also intended to be small so it can be provided via this update endpoint more frequently. As an example, an update payload may look like the following:
+
+```json
+{
+  "cost-per-node": 12,
+  "nodes-free": 100
+}
+```
+
+While the above would not be suited for a real-world deployment (for example, there are many more costs than per node, and occupancy goes beyond nodes free)
+but this will be appropriate for small tests and simulations. The metadata above will be provided, on a cluster level, for a final selection algorithm (to use or not). So after you've created your cluster, let's update the state.
+
+```bash
+make update-state
+```
+```console
+Adding edge from socket -contains-> core
+Adding edge from socket -contains-> core
+2024/04/05 18:38:13 We have made an in memory graph (subsystem cluster) with 45 vertices!
+Metrics for subsystem cluster{
+ "cluster": 1,
+ "core": 36,
+ "node": 3,
+ "rack": 1,
+ "socket": 3
+}
+2024/04/05 18:38:16 📝️ received state update: keebler
+Updating state cost-per-node to 12
+Updating state max-jobs to 100
+```
+In debug logging mode (`make server-debug`) you will see the values updated, as shown above. They are also in blue, which you can't see! Note that this state metadata is provided to a selection algorithm, and we will be added more interesting ones soon for experiments!
 
 ## Register Subsystem
 

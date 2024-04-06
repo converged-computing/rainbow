@@ -10,6 +10,7 @@ import (
 	"github.com/converged-computing/rainbow/cmd/rainbow/receive"
 	"github.com/converged-computing/rainbow/cmd/rainbow/register"
 	"github.com/converged-computing/rainbow/cmd/rainbow/submit"
+	"github.com/converged-computing/rainbow/cmd/rainbow/update"
 	"github.com/converged-computing/rainbow/pkg/types"
 
 	// Register database backends and selection algorithms
@@ -41,6 +42,7 @@ func main() {
 	submitCmd := parser.NewCommand("submit", "Submit a job to a rainbow scheduler")
 	receiveCmd := parser.NewCommand("receive", "Receive and accept jobs")
 	registerClusterCmd := registerCmd.NewCommand("cluster", "Register a new cluster")
+	updateCmd := parser.NewCommand("update", "Update a cluster")
 
 	// Configuration
 	configCmd := parser.NewCommand("config", "Interact with rainbow configs")
@@ -69,6 +71,10 @@ func main() {
 	// Register subsystem (requires config file for authentication)
 	subsysCmd := registerCmd.NewCommand("subsystem", "Register a new subsystem")
 
+	// Update subcommands - currently just supported are state
+	stateCmd := updateCmd.NewCommand("state", "Update the state for a known cluster")
+	stateFile := stateCmd.String("", "state-file", &argparse.Options{Help: "JSON file with key, value attributes for the cluster"})
+
 	// Submit (note that command for now needs to be in quotes to get the whole thing)
 	token := submitCmd.String("", "token", &argparse.Options{Default: defaultSecret, Help: "Client token to submit jobs with."})
 	nodes := submitCmd.Int("n", "nodes", &argparse.Options{Default: 1, Help: "Number of nodes to request"})
@@ -89,6 +95,17 @@ func main() {
 		err := config.RunInit(*cfg, *clusterName, *selectAlgo, *matchAlgo)
 		if err != nil {
 			log.Fatalf("Issue with config: %s\n", err)
+		}
+
+	} else if stateCmd.Happened() {
+		err := update.UpdateState(
+			*host,
+			*clusterName,
+			*stateFile,
+			*cfg,
+		)
+		if err != nil {
+			log.Fatalf("Issue with register subsystem: %s\n", err)
 		}
 
 	} else if registerCmd.Happened() {

@@ -47,6 +47,30 @@ func (s *Server) Register(_ context.Context, in *pb.RegisterRequest) (*pb.Regist
 	return response, err
 }
 
+// UpdateState sends state metadata to the graph for the selection step
+// This could eventually be used in other parts of the graph search but
+// right now makes sense to be used with algorithms
+func (s *Server) UpdateState(_ context.Context, in *pb.UpdateStateRequest) (*pb.UpdateStateResponse, error) {
+	if in == nil {
+		return nil, errors.New("request is required")
+	}
+	if in.Cluster == "" || in.Secret == "" || in.Payload == "" {
+		return nil, errors.New("cluster, name, secret, and state file payload are required")
+	}
+	_, err := s.db.ValidateClusterSecret(in.Cluster, in.Secret)
+	if err != nil {
+		return nil, errors.New("request denied")
+	}
+	// A subsystem just needs to be added to the graph
+	log.Printf("📝️ received state update: %s", in.Cluster)
+	response := pb.UpdateStateResponse{Status: pb.UpdateStateResponse_UPDATE_STATE_SUCCESS}
+	err = s.graph.UpdateState(in.Cluster, in.Payload)
+	if err != nil {
+		response.Status = pb.UpdateStateResponse_UPDATE_STATE_ERROR
+	}
+	return &response, err
+}
+
 // Register a subsystem with the server
 func (s *Server) RegisterSubsystem(_ context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	if in == nil {
@@ -119,8 +143,15 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 
 	log.Printf("📝️ received job %s for %d contender clusters", in.Name, len(clusters))
 
-	// Use the algorithm to select a final cluster
-	selected, err := s.selectionAlgorithm.Select(clusters)
+	// Get state for clusters. Note that we allow clusters that are missing
+	// state data - given that the algorithm needs it, they are not included
+	states, err := s.graph.GetStates(clusters)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the algorithm to select a final cluster, providing states
+	selected, err := s.selectionAlgorithm.Select(clusters, states)
 	if err != nil {
 		return nil, err
 	}

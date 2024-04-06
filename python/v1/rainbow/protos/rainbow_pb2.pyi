@@ -21,6 +21,32 @@ class RegisterRequest(_message.Message):
     sent: _timestamp_pb2.Timestamp
     def __init__(self, name: _Optional[str] = ..., secret: _Optional[str] = ..., nodes: _Optional[str] = ..., subsystem: _Optional[str] = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
+class UpdateStateRequest(_message.Message):
+    __slots__ = ("cluster", "secret", "payload")
+    CLUSTER_FIELD_NUMBER: _ClassVar[int]
+    SECRET_FIELD_NUMBER: _ClassVar[int]
+    PAYLOAD_FIELD_NUMBER: _ClassVar[int]
+    cluster: str
+    secret: str
+    payload: str
+    def __init__(self, cluster: _Optional[str] = ..., secret: _Optional[str] = ..., payload: _Optional[str] = ...) -> None: ...
+
+class UpdateStateResponse(_message.Message):
+    __slots__ = ("status",)
+    class ResultType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        UPDATE_STATE_UNSPECIFIED: _ClassVar[UpdateStateResponse.ResultType]
+        UPDATE_STATE_PARTIAL: _ClassVar[UpdateStateResponse.ResultType]
+        UPDATE_STATE_SUCCESS: _ClassVar[UpdateStateResponse.ResultType]
+        UPDATE_STATE_ERROR: _ClassVar[UpdateStateResponse.ResultType]
+    UPDATE_STATE_UNSPECIFIED: UpdateStateResponse.ResultType
+    UPDATE_STATE_PARTIAL: UpdateStateResponse.ResultType
+    UPDATE_STATE_SUCCESS: UpdateStateResponse.ResultType
+    UPDATE_STATE_ERROR: UpdateStateResponse.ResultType
+    STATUS_FIELD_NUMBER: _ClassVar[int]
+    status: UpdateStateResponse.ResultType
+    def __init__(self, status: _Optional[_Union[UpdateStateResponse.ResultType, str]] = ...) -> None: ...
+
 class SubmitJobRequest(_message.Message):
     __slots__ = ("name", "clusters", "jobspec", "sent")
     class Cluster(_message.Message):

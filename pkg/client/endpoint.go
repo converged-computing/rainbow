@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
@@ -216,6 +217,56 @@ func (c *RainbowClient) Register(
 	// For now we blindly accept all register, it's a fake endpoint
 	if err != nil {
 		return response, errors.Wrap(err, "could not register cluster")
+	}
+	return response, nil
+}
+
+// UpdateState of an existing cluster
+func (c *RainbowClient) UpdateState(
+	ctx context.Context,
+	cluster string,
+	secret string,
+	stateFile string,
+) (*pb.UpdateStateResponse, error) {
+
+	response := &pb.UpdateStateResponse{}
+
+	// Unlike register, this is the cluster to add the subsytem for.
+	if cluster == "" {
+		return response, errors.New("cluster is required")
+	}
+	if secret == "" {
+		return response, errors.New("secret is required")
+	}
+	if !c.Connected() {
+		return response, errors.New("client is not connected")
+	}
+	if stateFile == "" {
+		return response, fmt.Errorf("a state file must be provided with --state-file")
+	}
+	_, err := utils.PathExists(stateFile)
+	if err != nil {
+		return response, errors.New(fmt.Sprintf("state file %s does not exist: %s", stateFile, err))
+	}
+
+	// Read stateFile into payload
+	states, err := os.ReadFile(stateFile)
+	if err != nil {
+		return response, err
+	}
+
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	// Hit the register subsystem endpoint
+	response, err = c.service.UpdateState(ctx, &pb.UpdateStateRequest{
+		Cluster: cluster,
+		Secret:  secret,
+		Payload: string(states),
+	})
+	if err != nil {
+		return response, errors.Wrap(err, "could not update endpoint")
 	}
 	return response, nil
 }
