@@ -14,6 +14,10 @@ type Resource struct {
 	Metadata metadata.Metadata
 }
 
+// A Cluster state is a key value interface.
+// The algorithms are required to know what they are looking for
+type ClusterState map[string]interface{}
+
 // A vertex is defined by an identifier. We use an int
 // instead of a string because it's faster. Edges are other
 // vertices (and their identifiers) it's connected to.

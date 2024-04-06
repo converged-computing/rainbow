@@ -16,6 +16,7 @@ import (
 	"github.com/converged-computing/rainbow/pkg/graph"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
+	"github.com/converged-computing/rainbow/pkg/types"
 	"github.com/converged-computing/rainbow/pkg/utils"
 	"github.com/converged-computing/rainbow/plugins/backends/memory/service"
 )
@@ -28,6 +29,35 @@ type Graph struct {
 
 	// The dominant subsystem for all clusters, if desired to set
 	dominantSubsystem string
+}
+
+// GetStates for clusters in the graph
+func (g *Graph) GetStates(names []string) (map[string]types.ClusterState, error) {
+	states := map[string]types.ClusterState{}
+	for _, name := range names {
+
+		// Only error if the cluster isn't known
+		cluster, ok := g.Clusters[name]
+		if !ok {
+			return states, fmt.Errorf("cluster %s does not exist", name)
+		}
+		states[name] = cluster.GetState()
+	}
+	return states, nil
+}
+
+// UpdateState updates the state of a known cluster in the graph
+func (g *Graph) UpdateState(name string, state *types.ClusterState) error {
+	cluster, ok := g.Clusters[name]
+	if !ok {
+		return fmt.Errorf("cluster %s does not exist", name)
+	}
+	// We always update old values
+	for key, value := range *state {
+		rlog.Debugf("Updating state %s to %v\n", key, value)
+		cluster.State[key] = value
+	}
+	return nil
 }
 
 // NewGraph creates a structure that holds one or more graphs

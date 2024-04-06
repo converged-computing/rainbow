@@ -18,6 +18,10 @@ service RainbowScheduler {
   // Job Submission - request for submitting a job to a named cluster
   rpc SubmitJob(SubmitJobRequest) returns (SubmitJobResponse);
 
+  // Update State - allow a cluster to provide state metadata
+  // This is intended for use by a selection algorithm
+  rpc UpdateState(UpdateStateRequest) returns (UpdateStateResponse);
+
   // Request Job - ask the rainbow scheduler for up to max jobs
   rpc ReceiveJobs(ReceiveJobsRequest) returns (ReceiveJobsResponse);
 
@@ -36,6 +40,29 @@ message RegisterRequest {
   string subsystem = 4;
   google.protobuf.Timestamp sent = 5;
 }
+
+// UpdateStateRequests allows a cluster to set arbitrary metadata
+// for its state. State metadata is used for selection algorithms
+message UpdateStateRequest {
+  string cluster = 1;
+  string secret = 2;
+
+  // We are generous that the payload can be a flat
+  // set of key value pairs, and will be parsed into
+  // types within the graph database
+  string payload = 3;
+}
+
+message UpdateStateResponse {
+  enum ResultType {
+    UPDATE_STATE_UNSPECIFIED = 0;
+    UPDATE_STATE_PARTIAL = 1;
+    UPDATE_STATE_SUCCESS = 2;
+    UPDATE_STATE_ERROR = 3;
+  }
+  ResultType status = 1;
+}
+
 
 // SubmitJobRequest takes a job name, cluster name
 // and requires the cluster token. Since we want to be generic,

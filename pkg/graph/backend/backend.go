@@ -8,6 +8,7 @@ import (
 
 	"github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
+	"github.com/converged-computing/rainbow/pkg/types"
 	"google.golang.org/grpc"
 )
 
@@ -41,6 +42,13 @@ type GraphBackend interface {
 
 	// Add a subsystem to the graph
 	AddSubsystem(name string, nodes *graph.JsonGraph, subsystem string) error
+
+	// Update state of a cluster in the graph
+	UpdateState(name, payload string) error
+
+	// GetStates for a final set of clusters, these states
+	// go to selection algorithms
+	GetStates([]string) (map[string]types.ClusterState, error)
 }
 
 // List returns known backends

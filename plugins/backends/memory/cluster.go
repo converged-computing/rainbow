@@ -7,6 +7,7 @@ import (
 
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
+	"github.com/converged-computing/rainbow/pkg/types"
 )
 
 var (
@@ -19,6 +20,7 @@ var (
 type ClusterGraph struct {
 	subsystem map[string]*Subsystem
 	lock      sync.RWMutex
+	State     map[string]interface{}
 
 	// Courtesy holder for name
 	Name string
@@ -26,6 +28,14 @@ type ClusterGraph struct {
 	// The dominant subsystem is a lookup in the subsystem map
 	// It defaults to nodes (node resources)
 	dominantSubsystem string
+}
+
+// GetState of the cluster
+// We could expose this as a public variable, but I'm leaving
+// like this in case we want to do additional processing
+// (for example, maybe some attributes are private)
+func (c *ClusterGraph) GetState() types.ClusterState {
+	return c.State
 }
 
 // Dominant subsystem gets the dominant subsystem
@@ -113,6 +123,7 @@ func NewClusterGraph(name string, domSubsystem string) *ClusterGraph {
 		Name:              name,
 		subsystem:         subsystems,
 		dominantSubsystem: defaultDominantSubsystem,
+		State:             types.ClusterState{},
 	}
 	return g
 }

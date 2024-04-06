@@ -3,6 +3,8 @@ package selection
 import (
 	"fmt"
 	"log"
+
+	"github.com/converged-computing/rainbow/pkg/types"
 )
 
 // Lookup of Algorthms
@@ -18,7 +20,8 @@ type SelectionAlgorithm interface {
 	Init(map[string]string) error
 
 	// Take a list of contenders and select based on algorithm
-	Select([]string) (string, error)
+	// The algorithm can optionally use cluster states from the graph
+	Select([]string, map[string]types.ClusterState) (string, error)
 }
 
 // List returns known backends

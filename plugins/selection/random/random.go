@@ -4,6 +4,7 @@ import (
 	"math/rand"
 
 	"github.com/converged-computing/rainbow/pkg/graph/selection"
+	"github.com/converged-computing/rainbow/pkg/types"
 )
 
 // Random selection of a cluster
@@ -26,7 +27,10 @@ func (s RandomSelection) Description() string {
 
 // Select randomly chooses a cluster from the set
 // This should not receive an empty list, but we check anyway
-func (s RandomSelection) Select(contenders []string) (string, error) {
+func (s RandomSelection) Select(
+	contenders []string,
+	states map[string]types.ClusterState,
+) (string, error) {
 	if len(contenders) == 0 {
 		return "", nil
 	}
