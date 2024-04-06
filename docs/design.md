@@ -32,7 +32,15 @@ The connections (edges) between dominant subsystem and subsystem nodes are bidir
 1. When traversing the dominant subsystem looking for matches, we rely on the edges that point to the subsystem resource to determine if a need is satisfied.
 2. The opposite edge is (will be, not implemented yet) used for a cleanup, or going through the subsystem graph, finding nodes that are linked to, deleting the opposing edge, and then the entire subsystem graph.
 
-### 4. Submit Work
+### 4. Update State
+
+Optionally, a cluster can submit state information to the submit state information endpoint.  These key value pairs should represent a cluster's current state, and can range from costs to power to how occupied the cluster is.
+
+![img/3-cluster-state.png](3-cluster-state.png)
+
+These attributes are provided to the select algorithm, which is the step before final assignment that allows further filtering based on cluster state and/or constraint optimization. Selection algorithms can be customized via the Rainbow configuration file (global) or command line request (one off).
+
+### 5. Submit Work
 
 ![img/4-submit-work.png](img/4-submit-work.png)
 
@@ -44,11 +52,11 @@ Submitting work comes down to the client providing a request, having the request
 
 We likely will be designing other abstractions to define the work, which is not done yet.  Note that this interaction to find clusters that can satisfy the request is only done between the client and graph database, and this is done intentionally to not stress the rainbow cluster server, which should only handle receiving the final assignments and interaction with clusters. This also means we eventually need authentication just on the level of the graph database, which currently isn't an issue because the in-memory graph databsase is served by rainbow, and although it uses the same "separate GRPC" approach, this means it can use the same check for credentials as rainbow uses. We likely want some ability as well for rainbow to verify that the request was seen/approved by the graph database, but I haven't thought that far yet. This is the step that uses the graph database backend to do traversal and determine if the request can be satisfied by one or more clusters. You can read about algorithms for that [here](algorithms.md).
 
-### 5. Assign Work
+### 6. Assign Work
 
 ![img/5-assign-work.png](img/5-assign-work.png)
 
-When some number of clusters are found, the final request is sent to rainbow, which authenticates the user (1), validates access to the clusters (2), and assigns the work. Assignment is simply saving the Jobspec and cluster in the database (3), to be received by the cluster when it pulls next (4). This next step is called receiving work, and is implemented but does not have a diagram here. It comes down to having an endpoint that the cluster uses to receive jobs, authenticating itself with the secret, and then receiving the full jobs with the jobspecs. It accepts them and sends back a success response for rainbow to remove the record from the database. From this point on, the job is owned by the receiving cluster.
+When some number of clusters are found, a match algorithm (1) is first used to filter down the set further, where the algorithm operates on the level of slots defined by the Jobspec, and defines rules for how subsystem metadata at that slot should be used. As an example, the user might require a particular kind of storage to exist at a slot, and so the algorithm would check if a subsystem edge for that storage type is connected to a node. After match the request and set of clusters are sent to rainbow, which authenticates the user (2), validates access to the clusters (3), and assigns the work. Assignment means going through one more level of selection, which is an algorithm that can use cluster state data to further filter or set constraints for a choice. Once a cluster is chosen, it is simply a matter of saving the Jobspec and cluster in the database (4), to be received by the cluster when it pulls next (5). This next step is called receiving work, and is implemented but does not have a diagram here. It comes down to having an endpoint that the cluster uses to receive jobs, authenticating itself with the secret, and then receiving the full jobs with the jobspecs. It accepts them and sends back a success response for rainbow to remove the record from the database. From this point on, the job is owned by the receiving cluster.
 
 ## Details
 

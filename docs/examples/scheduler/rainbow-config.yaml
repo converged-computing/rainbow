@@ -3,12 +3,14 @@ scheduler:
     name: keebler
     algorithms:
         selection:
-            name: random
+            name: constraint
+            options:
+                key: value
         match:
             name: match
 cluster:
     name: keebler
-    secret: 76948f58-8655-48c1-aaab-fccedf2bb383
+    secret: 4a193104-d7fa-460a-a13d-9482173eb85d
 graphdatabase:
     name: memory
     host: 127.0.0.1:50051

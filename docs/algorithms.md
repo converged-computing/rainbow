@@ -183,8 +183,92 @@ In the above, the field is "version" and it is an arbitrary metadata field in th
 
 ## Selection Algorithms
 
+Selection algorithms can use metadata from three places:
+
+ - JobSpec -> attributes (updated to allow one-off attributes)
+ - Cluster -> state attributes (delivered via the update cluster state endpoint)
+ - Algorithm -> options (provided when you run the server)
+
 ### Random
 
-This algorithm speaks for itself. Given a listing of contender clusters (where all clusters have a match) we randomly choose.
+This algorithm speaks for itself, and does not use any of the metadata described above. Given a listing of contender clusters (where all clusters have a match) we randomly choose.
+
+#### Constraint
+
+The constraint selection algorithm does selection based on prioritized constraints. Note that this is currently described for our current simulation and will be updated (and more generalized) as needed. It will use the following selection attributes:
+
+##### JobSpec Attributes
+
+> **JobSpec -> attributes** 
+
+The first attribute `seconds_per_gb` is the number of seconds (time) that the package takes per unit memory. This is actually the slope of the line for a linear model built with package-specific build times and memory features. We are finding a sneaky way to get the model into the selection algorithm (the rainbow server) without actually doing that. If a JobSpec does not provide this value, a selection will still be made based on the cluster node cost, but without being informed about how the job uses it. This might look like this in a JobSpec - note that we add these to a section of parameter properties:
+
+```yaml
+version: 1
+resources:
+- count: 2
+  type: node
+  with:
+  - count: 1
+    label: default
+    type: slot
+    with:
+    - count: 2
+      type: core
+task:
+  command:
+  - spack
+  slot: default
+  count:
+    per_slot: 1
+  attributes:
+    parameter:
+      seconds_per_gb: 2
+```
+
+This is done flattened (at the top level of attributes) for now. We likely want to add a special subsection here akin to system or environment.
+
+##### Cluster State Attributes
+
+> **Cluster -> state**
+
+These attributes include `node_memory_gb`, `cost_per_node_hour` (dollars) and `nodes_free` or the remainder of nodes that are free, meaning a limit to what jobs rainbow can accept (the assumption being we will not schedule to a cluster that doesn't have nodes free). This value will update incrementally as the cluster accepts jobs.  These are describing the cluster, so they will be provided as cluster state data that is updated as needed. An entry to update a cluster state might look like this:
+
+```
+{
+    "cost_per_node_hour": 3,
+    "nodes_free": 20,
+    "memory_gb_per_node": 200,
+}
+```
+
+The above says that the cluster has 20 nodes free to accept work. When this goes to 0, we can no longer assign work to it (per this algorithm). Note that I'm aware that memory on the level of a node is more true to a subsystem. However, our match isn't deciding on any final set of nodes, so (for the time being) I'm putting it here, the idea being that the cluster would return some mean value of memory for the nodes that are free. This is assuming the nodes are homogeneous, which is probably OK to do for now.
+
+##### Algorithm Options
+
+The algorithm options will tell the constraint algorithm to use the attributes above, and how to prioritize rules. 
+An example for the above might look like the following:
+
+```yaml
+scheduler:
+    secret: chocolate-cookies
+    name: keebler
+    algorithms:
+        selection:
+            name: constraint
+            options: 
+                priorities: |
+                  - filter: "nodes_free > 0"
+                    calc: "build_cost=(cost_per_node_hour * (memory_gb_per_node * seconds_per_gb)/60/60))"
+                    sort_descending: build_cost 
+                    select: random
+```
+
+The above is saying for first priority, filter down to clusters that have nodes free. Then calculate an estimate of the cost for the build. Here is the logic. If we have a linaer model (Y = mX + b) to describe memory and runtime, so `runtime = (slope * memory) + intercept` and here our intercept is some value we can derive on the level of the package (and write into the jobspec) and seconds_per_gb is the slope of the line, then we can get an estimated runtime (in seconds) with `memory_gb_per_node * seconds_per_gb`. If we multiply by 60 we get minutes, and again we get hours. So the piece of the equation `memory_gb_per_node * seconds_per_gb)/60/60` is giving us an estimated runtime in hours based on the package being built. If we multiply that by the cost per node hour, then we get an estimate of the cost for the build.
+
+The "select" field is saying how to choose the final cluster from the set that remain. Options here can be first, last, or random.
+
+TODO: What we will eventually want to do is have the satisfy step return metrics about the nodes (resources) that it finds. Then this doesn't need to be provided as state data.
+
 
 [home](/README.md#rainbow-scheduler)
