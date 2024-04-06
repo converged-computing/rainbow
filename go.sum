@@ -1,9 +1,11 @@
+github.com/Knetic/govaluate v3.0.0+incompatible h1:7o6+MAPhYTCF0+fdvoz1xDedhRb4f6s9Tn1Tt7/WTEg=
+github.com/Knetic/govaluate v3.0.0+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Masterminds/semver/v3 v3.2.1 h1:RN9w6+7QoMeJVGyfmbcgs28Br8cvmnucEXnY0rYXWg0=
 github.com/Masterminds/semver/v3 v3.2.1/go.mod h1:qvl/7zhW3nngYb5+80sSMF+FG2BjYrf8m9wsX0PNOMQ=
 github.com/akamensky/argparse v1.4.0 h1:YGzvsTqCvbEZhL8zZu2AiA5nq805NZh75JNj4ajn1xc=
 github.com/akamensky/argparse v1.4.0/go.mod h1:S5kwC7IuDcEr5VeXtGPRVZ5o/FdhcMlQz4IZQuw64xA=
-github.com/compspec/jobspec-go v0.0.0-20240406061841-7865b4e0cad4 h1:M7nuU4+XKhSrcFa4YOGqop0k3QVMoAN4k0gFwtNBEnk=
-github.com/compspec/jobspec-go v0.0.0-20240406061841-7865b4e0cad4/go.mod h1:BaJyxaOhESe2DD4lqBdwTEWOw0TaTZVJGPrFh6KyXQM=
+github.com/compspec/jobspec-go v0.0.0-20240406210339-886aab99ffbe h1:AMgW4uL//FX/Rl0lVP0bjvr0s/tjJqUSdxd1enFvMp4=
+github.com/compspec/jobspec-go v0.0.0-20240406210339-886aab99ffbe/go.mod h1:BaJyxaOhESe2DD4lqBdwTEWOw0TaTZVJGPrFh6KyXQM=
 github.com/converged-computing/jsongraph-go v0.0.0-20240229082022-c6887a5a00fe h1:Tk//RW3uKn4A7N8gpHRXs+ZGlR7Fxkwh+4/Iml0GBV4=
 github.com/converged-computing/jsongraph-go v0.0.0-20240229082022-c6887a5a00fe/go.mod h1:+DhVyLXGVfBsfta4185jd33jqa94inshCcdvsXK2Irk=
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=

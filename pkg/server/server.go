@@ -66,11 +66,16 @@ func NewServer(
 	}
 
 	// Prepare the selection algorithm
+	// TODO: we probably want to allow a server to enable one or more selection
+	// and match algorithms, and then the user/cluster can select from that set.
 	selectAlgo, err := selection.Get(cfg.Scheduler.Algorithms.Selection.Name)
 	if err != nil {
 		log.Fatal(err)
 	}
-	selectAlgo.Init(cfg.Scheduler.Algorithms.Selection.Options)
+	err = selectAlgo.Init(cfg.Scheduler.Algorithms.Selection.Options)
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Printf("🧩️ selection algorithm: %v", selectAlgo.Name())
 
 	// Load the graph backend!

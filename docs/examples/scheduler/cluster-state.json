@@ -1,4 +1,5 @@
 {
-    "cost-per-node": 12,
-    "max-jobs": 100
+    "cost_per_node_hour": 3,
+    "nodes_free": 20,
+    "memory_per_node": 200
 }

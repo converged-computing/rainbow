@@ -238,7 +238,7 @@ These attributes include `node_memory_gb`, `cost_per_node_hour` (dollars) and `n
 {
     "cost_per_node_hour": 3,
     "nodes_free": 20,
-    "memory_gb_per_node": 200,
+    "memory_per_node": 200,
 }
 ```
 
@@ -258,13 +258,22 @@ scheduler:
             name: constraint
             options: 
                 priorities: |
-                  - filter: "nodes_free > 0"
-                    calc: "build_cost=(cost_per_node_hour * (memory_gb_per_node * seconds_per_gb)/60/60))"
-                    sort_descending: build_cost 
-                    select: random
+                  - priority: 1 
+                    steps:
+                    - filter: "nodes_free > 0"
+                    - calc: "build_cost=(cost_per_node_hour * (memory_per_node * seconds_per_gb)/60/60))"
+                    - sort_descending: build_cost 
+                    - select: random
+                  - priority: 2
+                    steps:
+                    - filter: "nodes_free > 0"
+                    - calc: "memory_min=min(100, memory_per_node - 100)"
+                    - calc: "build_cost=(cost_per_node_hour * (memory_min * seconds_per_gb)/60/60))"
+                    - sort_descending: build_cost 
+                    - select: random
 ```
 
-The above is saying for first priority, filter down to clusters that have nodes free. Then calculate an estimate of the cost for the build. Here is the logic. If we have a linaer model (Y = mX + b) to describe memory and runtime, so `runtime = (slope * memory) + intercept` and here our intercept is some value we can derive on the level of the package (and write into the jobspec) and seconds_per_gb is the slope of the line, then we can get an estimated runtime (in seconds) with `memory_gb_per_node * seconds_per_gb`. If we multiply by 60 we get minutes, and again we get hours. So the piece of the equation `memory_gb_per_node * seconds_per_gb)/60/60` is giving us an estimated runtime in hours based on the package being built. If we multiply that by the cost per node hour, then we get an estimate of the cost for the build.
+The above is saying for first priority, filter down to clusters that have nodes free. Then calculate an estimate of the cost for the build. Here is the logic. If we have a linaer model (Y = mX + b) to describe memory and runtime, so `runtime = (slope * memory) + intercept` and here our intercept is some value we can derive on the level of the package (and write into the jobspec) and seconds_per_gb is the slope of the line, then we can get an estimated runtime (in seconds) with `seconds_per_gb * memory_per_node`. If we multiply by 60 we get minutes, and again we get hours. So the piece of the equation `memory_per_node * seconds_per_gb)/60/60` is giving us an estimated runtime in hours based on the package being built. If we multiply that by the cost per node hour, then we get an estimate of the cost for the build.
 
 The "select" field is saying how to choose the final cluster from the set that remain. Options here can be first, last, or random.
 

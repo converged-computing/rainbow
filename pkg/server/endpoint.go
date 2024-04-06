@@ -106,7 +106,6 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 	if in == nil {
 		return nil, errors.New("request is required")
 	}
-
 	// Keep a list of clusters to send to the database
 	lookup := map[string]*database.Cluster{}
 	clusters := []string{}
@@ -140,7 +139,6 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 	if len(clusters) == 0 {
 		return nil, errors.New("one or more authenticated clusters are required")
 	}
-
 	log.Printf("📝️ received job %s for %d contender clusters", in.Name, len(clusters))
 
 	// Get state for clusters. Note that we allow clusters that are missing
@@ -150,8 +148,8 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 		return nil, err
 	}
 
-	// Use the algorithm to select a final cluster, providing states
-	selected, err := s.selectionAlgorithm.Select(clusters, states)
+	// Use the algorithm to select a final cluster, providing states and the jobspec
+	selected, err := s.selectionAlgorithm.Select(clusters, states, in.Jobspec)
 	if err != nil {
 		return nil, err
 	}

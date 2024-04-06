@@ -30,6 +30,7 @@ func (s RandomSelection) Description() string {
 func (s RandomSelection) Select(
 	contenders []string,
 	states map[string]types.ClusterState,
+	jobspec string,
 ) (string, error) {
 	if len(contenders) == 0 {
 		return "", nil

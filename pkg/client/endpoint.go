@@ -86,6 +86,7 @@ func (c *RainbowClient) SubmitJob(
 	if err != nil {
 		return response, err
 	}
+
 	// Validate that the cluster exists, and we have the right token.
 	// The response is the same either way - not found does not reveal
 	// additional information to the client trying to find it

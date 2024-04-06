@@ -161,7 +161,6 @@ func NewRainbowClientConfig(
 
 	// Scheduling algorithm defaults to random selection
 	config.setAlgorithms(selectionAlgorithm, matchAlgorithm)
-	fmt.Println(config)
 
 	// Default host, for now is always this
 	if config.GraphDatabase.Host == "" {
