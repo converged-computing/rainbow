@@ -121,7 +121,31 @@ I understand this is likely not perfect for what everyone wants, but I believe i
 
 ### Match
 
-The expliciy "match" type is going to look exactly at some exact value for a field in the metadata. It will return true (match) if it matches what the subsystem needs. For example, given this task:
+The "match" type is the most inclusive of all types - it includes interfaces for both equals and match, so you can check for exact values and ranges within the same jobspec. Here is an example of them combined:
+
+```yaml
+task:
+  command:
+  - ior
+  slot: default
+  count:
+    per_slot: 1
+  resources:
+    io:
+      match:
+      - field: type
+        value: shm
+      range:
+      - field: version
+        min: "0.5.1"
+        max: "0.5.5"
+```
+
+This is the most realisic use case I think.
+
+### Equals
+
+The "equals" type is going to look exactly at some exact value for a field in the metadata. It will return true (match) if it matches what the subsystem needs. For example, given this task:
 
 ```yaml
 task:

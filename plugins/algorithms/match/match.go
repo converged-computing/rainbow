@@ -1,26 +1,22 @@
 package match
 
 import (
-	"fmt"
 	"strings"
 
 	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"
+	"github.com/converged-computing/rainbow/plugins/algorithms/equals"
+	rangematch "github.com/converged-computing/rainbow/plugins/algorithms/range"
 )
 
 type MatchType struct{}
 
 var (
-	description = "match type for a subsystem for job assignment"
+	description = "match single values or ranges for subsystem job assignment"
 	matcherName = "match"
 )
-
-type MatchRequest struct {
-	Field string
-	Value string
-}
 
 func (s MatchType) Name() string {
 	return matcherName
@@ -28,26 +24,6 @@ func (s MatchType) Name() string {
 
 func (s MatchType) Description() string {
 	return description
-}
-
-// Compress the match request into a parseable field
-func (req *MatchRequest) Compress() string {
-	value := fmt.Sprintf("match||field=%s", req.Field)
-	value = fmt.Sprintf("%s||value=%s", value, req.Value)
-	return value
-}
-
-func NewMatchRequest(value string) *MatchRequest {
-	req := MatchRequest{}
-	pieces := strings.Split(value, "||")
-	for _, piece := range pieces {
-		if strings.HasPrefix(piece, "field=") {
-			req.Field = strings.ReplaceAll(piece, "field=", "")
-		} else if strings.HasPrefix(piece, "value=") {
-			req.Value = strings.ReplaceAll(piece, "value=", "")
-		}
-	}
-	return &req
 }
 
 // getSlotResource needs assumes a subsystem request as follows:
@@ -76,49 +52,17 @@ func (m MatchType) GetSlotResourceNeeds(slot *v1.Task) *types.SlotResourceNeeds 
 		if !ok {
 			continue
 		}
-
-		// We currently support "match" which is an exact match of a term to resource
+		// This is the meta (combined) matcher that support other matchers
+		// This also assumes we can have a match and range block
 		match, ok := needs["match"]
-		if !ok {
-			continue
+		if ok {
+			m := equals.EqualsType{}
+			sNeeds = m.UpdateResourceNeeds(match, subsystem, sNeeds)
 		}
-
-		// Now "match" goes from interface{} -> []map[string]string{}
-		matches, ok := match.([]interface{})
-		if !ok {
-			continue
-		}
-
-		// Finally, we just parse the list - these should be key value pairs to match exactly
-		for _, entry := range matches {
-			entry, ok := entry.(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			req := MatchRequest{}
-			for key, value := range entry {
-				value, ok := value.(string)
-
-				// We only know how to parse these
-				if key == "field" && ok {
-					req.Field = value
-				} else if key == "value" && ok {
-					req.Value = value
-				}
-			}
-
-			// If we get here and we have a field and at LEAST
-			// one of min or max, we can add to to our needs
-			// This is a bit janky - compressing with || separators
-			if req.Field != "" && (req.Value != "") {
-				_, ok := sNeeds[subsystem]
-				if !ok {
-					sNeeds[subsystem] = map[string]bool{}
-				}
-				// This sets the starting state that the range is not satisfied
-				sNeeds[subsystem][req.Compress()] = false
-			}
+		request, ok := needs["range"]
+		if ok {
+			m := rangematch.RangeType{}
+			sNeeds = m.UpdateResourceNeeds(request, subsystem, sNeeds)
 		}
 	}
 	// Parse into the slot resource needs
@@ -166,26 +110,15 @@ func (m MatchType) CheckSubsystemEdge(slotNeeds *types.SlotResourceNeeds, edge *
 			for k := range subsys.Attributes {
 				rlog.Debugf("      => Looking at edge %s '%s' for %s that needs %s\n", edge.Subsystem, edge.Vertex.Type, subsys.Name, k)
 
-				// We care if the attribute is marked as a range
+				// We care if the attribute is marked as a range or exact match
 				if strings.HasPrefix(k, "match") {
+					m := equals.EqualsType{}
+					m.MatchEdge(k, edge, &subsys)
 
-					rlog.Debugf("      => Found %s and inspecting edge metadata %v\n", k, edge.Vertex.Metadata.Elements)
-					req := NewMatchRequest(k)
-					// Get the field requested by the jobspec
-					toMatch, err := edge.Vertex.Metadata.GetStringElement(req.Field)
-					if err != nil {
-						continue
-					}
-
-					rlog.Debugf("      => Found field requested for range match %s\n", toMatch)
-					// These are the conditions of being satisifed, the value we got from the vertex
-					// matches the value provided in the slot request
-					if toMatch == req.Value {
-						rlog.Debugf("      => Resource '%s' has edge '%s' satisfies subsystem %s %s\n", vtx.Type, edge.Vertex.Type, subsys.Name, k)
-						subsys.Attributes[k] = true
-					}
+				} else if strings.HasPrefix(k, "range") {
+					m := rangematch.RangeType{}
+					m.MatchEdge(k, edge, &subsys)
 				}
-
 			}
 		}
 		slotNeeds.Subsystems[i] = subsys
