@@ -62,23 +62,37 @@ class RainbowConfig:
             matcher = "match"
         return matcher
 
-    def set_match_algorithm(self, name):
+    @property
+    def selection_algorithm(self):
         """
-        Get the match algorithm
+        Get the selection algorithm
         """
-        self._set_algorithm("match", name)
+        selection = (
+            self._cfg.get("scheduler", {}).get("algorithms", {}).get("selection", {}).get("name")
+        )
+        if not selection:
+            selection = "random"
+        return selection
 
-    def set_selection_algorithm(self, name):
+    def set_match_algorithm(self, name, options=None):
         """
         Get the match algorithm
         """
-        self._set_algorithm("selection", name)
+        self._set_algorithm("match", name, options)
 
-    def _set_algorithm(self, typ, name):
+    def set_selection_algorithm(self, name, options=None):
         """
         Get the match algorithm
         """
+        self._set_algorithm("selection", name, options)
+
+    def _set_algorithm(self, typ, name, options=None):
+        """
+        Get the match algorithm
+        """
+        options = options or {}
         self._cfg["scheduler"]["algorithms"][typ]["name"] = name
+        self._cfg["scheduler"]["algorithms"][typ]["options"] = options
 
     def load(self, config_file=None):
         """

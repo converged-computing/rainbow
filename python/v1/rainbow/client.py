@@ -180,13 +180,15 @@ class RainbowClient:
         self.database = database
         self.database_options = options
 
-    def submit_jobspec(self, jobspec):
+    def submit_jobspec(self, jobspec, match_algo=None, select_algo=None):
         """
         Submit a jobspec directly. This is useful if you want to generate
         it custom with your own special logic.
         """
         # Ask the database backend if our jobspec can be satisfied
-        satisfy_response = self.backend.satisfies(jobspec, self.cfg.match_algorithm)
+        match_algo = match_algo or self.cfg.match_algorithm
+        select_algo = select_algo or self.cfg.selection_algorithm
+        satisfy_response = self.backend.satisfies(jobspec, match_algo)
         matches = satisfy_response.clusters
 
         # No matches?
@@ -209,6 +211,7 @@ class RainbowClient:
         submitRequest = rainbow_pb2.SubmitJobRequest(
             name=jobspec.name,
             clusters=clusters,
+            select_algorithm=select_algo,
             jobspec=jobspec.to_yaml(),
         )
 
@@ -225,7 +228,7 @@ class RainbowClient:
         )
         return res
 
-    def submit_job(self, command, nodes=1, tasks=1):
+    def submit_job(self, command, nodes=1, tasks=1, match_algo=None, select_algo=None):
         """
         Submit a simple job to rainbow. This includes:
 
@@ -246,4 +249,4 @@ class RainbowClient:
         # Generate the jobspec dictionary
         raw = converter.new_simple_jobspec(nodes=nodes, command=command, tasks=tasks)
         jobspec = js.Jobspec(raw)
-        return self.submit_jobspec(jobspec)
+        return self.submit_jobspec(jobspec, match_algo=match_algo, select_algo=select_algo)

@@ -48,7 +48,7 @@ class UpdateStateResponse(_message.Message):
     def __init__(self, status: _Optional[_Union[UpdateStateResponse.ResultType, str]] = ...) -> None: ...
 
 class SubmitJobRequest(_message.Message):
-    __slots__ = ("name", "clusters", "jobspec", "sent")
+    __slots__ = ("name", "clusters", "jobspec", "select_algorithm", "sent")
     class Cluster(_message.Message):
         __slots__ = ("name", "token")
         NAME_FIELD_NUMBER: _ClassVar[int]
@@ -59,12 +59,14 @@ class SubmitJobRequest(_message.Message):
     NAME_FIELD_NUMBER: _ClassVar[int]
     CLUSTERS_FIELD_NUMBER: _ClassVar[int]
     JOBSPEC_FIELD_NUMBER: _ClassVar[int]
+    SELECT_ALGORITHM_FIELD_NUMBER: _ClassVar[int]
     SENT_FIELD_NUMBER: _ClassVar[int]
     name: str
     clusters: _containers.RepeatedCompositeFieldContainer[SubmitJobRequest.Cluster]
     jobspec: str
+    select_algorithm: str
     sent: _timestamp_pb2.Timestamp
-    def __init__(self, name: _Optional[str] = ..., clusters: _Optional[_Iterable[_Union[SubmitJobRequest.Cluster, _Mapping]]] = ..., jobspec: _Optional[str] = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+    def __init__(self, name: _Optional[str] = ..., clusters: _Optional[_Iterable[_Union[SubmitJobRequest.Cluster, _Mapping]]] = ..., jobspec: _Optional[str] = ..., select_algorithm: _Optional[str] = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
 class ReceiveJobsRequest(_message.Message):
     __slots__ = ("cluster", "secret", "maxJobs", "sent")

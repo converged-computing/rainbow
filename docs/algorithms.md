@@ -199,7 +199,7 @@ The constraint selection algorithm does selection based on prioritized constrain
 
 ##### JobSpec Attributes
 
-> **JobSpec -> attributes** 
+> **JobSpec -> attributes**
 
 The first attribute `seconds_per_gb` is the number of seconds (time) that the package takes per unit memory. This is actually the slope of the line for a linear model built with package-specific build times and memory features. We are finding a sneaky way to get the model into the selection algorithm (the rainbow server) without actually doing that. If a JobSpec does not provide this value, a selection will still be made based on the cluster node cost, but without being informed about how the job uses it. This might look like this in a JobSpec - note that we add these to a section of parameter properties:
 
@@ -246,7 +246,7 @@ The above says that the cluster has 20 nodes free to accept work. When this goes
 
 ##### Algorithm Options
 
-The algorithm options will tell the constraint algorithm to use the attributes above, and how to prioritize rules. 
+The algorithm options will tell the constraint algorithm to use the attributes above, and how to prioritize rules.
 An example for the above might look like the following:
 
 ```yaml
@@ -256,20 +256,20 @@ scheduler:
     algorithms:
         selection:
             name: constraint
-            options: 
+            options:
                 priorities: |
-                  - priority: 1 
+                  - priority: 1
                     steps:
                     - filter: "nodes_free > 0"
                     - calc: "build_cost=(cost_per_node_hour * (memory_per_node * seconds_per_gb)/60/60)"
-                    - sort_descending: build_cost 
+                    - sort_descending: build_cost
                     - select: random
                   - priority: 2
                     steps:
                     - filter: "nodes_free > 0"
                     - calc: "memory_min=min(100, memory_per_node - 100)"
                     - calc: "build_cost=(cost_per_node_hour * (memory_min * seconds_per_gb)/60/60)"
-                    - sort_descending: build_cost 
+                    - sort_descending: build_cost
                     - select: random
 ```
 

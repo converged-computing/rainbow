@@ -10,7 +10,7 @@ Let's walk through an example of submitting a job that uses a constraint selecti
 ```bash
 # Start the server (terminal 1)
 rm rainbow.db || true
-go run cmd/server/server.go --loglevel 6 --global-token rainbow --config ./docs/examples/scheduler/rainbow-selection-config.yaml 
+go run cmd/server/server.go --loglevel 6 --global-token rainbow --config ./docs/examples/scheduler/rainbow-selection-config.yaml
 
 # Register a cluster (terminal 2)
 go run cmd/rainbow/rainbow.go register cluster --cluster-name keebler --nodes-json ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/scheduler/rainbow-config.yaml --save

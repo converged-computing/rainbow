@@ -8,6 +8,7 @@ import (
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
 	"github.com/converged-computing/rainbow/pkg/database"
 	"github.com/converged-computing/rainbow/pkg/graph"
+	"github.com/converged-computing/rainbow/pkg/graph/selection"
 
 	"github.com/pkg/errors"
 )
@@ -148,8 +149,23 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 		return nil, err
 	}
 
+	// A request can customize this on the fly, but currently no support
+	// for options. We will need to add support for multiple algorithms
+	// and options in the rainbow config
+	algo := s.selectionAlgorithm
+	if in.SelectAlgorithm != "" {
+		selectAlgo, err := selection.Get(in.SelectAlgorithm)
+		if err != nil {
+			return nil, err
+		}
+		err = selectAlgo.Init(map[string]string{})
+		if err != nil {
+			return nil, err
+		}
+		algo = selectAlgo
+	}
 	// Use the algorithm to select a final cluster, providing states and the jobspec
-	selected, err := s.selectionAlgorithm.Select(clusters, states, in.Jobspec)
+	selected, err := algo.Select(clusters, states, in.Jobspec)
 	if err != nil {
 		return nil, err
 	}
