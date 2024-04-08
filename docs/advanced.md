@@ -22,5 +22,6 @@ go run cmd/rainbow/rainbow.go update state --state-file ./docs/examples/schedule
 go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/scheduler/rainbow-selection-config.yaml --jobspec ./docs/examples/scheduler/jobspec-constraint.yaml
 ```
 
+The above demonstrates using a more advanced selection algorithm.
 
 [home](/README.md#rainbow-scheduler)
