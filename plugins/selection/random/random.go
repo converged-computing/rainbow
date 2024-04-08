@@ -30,14 +30,19 @@ func (s RandomSelection) Description() string {
 func (s RandomSelection) Select(
 	contenders []string,
 	states map[string]types.ClusterState,
-) (string, error) {
+	jobspec string,
+	satisfyOnly bool,
+) ([]string, error) {
 	if len(contenders) == 0 {
-		return "", nil
+		return contenders, nil
 	}
-
+	// Satisfy only means "return all the matches"
+	if satisfyOnly {
+		return contenders, nil
+	}
 	// Select a random number the length of the slice
 	idx := rand.Intn(len(contenders))
-	return contenders[idx], nil
+	return []string{contenders[idx]}, nil
 }
 
 // Init provides extra initialization functionality, if needed

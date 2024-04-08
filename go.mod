@@ -3,9 +3,10 @@ module github.com/converged-computing/rainbow
 go 1.20
 
 require (
+	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/akamensky/argparse v1.4.0
-	github.com/compspec/jobspec-go v0.0.0-20240319000127-8020a01a65da
+	github.com/compspec/jobspec-go v0.0.0-20240406210339-886aab99ffbe
 	github.com/converged-computing/jsongraph-go v0.0.0-20240229082022-c6887a5a00fe
 	github.com/fatih/color v1.16.0
 	github.com/google/uuid v1.6.0

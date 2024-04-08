@@ -185,16 +185,9 @@ func (g *ClusterGraph) depthFirstSearch(
 				return false, fmt.Errorf("cannot find slot %s in jobspec", resource.Label)
 			}
 			// Create a simple means to determine if a subsystem is matched
-			// This will eventually be more complex, but right now we are just
-			// matching labels, because that's all we need for the early
-			// scheduling experiments. This can eventually be a setting, but right
-			// now is a single algorithm (function) since there is only one.
 			slotResourceNeeds := matcher.GetSlotResourceNeeds(slot)
 
-			// TODO: how does the slot Count (under tasks) fit in?
-			// I don't understand what these counts are, because they seem like MPI tasks
-			// but a slot can be defined at any level. So I'm going to ignore for now
-			// Suggestion - this needs to be more clear in jobspec v2.
+			// Suggestion - slot count might be more clear in jobspec v2.
 			// https://flux-framework.readthedocs.io/projects/flux-rfc/en/latest/spec_14.html
 			// These are logical groups of "stuff" that need to be scheduled together
 			slotsNeeded := resource.Count

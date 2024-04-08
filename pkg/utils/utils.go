@@ -27,3 +27,12 @@ func ShuffleJobs(jobs []int32) []int32 {
 	}
 	return jobs
 }
+
+// Copy returns a copy of a list slice
+// This is intended for evaluating contender clusters
+// where we change the list (and need to reuse it later)
+func Copy(list []string) []string {
+	copied := make([]string, len(list))
+	copy(copied, list)
+	return copied
+}

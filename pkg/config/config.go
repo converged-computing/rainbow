@@ -78,17 +78,20 @@ func (c *RainbowConfig) ToYaml() (string, error) {
 }
 
 // setAlgorithm sets the algorithms for the rainbow scheduler
+// But only if they aren't already set!
 func (c *RainbowConfig) setAlgorithms(selectAlgo, matchAlgo string) {
 	sAlgo := Algorithm{Name: DefaultSelectionAlgorithm, Options: map[string]string{}}
 	mAlgo := Algorithm{Name: DefaultMatchAlgorithm, Options: map[string]string{}}
-	if selectAlgo != "" {
-		mAlgo.Name = selectAlgo
-	}
-	if matchAlgo != "" {
+
+	// Only set if our config is missing it
+	if matchAlgo != "" && c.Scheduler.Algorithms.Match.Name == "" {
 		mAlgo.Name = matchAlgo
+		c.Scheduler.Algorithms.Match = mAlgo
 	}
-	c.Scheduler.Algorithms.Selection = sAlgo
-	c.Scheduler.Algorithms.Match = mAlgo
+	if selectAlgo != "" && c.Scheduler.Algorithms.Selection.Name == "" {
+		sAlgo.Name = selectAlgo
+		c.Scheduler.Algorithms.Selection = sAlgo
+	}
 }
 
 // ToJson serializes to json
@@ -175,17 +178,9 @@ func NewRainbowServerConfig(name string) *RainbowConfig {
 
 // Load a filename into the rainbow config
 func (cfg *RainbowConfig) Load(filename string) error {
-
-	f, err := os.Open(filename)
+	f, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-
-	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(&cfg)
-	if err != nil {
-		return err
-	}
-	return nil
+	return yaml.Unmarshal([]byte(f), cfg)
 }

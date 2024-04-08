@@ -1,6 +1,6 @@
 # Commands
 
-The following commands are currently supported. For Python, see the [README](https://github.com/converged-computing/rainbow/tree/main/python/v1) in the Python directory.
+The following commands are currently supported. For Python, see the [README](https://github.com/converged-computing/rainbow/tree/main/python/v1) in the Python directory. For advanced examples, see the [advanced](#advanced.md) page.
 
 ## Run the Server
 
@@ -592,6 +592,8 @@ The above can be prettier printed, especially since the jobspec is sent back now
 Note that if you don't define the max jobs (so it is essentially 0) you will get all jobs.
 Awesome! Next we can put that logic in a flux instance (from the Python grpc to start) and then have Flux
 accept some number of them. The response back to the rainbow scheduler will be those to accept, which will then be removed from the database. For another day.
+
+
 
 
 [home](/README.md#rainbow-scheduler)

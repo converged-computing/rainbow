@@ -8,6 +8,7 @@ import (
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
 	"github.com/converged-computing/rainbow/pkg/database"
 	"github.com/converged-computing/rainbow/pkg/graph"
+	"github.com/converged-computing/rainbow/pkg/graph/selection"
 
 	"github.com/pkg/errors"
 )
@@ -106,7 +107,6 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 	if in == nil {
 		return nil, errors.New("request is required")
 	}
-
 	// Keep a list of clusters to send to the database
 	lookup := map[string]*database.Cluster{}
 	clusters := []string{}
@@ -140,7 +140,6 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 	if len(clusters) == 0 {
 		return nil, errors.New("one or more authenticated clusters are required")
 	}
-
 	log.Printf("📝️ received job %s for %d contender clusters", in.Name, len(clusters))
 
 	// Get state for clusters. Note that we allow clusters that are missing
@@ -150,17 +149,52 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 		return nil, err
 	}
 
-	// Use the algorithm to select a final cluster, providing states
-	selected, err := s.selectionAlgorithm.Select(clusters, states)
+	// A request can customize this on the fly, but currently no support
+	// for options. We will need to add support for multiple algorithms
+	// and options in the rainbow config
+	algo := s.selectionAlgorithm
+	if in.SelectAlgorithm != "" {
+		selectAlgo, err := selection.Get(in.SelectAlgorithm)
+		if err != nil {
+			return nil, err
+		}
+		opts := in.SelectOptions
+		if opts == nil {
+			opts = map[string]string{}
+		}
+		err = selectAlgo.Init(opts)
+		if err != nil {
+			return nil, err
+		}
+		algo = selectAlgo
+	}
+	// Use the algorithm to select a final cluster, providing states and the jobspec
+	selected, err := algo.Select(clusters, states, in.Jobspec, in.SatisfyOnly)
 	if err != nil {
 		return nil, err
 	}
-	response, err := s.db.SubmitJob(in, lookup[selected])
+
+	// The user wants to get back all selected without assignment
+	if in.SatisfyOnly {
+		response := &pb.SubmitJobResponse{
+			Status:   pb.SubmitJobResponse_SUBMIT_SUCCESS,
+			Clusters: selected,
+		}
+		return response, nil
+	}
+	// If we don't have a selected job
+	if len(selected) == 0 {
+		response := &pb.SubmitJobResponse{
+			Status: pb.SubmitJobResponse_SUBMIT_SUCCESS,
+		}
+		return response, fmt.Errorf("no clusters passed selection")
+	}
+	response, err := s.db.SubmitJob(in, lookup[selected[0]])
 	if err == nil {
 		log.Printf("📝️ job %s is assigned to cluster %s", in.Name, selected)
 	}
 	// Tell the user right away the assigned cluster
-	response.Cluster = selected
+	response.Cluster = selected[0]
 	return response, err
 }
 

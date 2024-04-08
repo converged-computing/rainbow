@@ -71,7 +71,10 @@ message SubmitJobRequest {
   string name = 1;
   repeated Cluster clusters = 2;
   string jobspec = 3;
-  google.protobuf.Timestamp sent = 4;
+  string select_algorithm = 4;
+  map<string,string> select_options = 5;
+  bool satisfy_only = 6;
+  google.protobuf.Timestamp sent = 7;
 
   message Cluster {
     string name = 1;
@@ -139,6 +142,8 @@ message SubmitJobResponse {
   int32 jobid = 2;
   string cluster = 3;
   ResultType status = 4;
+  // A SatisfyOnly request can return the entire selected set
+  repeated string clusters = 5;
 }
 
 // RequestJobsResponse

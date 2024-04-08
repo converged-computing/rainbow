@@ -12,8 +12,6 @@ import rainbow.types as types
 import rainbow.utils as utils
 from rainbow.protos import rainbow_pb2, rainbow_pb2_grpc
 
-# TODO need to register the databases here...
-
 
 class RainbowClient:
     """
@@ -104,7 +102,7 @@ class RainbowClient:
             response = stub.Register(registerRequest)
         return response
 
-    def update_state(self, cluster, state_file, secret):
+    def update_state(self, cluster, state_data, secret):
         """
         Update a cluster state
         """
@@ -112,16 +110,21 @@ class RainbowClient:
             raise ValueError("A cluster name is required to register")
         if not secret:
             raise ValueError("A secret is required to register")
-        if not os.path.exists(state_file):
-            raise ValueError(f"State metadata file {state_file} does not exist.")
 
-        payload = utils.read_file(state_file)
+        # State file can be a file path or loaded state metadata
+        if not isinstance(state_data, dict) and not os.path.exists(state_data):
+            raise ValueError(f"State metadata file {state_data} does not exist.")
+
+        if isinstance(state_data, dict):
+            payload = state_data
+        else:
+            payload = utils.read_file(state_data)
 
         # These are the variables for our cluster - name for now
         request = rainbow_pb2.UpdateStateRequest(
             cluster=cluster,
             secret=secret,
-            payload=payload,
+            payload=json.dumps(payload),
         )
         with grpc.insecure_channel(self.host) as channel:
             stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
@@ -180,13 +183,18 @@ class RainbowClient:
         self.database = database
         self.database_options = options
 
-    def submit_jobspec(self, jobspec):
+    def submit_jobspec(
+        self, jobspec, match_algo=None, select_algo=None, select_options=None, satisfy_only=False
+    ):
         """
         Submit a jobspec directly. This is useful if you want to generate
         it custom with your own special logic.
         """
         # Ask the database backend if our jobspec can be satisfied
-        satisfy_response = self.backend.satisfies(jobspec, self.cfg.match_algorithm)
+        match_algo = match_algo or self.cfg.match_algorithm
+        select_algo = select_algo or self.cfg.selection_algorithm
+        select_options = select_options or self.cfg.selection_algorithm_options
+        satisfy_response = self.backend.satisfies(jobspec, match_algo)
         matches = satisfy_response.clusters
 
         # No matches?
@@ -208,7 +216,10 @@ class RainbowClient:
         # These are submit variables. A more substantial submit script would have argparse, etc.
         submitRequest = rainbow_pb2.SubmitJobRequest(
             name=jobspec.name,
+            satisfy_only=satisfy_only,
             clusters=clusters,
+            select_algorithm=select_algo,
+            select_options=select_options,
             jobspec=jobspec.to_yaml(),
         )
 
@@ -222,10 +233,13 @@ class RainbowClient:
             total_mismatches=satisfy_response.total_mismatches,
             total_clusters=satisfy_response.total_clusters,
             status=response.status,
+            clusters=response.clusters,
         )
         return res
 
-    def submit_job(self, command, nodes=1, tasks=1):
+    def submit_job(
+        self, command, nodes=1, tasks=1, match_algo=None, select_algo=None, satisfy_only=False
+    ):
         """
         Submit a simple job to rainbow. This includes:
 
@@ -246,4 +260,6 @@ class RainbowClient:
         # Generate the jobspec dictionary
         raw = converter.new_simple_jobspec(nodes=nodes, command=command, tasks=tasks)
         jobspec = js.Jobspec(raw)
-        return self.submit_jobspec(jobspec)
+        return self.submit_jobspec(
+            jobspec, match_algo=match_algo, select_algo=select_algo, satisfy_only=satisfy_only
+        )

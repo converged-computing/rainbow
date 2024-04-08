@@ -106,6 +106,94 @@ func (req *RangeRequest) Satisfies(value string) (bool, error) {
 	return true, nil
 }
 
+// MatchEdge is an exposed function (for other matchers to use)
+// to allow for matching a subsystem edge
+func (m RangeType) MatchEdge(k string, edge *types.Edge, subsys *types.SubsystemNeeds) {
+	rlog.Debugf("      => Found %s and inspecting edge metadata %v\n", k, edge.Vertex.Metadata.Elements)
+	req := NewRangeRequest(k)
+
+	// Get the field requested by the jobspec
+	toMatch, err := edge.Vertex.Metadata.GetStringElement(req.Field)
+	if err != nil {
+		return
+	}
+
+	rlog.Debugf("      => Found field requested for range match %s\n", toMatch)
+	satisfied, err := req.Satisfies(toMatch)
+	if err != nil {
+		return
+	}
+	if satisfied {
+		rlog.Debugf("      => Edge '%s' satisfies subsystem %s %s\n", edge.Vertex.Type, subsys.Name, k)
+		subsys.Attributes[k] = true
+	}
+}
+
+// UpdateResourceNeeds allows exposing parsing of the match interface
+// to other matchers
+func (m RangeType) UpdateResourceNeeds(
+	request interface{},
+	subsystem string,
+	sNeeds map[string]map[string]bool,
+) map[string]map[string]bool {
+	// Now "request" goes from interface{} -> []map[string]string{}
+	matches, ok := request.([]interface{})
+	if !ok {
+		rlog.Warning("    Issue parsing range type needs")
+		return sNeeds
+	}
+
+	// Finally, we just parse the list - these should be key value pairs to match exactly
+	for _, entry := range matches {
+		rlog.Debugf("    Processing entry %s\n", entry)
+		entry, ok := entry.(map[string]interface{})
+		if !ok {
+			rlog.Warningf("    There was an issue processing entry %s\n", entry)
+			continue
+		}
+
+		// Go through each entry and parse into a request
+		req := RangeRequest{}
+		for key, value := range entry {
+
+			// Allow support for integer or string
+			strValue, ok := value.(string)
+			if ok {
+				// We only know how to parse these
+				if key == "field" {
+					req.Field = strValue
+				} else if key == "min" {
+					req.Min = strValue
+				} else if key == "max" {
+					req.Max = strValue
+				}
+			} else {
+				intValue, ok := value.(int32)
+				if ok {
+					if key == "min" {
+						req.Min = fmt.Sprintf("%d", intValue)
+					} else if key == "max" {
+						req.Max = fmt.Sprintf("%d", intValue)
+					}
+				}
+			}
+
+		}
+		// If we get here and we have a field and at LEAST
+		// one of min or max, we can add to to our needs
+		// This is a bit janky - compressing with || separators
+		if req.Field != "" && (req.Min != "" || req.Max != "") {
+			_, ok := sNeeds[subsystem]
+			if !ok {
+				sNeeds[subsystem] = map[string]bool{}
+			}
+			// This sets the starting state that the range is not satisfied
+			sNeeds[subsystem][req.Compress()] = false
+		}
+	}
+	return sNeeds
+}
+
 // getSlotResource needs assumes a subsystem request as follows
 /*
 task:
@@ -140,46 +228,7 @@ func (m RangeType) GetSlotResourceNeeds(slot *v1.Task) *types.SlotResourceNeeds 
 		if !ok {
 			continue
 		}
-
-		// Now "request" goes from interface{} -> []map[string]string{}
-		matches, ok := request.([]interface{})
-		if !ok {
-			continue
-		}
-
-		// Finally, we just parse the list - these should be key value pairs to match exactly
-		for _, entry := range matches {
-			entry, ok := entry.(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			// Go through each entry and parse into a request
-			req := RangeRequest{}
-			for key, value := range entry {
-				value, ok := value.(string)
-
-				// We only know how to parse these
-				if key == "field" && ok {
-					req.Field = value
-				} else if key == "min" && ok {
-					req.Min = value
-				} else if key == "max" && ok {
-					req.Max = value
-				}
-			}
-			// If we get here and we have a field and at LEAST
-			// one of min or max, we can add to to our needs
-			// This is a bit janky - compressing with || separators
-			if req.Field != "" && (req.Min != "" || req.Max != "") {
-				_, ok := sNeeds[subsystem]
-				if !ok {
-					sNeeds[subsystem] = map[string]bool{}
-				}
-				// This sets the starting state that the range is not satisfied
-				sNeeds[subsystem][req.Compress()] = false
-			}
-		}
+		sNeeds = m.UpdateResourceNeeds(request, subsystem, sNeeds)
 	}
 	// Parse into the slot resource needs
 	needs := []types.SubsystemNeeds{}
@@ -230,24 +279,7 @@ func (m RangeType) CheckSubsystemEdge(
 
 				// We care if the attribute is marked as a range
 				if strings.HasPrefix(k, "range") {
-					rlog.Debugf("      => Found %s and inspecting edge metadata %v\n", k, edge.Vertex.Metadata.Elements)
-					req := NewRangeRequest(k)
-
-					// Get the field requested by the jobspec
-					toMatch, err := edge.Vertex.Metadata.GetStringElement(req.Field)
-					if err != nil {
-						continue
-					}
-
-					rlog.Debugf("      => Found field requested for range match %s\n", toMatch)
-					satisfied, err := req.Satisfies(toMatch)
-					if err != nil {
-						continue
-					}
-					if satisfied {
-						rlog.Debugf("      => Resource '%s' has edge '%s' satisfies subsystem %s %s\n", vtx.Type, edge.Vertex.Type, subsys.Name, k)
-						subsys.Attributes[k] = true
-					}
+					m.MatchEdge(k, edge, &subsys)
 				}
 			}
 		}

@@ -43,7 +43,7 @@ def main():
 
     # The secret we need is from the cluster config 
     secret = cfg._cfg["cluster"]["secret"]       
-    response = cli.update_state(args.cluster, state_file=args.state_file, secret=secret)
+    response = cli.update_state(args.cluster, state_data=args.state_file, secret=secret)
     print(response)
 
 if __name__ == "__main__":

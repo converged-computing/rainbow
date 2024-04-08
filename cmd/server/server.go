@@ -14,6 +14,7 @@ import (
 	_ "github.com/converged-computing/rainbow/plugins/algorithms/match"
 	_ "github.com/converged-computing/rainbow/plugins/algorithms/range"
 	_ "github.com/converged-computing/rainbow/plugins/backends/memory"
+	_ "github.com/converged-computing/rainbow/plugins/selection/constraint"
 	_ "github.com/converged-computing/rainbow/plugins/selection/random"
 )
 
