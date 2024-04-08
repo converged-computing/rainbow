@@ -58,9 +58,7 @@ class RainbowConfig:
         Get the match algorithm
         """
         matcher = self._cfg.get("scheduler", {}).get("algorithms", {}).get("match", {}).get("name")
-        if not matcher:
-            matcher = "match"
-        return matcher
+        return matcher or "match"
 
     @property
     def selection_algorithm(self):
@@ -70,9 +68,17 @@ class RainbowConfig:
         selection = (
             self._cfg.get("scheduler", {}).get("algorithms", {}).get("selection", {}).get("name")
         )
-        if not selection:
-            selection = "random"
-        return selection
+        return selection or "random"
+
+    @property
+    def selection_algorithm_options(self):
+        """
+        Get the selection algorithm options
+        """
+        options = (
+            self._cfg.get("scheduler", {}).get("algorithms", {}).get("selection", {}).get("options")
+        )
+        return options or {}
 
     def set_match_algorithm(self, name, options=None):
         """

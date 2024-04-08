@@ -158,23 +158,43 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 		if err != nil {
 			return nil, err
 		}
-		err = selectAlgo.Init(map[string]string{})
+		opts := in.SelectOptions
+		if opts == nil {
+			opts = map[string]string{}
+		}
+		err = selectAlgo.Init(opts)
 		if err != nil {
 			return nil, err
 		}
 		algo = selectAlgo
 	}
 	// Use the algorithm to select a final cluster, providing states and the jobspec
-	selected, err := algo.Select(clusters, states, in.Jobspec)
+	selected, err := algo.Select(clusters, states, in.Jobspec, in.SatisfyOnly)
 	if err != nil {
 		return nil, err
 	}
-	response, err := s.db.SubmitJob(in, lookup[selected])
+
+	// The user wants to get back all selected without assignment
+	if in.SatisfyOnly {
+		response := &pb.SubmitJobResponse{
+			Status:   pb.SubmitJobResponse_SUBMIT_SUCCESS,
+			Clusters: selected,
+		}
+		return response, nil
+	}
+	// If we don't have a selected job
+	if len(selected) == 0 {
+		response := &pb.SubmitJobResponse{
+			Status: pb.SubmitJobResponse_SUBMIT_SUCCESS,
+		}
+		return response, fmt.Errorf("no clusters passed selection")
+	}
+	response, err := s.db.SubmitJob(in, lookup[selected[0]])
 	if err == nil {
 		log.Printf("📝️ job %s is assigned to cluster %s", in.Name, selected)
 	}
 	// Tell the user right away the assigned cluster
-	response.Cluster = selected
+	response.Cluster = selected[0]
 	return response, err
 }
 

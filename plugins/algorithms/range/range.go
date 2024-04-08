@@ -139,29 +139,45 @@ func (m RangeType) UpdateResourceNeeds(
 	// Now "request" goes from interface{} -> []map[string]string{}
 	matches, ok := request.([]interface{})
 	if !ok {
+		rlog.Warning("    Issue parsing range type needs")
 		return sNeeds
 	}
 
 	// Finally, we just parse the list - these should be key value pairs to match exactly
 	for _, entry := range matches {
+		rlog.Debugf("    Processing entry %s\n", entry)
 		entry, ok := entry.(map[string]interface{})
 		if !ok {
+			rlog.Warningf("    There was an issue processing entry %s\n", entry)
 			continue
 		}
 
 		// Go through each entry and parse into a request
 		req := RangeRequest{}
 		for key, value := range entry {
-			value, ok := value.(string)
 
-			// We only know how to parse these
-			if key == "field" && ok {
-				req.Field = value
-			} else if key == "min" && ok {
-				req.Min = value
-			} else if key == "max" && ok {
-				req.Max = value
+			// Allow support for integer or string
+			strValue, ok := value.(string)
+			if ok {
+				// We only know how to parse these
+				if key == "field" {
+					req.Field = strValue
+				} else if key == "min" {
+					req.Min = strValue
+				} else if key == "max" {
+					req.Max = strValue
+				}
+			} else {
+				intValue, ok := value.(int32)
+				if ok {
+					if key == "min" {
+						req.Min = fmt.Sprintf("%d", intValue)
+					} else if key == "max" {
+						req.Max = fmt.Sprintf("%d", intValue)
+					}
+				}
 			}
+
 		}
 		// If we get here and we have a field and at LEAST
 		// one of min or max, we can add to to our needs

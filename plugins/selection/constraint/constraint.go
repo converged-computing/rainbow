@@ -49,9 +49,10 @@ func (s ConstraintSelection) Select(
 	contenders []string,
 	states map[string]types.ClusterState,
 	jobspec string,
-) (string, error) {
+	satisfyOnly bool,
+) ([]string, error) {
 	if len(contenders) == 0 {
-		return "", nil
+		return contenders, nil
 	}
 	rlog.Debugf("  Pre-state filter clusters: %s\n", contenders)
 
@@ -67,22 +68,23 @@ func (s ConstraintSelection) Select(
 
 	// Again, cut out early with no match
 	if len(matches) == 0 {
-		return "", nil
+		return matches, nil
 	}
 
 	// Load the jobspec from yaml string
 	jspec := js.Jobspec{}
 	err := yaml.Unmarshal([]byte(jobspec), &jspec)
 	if err != nil {
-		return "", err
+		return matches, err
 	}
 
 	// Loop through priorities until we have a match (or finish and no match)
 	// Note this is implemented to work - I haven't thought about optimizing it
+	clusters := []string{}
 	for _, priority := range opts {
 
 		// Copy contenders
-		clusters := utils.Copy(matches)
+		clusters = utils.Copy(matches)
 
 		// TODO we might also want to copy states, as calc
 		// for a priority level can change it. I'm assuming now that
@@ -104,7 +106,7 @@ func (s ConstraintSelection) Select(
 				if stepName == "filter" {
 					clusters, err = filterStep(&clusters, logic, states, &jspec)
 					if err != nil {
-						return "", err
+						return clusters, err
 					}
 					rlog.Debugf("    filter: %d clusters remaining\n", len(clusters))
 
@@ -117,12 +119,12 @@ func (s ConstraintSelection) Select(
 					rlog.Debugf("    calc: %s\n", logic)
 					states, err = calcStep(logic, states, &jspec)
 					if err != nil {
-						return "", err
+						return clusters, err
 					}
 				} else if stepName == "sort_descending" {
 					clusters, err := sortDescending(logic, states, &jspec)
 					if err != nil {
-						return "", err
+						return clusters, err
 					}
 					rlog.Debugf("    sort_descending: %d clusters\n", len(clusters))
 					if len(clusters) == 0 {
@@ -132,7 +134,7 @@ func (s ConstraintSelection) Select(
 				} else if stepName == "sort_ascending" {
 					clusters, err := sortAscending(logic, states, &jspec)
 					if err != nil {
-						return "", err
+						return clusters, err
 					}
 					rlog.Debugf("    sort_ascending: %d clusters\n", len(clusters))
 					if len(clusters) == 0 {
@@ -140,21 +142,28 @@ func (s ConstraintSelection) Select(
 						break
 					}
 				} else if stepName == "select" {
+
+					// SatisfyOnly means they want all clusters return
+					if satisfyOnly {
+						rlog.Debugf("    select: clusters %d are selected\n", len(clusters))
+						return clusters, nil
+					}
+
 					cluster, err := finalSelect(clusters, logic)
 					if err != nil {
-						return "", err
+						return clusters, err
 					}
 					// We found a match!
 					if cluster != "" {
 						rlog.Debugf("    select: clusters %s is selected\n", cluster)
-						return cluster, nil
+						return []string{cluster}, nil
 					}
 				}
 			}
 		}
 	}
 	// If we get here, there were no matches
-	return "", nil
+	return clusters, nil
 }
 
 // Init provides extra initialization functionality, if needed
@@ -162,9 +171,16 @@ func (s ConstraintSelection) Select(
 func (s ConstraintSelection) Init(options map[string]string) error {
 	// This algorithm requires priorities to be set
 	priorities, ok := options["priorities"]
+
+	// This is only not OK if we don't have opts yet
 	if !ok {
-		return fmt.Errorf("the constraint selection algorithm requires priorities to be defined in options")
+		if len(opts) == 0 {
+			return fmt.Errorf("the constraint selection algorithm requires priorities to be defined in options")
+		}
+		// This means we have opts, return nil
+		return nil
 	}
+
 	// Parse into global options for later use
 	err := yaml.Unmarshal([]byte(priorities), &opts)
 	if err != nil {

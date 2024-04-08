@@ -12,8 +12,6 @@ import rainbow.types as types
 import rainbow.utils as utils
 from rainbow.protos import rainbow_pb2, rainbow_pb2_grpc
 
-# TODO need to register the databases here...
-
 
 class RainbowClient:
     """
@@ -185,7 +183,9 @@ class RainbowClient:
         self.database = database
         self.database_options = options
 
-    def submit_jobspec(self, jobspec, match_algo=None, select_algo=None):
+    def submit_jobspec(
+        self, jobspec, match_algo=None, select_algo=None, select_options=None, satisfy_only=False
+    ):
         """
         Submit a jobspec directly. This is useful if you want to generate
         it custom with your own special logic.
@@ -193,6 +193,7 @@ class RainbowClient:
         # Ask the database backend if our jobspec can be satisfied
         match_algo = match_algo or self.cfg.match_algorithm
         select_algo = select_algo or self.cfg.selection_algorithm
+        select_options = select_options or self.cfg.selection_algorithm_options
         satisfy_response = self.backend.satisfies(jobspec, match_algo)
         matches = satisfy_response.clusters
 
@@ -215,8 +216,10 @@ class RainbowClient:
         # These are submit variables. A more substantial submit script would have argparse, etc.
         submitRequest = rainbow_pb2.SubmitJobRequest(
             name=jobspec.name,
+            satisfy_only=satisfy_only,
             clusters=clusters,
             select_algorithm=select_algo,
+            select_options=select_options,
             jobspec=jobspec.to_yaml(),
         )
 
@@ -230,10 +233,13 @@ class RainbowClient:
             total_mismatches=satisfy_response.total_mismatches,
             total_clusters=satisfy_response.total_clusters,
             status=response.status,
+            clusters=response.clusters,
         )
         return res
 
-    def submit_job(self, command, nodes=1, tasks=1, match_algo=None, select_algo=None):
+    def submit_job(
+        self, command, nodes=1, tasks=1, match_algo=None, select_algo=None, satisfy_only=False
+    ):
         """
         Submit a simple job to rainbow. This includes:
 
@@ -254,4 +260,6 @@ class RainbowClient:
         # Generate the jobspec dictionary
         raw = converter.new_simple_jobspec(nodes=nodes, command=command, tasks=tasks)
         jobspec = js.Jobspec(raw)
-        return self.submit_jobspec(jobspec, match_algo=match_algo, select_algo=select_algo)
+        return self.submit_jobspec(
+            jobspec, match_algo=match_algo, select_algo=select_algo, satisfy_only=satisfy_only
+        )

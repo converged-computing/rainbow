@@ -21,7 +21,7 @@ type SelectionAlgorithm interface {
 
 	// Take a list of contenders and select based on algorithm
 	// The algorithm can optionally use cluster states from the graph
-	Select([]string, map[string]types.ClusterState, string) (string, error)
+	Select([]string, map[string]types.ClusterState, string, bool) ([]string, error)
 }
 
 // List returns known backends
