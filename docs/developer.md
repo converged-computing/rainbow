@@ -1,6 +1,6 @@
 # Developer Guide
 
-This is a short guide to help with development.
+This is a short guide to help with development. It's recommended to develop rainbow locally with Go (I use version 1.20.14) but a `.devcontainer` environment is provided if you don't have that.
 
 ### Documentation
 
@@ -18,8 +18,7 @@ make proto
 
 That will download protoc and needed tools into a local "bin" and then generate the bindings.
 
-
-### Build
+### Build Local
 
 You can build the binaries:
 
@@ -81,5 +80,34 @@ REGISTRY=vanessa make docker
 ```
 
 Further instructions will be added for running these containers in the next round of work - likely we will have a basic kind setup that demonstrates the orchestration.
+
+
+### VSCode Developer Environment
+
+We have a [Dev Container](https://code.visualstudio.com/docs/remote/containers)
+provided via the assets in [.devcontainer](https://code.visualstudio.com/docs/remote/containers#_create-a-devcontainerjson-file).
+
+You can follow the [tutorial](https://code.visualstudio.com/docs/remote/containers-tutorial) where you'll basically
+need to:
+
+1. Install Docker, or compatible engine
+2. Install the [Development Containers](vscode:extension/ms-vscode-remote.remote-containers) extension
+
+Then you can go to the command palette (View -> Command Palette) and select `Dev Containers: Open Workspace in Container.`
+This will build a development environment with Go that is ready to go and use rainbow.
+
+You are free to change the base image and rebuild if you need to test on another operating system!
+When your container is built, when you open `Terminal -> New Terminal`, and you'll be in the container.
+
+**Important** the development container assumes you are on a system with uid 1000 and gid 1000. If this isn't the case,
+edit the `.devcontainer/Dockerfile` to be your user and group id. This will ensure changes written inside the container
+are owned by your user. It's recommended that you commit on your system (not inside the container) because if you
+need to sign your commits, the container doesn't have access and won't be able to. If you find that you accidentally
+muck up permissions and need to fix, you can run this from your terminal outside of VSCode:
+
+```bash
+$ sudo chown -R $USER .git/
+# and then commit
+```
 
 [home](/README.md#rainbow-scheduler)
