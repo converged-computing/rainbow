@@ -14,18 +14,15 @@ import (
 // Run will check a manifest list of artifacts against a host machine
 // For now, the host machine parameters will be provided as flags
 func Run(
-	host, jobName, command string,
+	c client.Client,
+	jobName, command string,
 	nodes, tasks int,
 	token, jobspec, clusterName,
 	database, cfgFile string,
 	selectAlgo, matchAlgo string,
 ) error {
 
-	c, err := client.NewClient(host)
-	if err != nil {
-		return nil
-	}
-
+	var err error
 	jspec := &js.Jobspec{}
 	if jobspec == "" {
 		jspec, err = jscli.JobspecFromCommand(command, jobName, int32(nodes), int32(tasks))

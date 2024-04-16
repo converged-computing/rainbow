@@ -4,5 +4,6 @@
   - [Backends](backends.md)
   - [Advanced](advanced.md)
 - [Developer](developer.md)
+  - [Certificates](auth.md)
 - [Design](design.md)
 - [Support](support.md)

@@ -11,17 +11,13 @@ import (
 
 // RegisterSubsystem registers a subsystem
 func RegisterSubsystem(
-	host,
+	c client.Client,
 	clusterName,
 	subsystemNodes,
 	subsystem,
 	cfgFile string,
-) error {
 
-	c, err := client.NewClient(host)
-	if err != nil {
-		return err
-	}
+) error {
 
 	// A config file is required here
 	if cfgFile == "" {

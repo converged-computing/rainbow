@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
+	"github.com/converged-computing/rainbow/pkg/certs"
 	"github.com/converged-computing/rainbow/pkg/config"
 	"github.com/converged-computing/rainbow/pkg/database"
 	"github.com/converged-computing/rainbow/pkg/graph/backend"
@@ -40,6 +41,7 @@ type Server struct {
 	globalToken string
 	db          *database.Database
 	host        string
+	certManager *certs.Certificate
 
 	// graph database handle
 	graph              backend.GraphBackend
@@ -53,6 +55,7 @@ func NewServer(
 	version, sqliteFile string,
 	cleanup bool,
 	globalToken, host string,
+	cert *certs.Certificate,
 ) (*Server, error) {
 
 	if cfg.Scheduler.Secret == "" {
@@ -106,6 +109,7 @@ func NewServer(
 		globalToken:        globalToken,
 		selectionAlgorithm: selectAlgo,
 		host:               host,
+		certManager:        cert,
 	}, nil
 }
 
@@ -139,6 +143,7 @@ func (s *Server) Stop() {
 
 // Start the server
 func (s *Server) Start(ctx context.Context, host string) error {
+
 	// Create a listener on the specified address.
 	lis, err := net.Listen(protocol, host)
 	if err != nil {
@@ -155,8 +160,14 @@ func (s *Server) serve(_ context.Context, lis net.Listener) error {
 	}
 	s.listener = lis
 
-	// TODO: should we add grpc.KeepaliveParams here?
-	s.server = grpc.NewServer()
+	// If we have a certificate, prepare to load and use it
+	if !s.certManager.IsEmpty() {
+		log.Printf("🔐️ adding tls credentials")
+		tlsCredentials := s.certManager.GetServerCredentials()
+		s.server = grpc.NewServer(grpc.Creds(tlsCredentials))
+	} else {
+		s.server = grpc.NewServer()
+	}
 
 	// This is the main rainbow scheduler service
 	pb.RegisterRainbowSchedulerServer(s.server, s)

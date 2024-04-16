@@ -12,7 +12,7 @@ import (
 
 // Run will register the cluster with rainbow
 func Run(
-	host,
+	c client.Client,
 	clusterName,
 	clusterNodes,
 	secret string,
@@ -22,13 +22,8 @@ func Run(
 	subsystem,
 	selectionAlgorithm string,
 	matchAlgorithm string,
+
 ) error {
-
-	c, err := client.NewClient(host)
-	if err != nil {
-		return err
-	}
-
 	if clusterName == "" {
 		return fmt.Errorf("s --cluster-name is required")
 	}
