@@ -64,18 +64,21 @@ func NewClient(host string, cert *certs.Certificate) (Client, error) {
 	var err error
 	if !cert.IsEmpty() {
 		log.Printf("🔐️ adding tls credentials")
-		transportCreds, err = cert.GetClientCredentials()
-		if err != nil {
-			return nil, err
-		}
+		transportCreds = cert.GetClientCredentials()
 	} else {
 		transportCreds = insecure.NewCredentials()
 	}
 
 	// Set up a connection to the server.
 	creds := grpc.WithTransportCredentials(transportCreds)
-	conn, err := grpc.Dial(c.GetHost(), creds, grpc.WithBlock())
+	conn, err := grpc.Dial(c.GetHost(), creds, grpc.WithBlock())	
 
+	// Something else I was trying
+	// conn, err := grpc.Dial(c.GetHost(),
+	//	creds,
+		//		grpc.WithBlock(),
+	//	grpc.FailOnNonTempDialError(true),
+	// )
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to connect to %s", host)
 	}

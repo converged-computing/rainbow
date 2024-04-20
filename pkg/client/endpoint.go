@@ -15,6 +15,7 @@ import (
 	"github.com/converged-computing/rainbow/pkg/utils"
 	"github.com/pkg/errors"
 
+	"google.golang.org/grpc/connectivity"
 	ts "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -185,6 +186,13 @@ func (c *RainbowClient) Register(
 	if secret == "" {
 		return response, errors.New("secret is required")
 	}
+
+	//	fmt.Println(c.service)
+	fmt.Println(c.connection)
+	fmt.Println(c.connection.GetState())
+	fmt.Println(connectivity.Ready)
+	//	return c.service != nil && c.connection != nil && c.connection.GetState() == connectivity.Ready
+
 	if !c.Connected() {
 		return response, errors.New("client is not connected")
 	}

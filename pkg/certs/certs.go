@@ -18,8 +18,8 @@ type Certificate struct {
 	keyFile    string
 
 	certPool   *x509.CertPool
-	serverCert *tls.Certificate
-	clientCert *tls.Certificate
+	serverCert tls.Certificate
+	clientCert tls.Certificate
 }
 
 // IsEmpty determines if the certificate is empty
@@ -66,7 +66,7 @@ func (c *Certificate) GetServerCredentials() credentials.TransportCredentials {
 
 	// configuration of the certificate what we want to
 	conf := &tls.Config{
-		Certificates: []tls.Certificate{*c.serverCert},
+		Certificates: []tls.Certificate{c.serverCert},
 		ClientAuth:   tls.RequireAndVerifyClientCert,
 		ClientCAs:    c.certPool,
 	}
@@ -79,12 +79,13 @@ func (c *Certificate) GenerateServerCert() error {
 	if err != nil {
 		return err
 	}
-	c.serverCert = &serverCert
+	c.serverCert = serverCert
 	return nil
 }
 
 // NewCertificate generates a client agnostic certificate manager
 func NewCertificate(caCertFile, certFile, keyFile string) (*Certificate, error) {
+
 	// Cut out early if we aren't using TLS
 	cert := Certificate{caCertFile: caCertFile, keyFile: keyFile, certFile: certFile}
 	if cert.IsEmpty() {
@@ -100,6 +101,7 @@ func NewCertificate(caCertFile, certFile, keyFile string) (*Certificate, error) 
 	return &cert, err
 }
 
+// NewClientCertificate generates a new client certificate
 func NewClientCertificate(caCertFile, certFile, keyFile string) (*Certificate, error) {
 	cert, err := NewCertificate(caCertFile, certFile, keyFile)
 	if err != nil || cert.IsEmpty() {
@@ -109,13 +111,13 @@ func NewClientCertificate(caCertFile, certFile, keyFile string) (*Certificate, e
 	return cert, err
 }
 
+// GenerateClientCert generates the client certificate
 func (c *Certificate) GenerateClientCert() error {
-	//read client cert
 	clientCert, err := tls.LoadX509KeyPair(c.certFile, c.keyFile)
 	if err != nil {
 		return err
 	}
-	c.clientCert = &clientCert
+	c.clientCert = clientCert
 	return nil
 }
 
@@ -130,10 +132,11 @@ func NewServerCertificate(caCertFile, certFile, keyFile string) (*Certificate, e
 }
 
 // GenerateClientCert generates the client tls certificate
-func (c *Certificate) GetClientCredentials() (credentials.TransportCredentials, error) {
+func (c *Certificate) GetClientCredentials() credentials.TransportCredentials {
 	config := &tls.Config{
-		Certificates: []tls.Certificate{*c.clientCert},
+		//InsecureSkipVerify: false,
+		Certificates: []tls.Certificate{c.clientCert},
 		RootCAs:      c.certPool,
 	}
-	return credentials.NewTLS(config), nil
+	return credentials.NewTLS(config)
 }
