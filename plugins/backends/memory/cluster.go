@@ -6,14 +6,9 @@ import (
 	"sync"
 
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
+	"github.com/converged-computing/rainbow/pkg/graph"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"
-)
-
-var (
-	// cluster == containment == nodes
-	defaultDominantSubsystem = "cluster"
-	containsRelation         = "contains"
 )
 
 // A ClusterGraph holds a single graph with one or more subsystems
@@ -69,7 +64,7 @@ func (g *ClusterGraph) LoadClusterNodes(
 		// We only care about contains for now, recursive lets us just return
 		// This reduces redundancy of edges. We will need the double linking
 		// for subsystems
-		if edge.Relation != containsRelation {
+		if edge.Relation != types.ContainsRelation {
 			continue
 		}
 
@@ -95,34 +90,23 @@ func (g *ClusterGraph) LoadClusterNodes(
 	return nil
 }
 
-// validateNodes ensures that we have at least one node and edge
-func (c *ClusterGraph) validateNodes(nodes *jgf.JsonGraph) (error, int, int) {
-	var err error
-	nNodes := len(nodes.Graph.Nodes)
-	nEdges := len(nodes.Graph.Edges)
-	if nEdges == 0 || nNodes == 0 {
-		err = fmt.Errorf("subsystem cluster must have at least one edge and node")
-	}
-	return err, nNodes, nEdges
-}
-
 // NewClusterGraph creates a new cluster graph with a dominant subsystem
 // We assume the dominant is hard coded to be containment
 func NewClusterGraph(name string, domSubsystem string) *ClusterGraph {
 
 	// If not defined, set the dominant subsystem
 	if domSubsystem == "" {
-		domSubsystem = defaultDominantSubsystem
+		domSubsystem = types.DefaultDominantSubsystem
 	}
 	// For now, the dominant subsystem is hard coded to be nodes (resources)
 	subsystem := NewSubsystem(domSubsystem)
-	subsystems := map[string]*Subsystem{defaultDominantSubsystem: subsystem}
+	subsystems := map[string]*Subsystem{types.DefaultDominantSubsystem: subsystem}
 
 	// TODO options / algorithms can come from config
 	g := &ClusterGraph{
 		Name:              name,
 		subsystem:         subsystems,
-		dominantSubsystem: defaultDominantSubsystem,
+		dominantSubsystem: types.DefaultDominantSubsystem,
 		State:             types.ClusterState{},
 	}
 	return g
@@ -164,7 +148,7 @@ func (g *ClusterGraph) LoadSubsystemNodes(
 	for _, edge := range nodes.Graph.Edges {
 
 		// We are currently just saving one direction "x contains y"
-		if edge.Relation != containsRelation {
+		if edge.Relation != types.ContainsRelation {
 			continue
 		}
 
@@ -183,7 +167,7 @@ func (g *ClusterGraph) LoadSubsystemNodes(
 		} else {
 
 			// We need the namespaced name for the dom lookup
-			lookupName := getNamespacedName(dom.Name, edge.Source)
+			lookupName := graph.GetNamespacedName(dom.Name, edge.Source)
 
 			// Case 2: the src is in the dominant subsystem
 			domIdx, ok := dom.Lookup[lookupName]

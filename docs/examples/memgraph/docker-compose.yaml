@@ -1,0 +1,24 @@
+version: "3"
+
+# This will run memgraph mage (graph) and the lab (UI) 
+# docker compose up -d
+# docker compose ps
+services:
+  memgraph:
+    image: memgraph/memgraph-mage:latest
+    container_name: memgraph-mage
+    ports:
+      - "7687:7687"
+      - "7444:7444"
+    command: ["--memory-limit=500", "--log-level=TRACE", "MGCONSOLE=\"--username rainbow --password chocolate-cookies\""]
+  
+  lab:
+    image: memgraph/lab:latest
+    container_name: memgraph-lab
+    ports:
+      - "3000:3000"
+    depends_on:
+      - memgraph
+    environment:
+      - QUICK_CONNECT_MG_HOST=memgraph
+      - QUICK_CONNECT_MG_PORT=7687

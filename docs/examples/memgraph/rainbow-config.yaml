@@ -1,0 +1,17 @@
+scheduler:
+    secret: chocolate-cookies
+    name: keebler
+    algorithms:
+        selection:
+            name: random
+        match:
+            name: match
+cluster:
+    name: keebler
+    secret: 446c3d43-7626-4d2c-b529-1cbc95773639
+graphdatabase:
+    name: memgraph
+    host: 127.0.0.1:50051
+clusters:
+    - name: keebler
+      token: rainbow

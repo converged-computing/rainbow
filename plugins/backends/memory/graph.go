@@ -65,7 +65,7 @@ func NewGraph() *Graph {
 
 	// Set the dominant subsystem to cluster for now
 	clusters := map[string]*ClusterGraph{}
-	g := Graph{dominantSubsystem: defaultDominantSubsystem, Clusters: clusters}
+	g := Graph{dominantSubsystem: types.DefaultDominantSubsystem, Clusters: clusters}
 
 	// Listen for syscalls to exit
 	g.awaitExit()
@@ -109,10 +109,6 @@ func (g *Graph) RegisterCluster(
 
 	// do something with g.subsystem
 	return &response, err
-}
-
-func getNamespacedName(clusterName, name string) string {
-	return fmt.Sprintf("%s-%s", clusterName, name)
 }
 
 // LoadClusterNodes loads a new cluster into the graph

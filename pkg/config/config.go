@@ -154,7 +154,9 @@ func NewRainbowClientConfig(
 	}
 
 	// By default we use the in-memory (vanilla, simple) database
-	config.GraphDatabase.Name = DefaultGraphDatabase
+	if config.GraphDatabase.Name == "" {
+		config.GraphDatabase.Name = DefaultGraphDatabase
+	}
 	if database != "" {
 		config.GraphDatabase.Name = database
 	}

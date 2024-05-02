@@ -158,7 +158,7 @@ func (g *ClusterGraph) depthFirstSearch(
 
 			// Only keep going if we aren't stopping here
 			// This is also traversing the dominant subsystem
-			if child.Relation == containsRelation {
+			if child.Relation == types.ContainsRelation {
 				slotsFound += findSlots(child.Vertex, resource, slotNeeds, slotsFound)
 			}
 		}
