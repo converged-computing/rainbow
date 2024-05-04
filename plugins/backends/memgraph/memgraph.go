@@ -5,6 +5,7 @@ package memgraph
 import (
 	"encoding/json"
 	"log"
+	"strings"
 
 	"context"
 	"fmt"
@@ -117,7 +118,7 @@ func (m Memgraph) AddSubsystem(
 	if err != nil {
 		return err
 	}
-	if len(result.Records) > 10 {
+	if len(result.Records) > 0 {
 		return fmt.Errorf("subsystem '%s' with type '%s' already exists", name, subsystem)
 	}
 
@@ -301,50 +302,125 @@ func (m Memgraph) RegisterService(s *grpc.Server) error {
 // Satisfies - determine what clusters satisfy a jobspec request
 // Since this is called from the client function, it's technically
 // running from the client (not from the server)
+//
+// This is an example that works
+//
+//		MATCH (cluster:Node {subsystem: 'cluster', type: 'cluster'})
+//		-[r1:contains]-(rack:Node {subsystem: 'cluster', type: 'rack'})
+//		-[r2:contains]-(node:Node {subsystem: 'cluster', type: 'node'})
+//		-[r3:contains]-(socket:Node {subsystem: 'cluster', type: 'socket'})
+//		-[r4:contains]-(core:Node {subsystem: 'cluster', type: 'core'})
+//	   WITH cluster,node,count(distinct r4) as core_count
+//	   WHERE core_count > 4
+//	   RETURN cluster,node,core_count;
 func (g Memgraph) Satisfies(
 	jobspec *js.Jobspec,
 	matcher algorithm.MatchAlgorithm,
 ) ([]string, error) {
 
-	//matches := []string{}
-	// TODO how to implement satisfy here?
+	matches := []string{}
 
-	//client := service.NewFluxionGraphClient(conn)
+	// Prepare query that looks for slots
+	// The slot STARTS at the first resource type and stops right after the slot
+	// This currently just handles one slot with this design
+	query := "MATCH (cluster:Node {subsystem: 'cluster', type: 'cluster'})"
+	totals := graph.ExtractResourceSlots(jobspec)
 
-	// Read a node
-	/*	query := "MATCH (n:Technology{name: 'Memgraph'}) RETURN n;"
-		result, err := neo4j.ExecuteQuery(ctx, driver, query, nil, neo4j.EagerResultTransformer, neo4j.ExecuteQueryWithDatabase(""))
-		if err != nil {
-			panic(err)
+	out, _ := jobspec.JobspecToYaml()
+	fmt.Println(out + "\n")
+
+	// We will want to hit a slot count - the number of rows of result we need to get
+	slotCount := int32(0)
+	resourceCount := 0
+
+	// This isn't a great design - I am hard coding the order of resources
+	// E.g., cluster -> rack -> node -> socket -> core since that is what
+	// flux jobspec understands for the containment subystem. If we forget
+	// a level, the query will fail, because the graph knows this structure
+	resourceTypes := []string{"rack", "node", "socket", "core"}
+	slotResource := ""
+	slotResourceCount := 0
+
+	for _, resourceType := range resourceTypes {
+
+		// If we have the resource type in our spec, add to query
+		count, ok := totals[resourceType]
+		if resourceType == "slot" {
+			if count == 0 {
+				slotCount = 1
+			} else {
+				slotCount = count
+			}
+			continue
 		}
 
-		// Print the node results
-		for _, node := range result.Records {
-			fmt.Println(node.AsMap()["n"].(neo4j.Node))                                        // Node type
-			fmt.Println(node.AsMap()["n"].(neo4j.Node).GetProperties())                        // Node properties
-			fmt.Println(node.AsMap()["n"].(neo4j.Node).GetElementId())                         // Node internal ID
-			fmt.Println(node.AsMap()["n"].(neo4j.Node).Labels)                                 // Node labels
-			fmt.Println(node.AsMap()["n"].(neo4j.Node).Props["id"].(int64))                    // Node user defined id property
-			fmt.Println(node.AsMap()["n"].(neo4j.Node).Props["name"].(string))                 // Node user defined name property
-			fmt.Println(node.AsMap()["n"].(neo4j.Node).Props["description"].(string))          // Node user defined description property
-			fmt.Println(node.AsMap()["n"].(neo4j.Node).Props["createdAt"].(neo4j.Date).Time()) // Node user defined createdAt property
+		// We have to add every leve of the graph
+		query += fmt.Sprintf("\n-[r%d:contains]-(%s:Node {subsystem: 'cluster', type: '%s'})", resourceCount, resourceType, resourceType)
+		resourceCount += 1
 
+		// But don't consider the count unless it's given to use
+		if !ok {
+			continue
 		}
+		// The last resource we see is the slot resource, for now
+		// This is incorrect because it doesn't account for counts of parent resources
+		// I'm not sure what this query should look like with cypher
+		slotResource = resourceType
+		slotResourceCount = int(count)
+	}
 
-		// Prepare a satisfy request, the jobspec needs to be serialized to string
-		_, err = json.Marshal(jobspec)
-		if err != nil {
-			return matches, err
+	// Assume the last resource indicated is our slot
+	query += fmt.Sprintf("\nWITH cluster,node,count(distinct r%d) as %s_count\n", resourceCount-1, slotResource)
+	query += fmt.Sprintf("WHERE %s_count > %d\n", slotResource, slotResourceCount)
+	query += fmt.Sprintf("RETURN cluster,node,%s_count;", slotResource)
+
+	fmt.Println(query)
+
+	// Connect to the driver
+	driver, err := neo4j.NewDriverWithContext(memoryHost, neo4j.BasicAuth(username, password, databaseName))
+	if err != nil {
+		return matches, err
+	}
+	ctx := context.Background()
+	defer driver.Close(ctx)
+	err = driver.VerifyConnectivity(ctx)
+	if err != nil {
+		return matches, err
+	}
+
+	// Do the query
+	result, err := neo4j.ExecuteQuery(ctx, driver, query, nil, neo4j.EagerResultTransformer, neo4j.ExecuteQueryWithDatabase(databaseName))
+	if err != nil {
+		return matches, err
+	}
+
+	// Keep a count of matches per cluster
+	lookup := map[string]int32{}
+
+	// Print the node results
+	for _, node := range result.Records {
+
+		// Here is how to inspect additional node metadata
+		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node))                 // Node type
+		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).GetProperties()) // Node properties
+		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).GetElementId())  // Node internal ID
+		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).Labels)          // Node labels
+		clusterName := node.AsMap()["cluster"].(neo4j.Node).Props["name"].(string)
+		originalName := strings.Replace(clusterName, "cluster-", "", 1)
+		_, ok := lookup[originalName]
+		if !ok {
+			lookup[originalName] = 0
 		}
-		// Make the satisfy request, ensuring we provide the graph algorithm
-		//	request := service.SatisfyRequest{Payload: string(out), Matcher: matcher.Name()}
-		//	ctx := context.Background()
-		//	response, err := client.Satisfy(ctx, &request)
-		//	if err != nil {
-		//		return matches, err
-		//	}
-		//	return response.Clusters, nil*/
-	return []string{}, nil
+		lookup[originalName] += 1
+	}
+
+	// Keep matches that we have minimum slot count
+	for cluster, count := range lookup {
+		if count >= slotCount {
+			matches = append(matches, cluster)
+		}
+	}
+	return matches, nil
 }
 
 // Init provides extra initialization functionality

@@ -4,7 +4,7 @@ The rainbow scheduler is a combined scheduler and client to allow for multi-clus
 
 ## Designs
 
-For designs, see the [design](design.md) pages
+For designs, see the [design](design.md) pages. For currently supported graph database backends, see [backends](backends.md).
 
 ## Components
 

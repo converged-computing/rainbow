@@ -1,6 +1,6 @@
 # Graph Backends
 
-The following graph backends currently supported. 
+The following graph backends currently supported (in some capacity).
 
 ## Memory
 
@@ -31,15 +31,16 @@ If you need to get to the console:
 docker exec -it memgraph mgconsole
 ```
 
-We also have a docker compose setup that will add the web interface. 
+We also have a docker compose setup that will add the web interface.
 
 ```bash
-cd ./examples/memgraph
+cd ./docs/examples/memgraph
 docker compose up -d
 docker compose ps
 ```
 
 Otherwise we communicate with the Go client.
+
 
 ### Register
 
@@ -49,7 +50,7 @@ Let's try a register. Start rainbow, targeting the memgraph config:
 go run cmd/server/server.go --loglevel 6 --global-token rainbow --config ./docs/examples/memgraph/rainbow-config.yaml
 ```
 
-Then register:
+Then register.
 
 ```bash
 go run cmd/rainbow/rainbow.go register cluster --cluster-name keebler --nodes-json ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/memgraph/rainbow-config.yaml --save
@@ -61,6 +62,30 @@ Then register a subsystem:
 go run cmd/rainbow/rainbow.go register subsystem --subsystem io --nodes-json ./docs/examples/scheduler/cluster-io-subsystem.json --config-path ./docs/examples/memgraph/rainbow-config.yaml
 ```
 
+Now let's try submitting a jobspec to match.
+
+```bash
+go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/memgraph/rainbow-config.yaml --nodes 2 --tasks 2 --command "echo hello world"
+```
+
+Note that you can open the interface to [localhost:3000](localhost:3000) for an interactive experience!
+To get help with queries, see [here](https://memgraph.com/docs/querying/clauses).
+When you are done:
+
+```bash
+# To stop containers (and bring up later)
+docker compose stop
+
+# And if you want to remove them too
+docker compose rm
+```
+
+Note that this backend currently supports very basic (imperfect) slot matching, but custom algorithms have not been implemented. In other words, whatever algorithm you select for match will be ignored. The select is done separately and will
+still be maintained. To account for match algorithms, we will have the interface generate a `GenerateCypher` function as follows:
+
+```go
+query, err := matcher.GenerateCypher(jobspec)
+```
 
 
 [home](/README.md#rainbow-scheduler)

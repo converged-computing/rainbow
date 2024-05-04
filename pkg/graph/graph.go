@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
+
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 
 	"github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
@@ -35,6 +37,36 @@ func ReadNodeJsonGraphString(nodes string) (graph.JsonGraph, error) {
 		return g, fmt.Errorf("error unmarshalling json graph: %s", err)
 	}
 	return g, nil
+}
+
+// ExtractResourceSlots flattens a jobspec into a lookup of slots
+func ExtractResourceSlots(jobspec *v1.Jobspec) map[string]int32 {
+
+	totals := map[string]int32{}
+
+	// Go sets loops to an initial value at start,
+	// so we need a function to recurse into nested resources
+	var checkResource func(resource *v1.Resource)
+	checkResource = func(resource *v1.Resource) {
+		count, ok := totals[resource.Type]
+		if !ok {
+			count = 0
+		}
+		count += resource.Count
+		totals[resource.Type] = count
+
+		// This is the recursive bit
+		if resource.With != nil {
+			for _, with := range resource.With {
+				checkResource(&with)
+			}
+		}
+	}
+	// Make a call on each of the top level resources
+	for _, resource := range jobspec.Resources {
+		checkResource(&resource)
+	}
+	return totals
 }
 
 // GetNamespacedName is a shared function to get a namespaced name for a node/edge
