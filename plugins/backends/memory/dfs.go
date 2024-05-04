@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
+	"github.com/converged-computing/rainbow/pkg/graph"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"
@@ -29,35 +30,12 @@ func (g *ClusterGraph) DFSForMatch(
 	}
 
 	// Do a quick top level count for resource types
-	totals := map[string]int32{}
-
-	// Go sets loops to an initial value at start,
-	// so we need a function to recurse into nested resources
-	var checkResource func(resource *v1.Resource)
-	checkResource = func(resource *v1.Resource) {
-		count, ok := totals[resource.Type]
-		if !ok {
-			count = 0
-		}
-		count += resource.Count
-		totals[resource.Type] = count
-
-		// This is the recursive bit
-		if resource.With != nil {
-			for _, with := range resource.With {
-				checkResource(&with)
-			}
-		}
-	}
-	// Make a call on each of the top level resources
-	for _, resource := range jobspec.Resources {
-		checkResource(&resource)
-	}
-
 	isMatch := true
+	totals := graph.ExtractResourceSlots(jobspec)
+
 	for resourceType, needed := range totals {
 
-		// TODO this should be part of a subsystem spec to ignore
+		// Ignore the slot resource type
 		if resourceType == "slot" {
 			continue
 		}
@@ -158,7 +136,7 @@ func (g *ClusterGraph) depthFirstSearch(
 
 			// Only keep going if we aren't stopping here
 			// This is also traversing the dominant subsystem
-			if child.Relation == containsRelation {
+			if child.Relation == types.ContainsRelation {
 				slotsFound += findSlots(child.Vertex, resource, slotNeeds, slotsFound)
 			}
 		}

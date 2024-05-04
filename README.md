@@ -13,6 +13,7 @@ For more information:
 
 ## TODO
 
+- cypher: when we have another cypher graph, move the memgraph cypher logic into the graph match algorithm, add an endpoint to return cypher. Currently the match algorithms (beyond basic containment) are not implemented
 - subsystems
   - make also a function to delete subsystems
 - ephemeral case - actual nodes don't exist, but instead rules for requests and limits. Need to develop this and means to authenticate to use it.
