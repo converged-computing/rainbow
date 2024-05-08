@@ -5,10 +5,10 @@ scheduler:
         selection:
             name: random
         match:
-            name: match
+            name: range
 cluster:
     name: spack-builder
-    secret: 37e5b798-189f-4c38-bc1c-0a14877acbcf
+    secret: e4de434d-3e32-4950-be65-a31db3824e26
 graphdatabase:
     name: memory
     host: 127.0.0.1:50051

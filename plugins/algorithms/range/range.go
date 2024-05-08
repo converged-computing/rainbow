@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	semver "github.com/Masterminds/semver/v3"
-	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
@@ -131,119 +130,37 @@ func (m RangeType) MatchEdge(k string, edge *types.Edge, subsys *types.Subsystem
 
 // UpdateResourceNeeds allows exposing parsing of the match interface
 // to other matchers
-func (m RangeType) UpdateResourceNeeds(
-	request interface{},
+func UpdateResourceNeeds(
+	request map[string]string,
 	subsystem string,
 	sNeeds map[string]map[string]bool,
 ) map[string]map[string]bool {
-	// Now "request" goes from interface{} -> []map[string]string{}
-	matches, ok := request.([]interface{})
-	if !ok {
-		rlog.Warning("    Issue parsing range type needs")
-		return sNeeds
+
+	// Go through each entry and parse into a request
+	req := RangeRequest{}
+	for key, value := range request {
+
+		// We only know how to parse these
+		if key == "field" {
+			req.Field = value
+		} else if key == "min" {
+			req.Min = value
+		} else if key == "max" {
+			req.Max = value
+		}
 	}
-
-	// Finally, we just parse the list - these should be key value pairs to match exactly
-	for _, entry := range matches {
-		rlog.Debugf("    Processing entry %s\n", entry)
-		entry, ok := entry.(map[string]interface{})
+	// If we get here and we have a field and at LEAST
+	// one of min or max, we can add to to our needs
+	// This is a bit janky - compressing with || separators
+	if req.Field != "" && (req.Min != "" || req.Max != "") {
+		_, ok := sNeeds[subsystem]
 		if !ok {
-			rlog.Warningf("    There was an issue processing entry %s\n", entry)
-			continue
+			sNeeds[subsystem] = map[string]bool{}
 		}
-
-		// Go through each entry and parse into a request
-		req := RangeRequest{}
-		for key, value := range entry {
-
-			// Allow support for integer or string
-			strValue, ok := value.(string)
-			if ok {
-				// We only know how to parse these
-				if key == "field" {
-					req.Field = strValue
-				} else if key == "min" {
-					req.Min = strValue
-				} else if key == "max" {
-					req.Max = strValue
-				}
-			} else {
-				intValue, ok := value.(int32)
-				if ok {
-					if key == "min" {
-						req.Min = fmt.Sprintf("%d", intValue)
-					} else if key == "max" {
-						req.Max = fmt.Sprintf("%d", intValue)
-					}
-				}
-			}
-
-		}
-		// If we get here and we have a field and at LEAST
-		// one of min or max, we can add to to our needs
-		// This is a bit janky - compressing with || separators
-		if req.Field != "" && (req.Min != "" || req.Max != "") {
-			_, ok := sNeeds[subsystem]
-			if !ok {
-				sNeeds[subsystem] = map[string]bool{}
-			}
-			// This sets the starting state that the range is not satisfied
-			sNeeds[subsystem][req.Compress()] = false
-		}
+		// This sets the starting state that the range is not satisfied
+		sNeeds[subsystem][req.Compress()] = false
 	}
 	return sNeeds
-}
-
-// getSlotResource needs assumes a subsystem request as follows
-/*
-task:
-  command:
-  - spack
-  slot: default
-  count:
-    per_slot: 1
-  resources:
-    spack:
-      range:
-      - field: version
-        min: "0.5.1"
-        max: "0.5.5"
-*/
-// We look for a field in the subsystem metadata attached to a node,
-// in the example above "version" and then parse either > a min, < a max,
-// or between the range.
-func (m RangeType) GetSlotResourceNeeds(slot *v1.Task) *types.SlotResourceNeeds {
-	sNeeds := map[string]map[string]bool{}
-	for subsystem, needs := range slot.Resources {
-
-		// Needs should be interface{} --> map[string][]map[string]string{}
-		// Assume if we cannot parse, don't consider
-		needs, ok := needs.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		// Do we have a range algorithm?
-		request, ok := needs["range"]
-		if !ok {
-			continue
-		}
-		sNeeds = m.UpdateResourceNeeds(request, subsystem, sNeeds)
-	}
-	// Parse into the slot resource needs
-	needs := []types.SubsystemNeeds{}
-	for subsystem, sneeds := range sNeeds {
-		subsystemNeeds := types.SubsystemNeeds{Name: subsystem, Attributes: sneeds}
-		needs = append(needs, subsystemNeeds)
-	}
-
-	// If we don't have any needs, the slot is satisfied for that
-	slotNeeds := &types.SlotResourceNeeds{Subsystems: needs}
-	if len(needs) == 0 {
-		slotNeeds.Satisfied = true
-	}
-	rlog.Debugf("      => Assessing needs for slot: %v\n", slotNeeds)
-	return slotNeeds
 }
 
 // checkSubsystemEdge evaluates a node edge in the dominant subsystem for a

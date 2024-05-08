@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
+	js "github.com/compspec/jobspec-go/pkg/nextgen/v1"
 
 	"github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"

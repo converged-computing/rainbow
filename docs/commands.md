@@ -495,23 +495,25 @@ The new portion from the above is seeing that the subsystem "io" is satisfied at
 
 ```console
 ...
+🍇️ Satisfy request to Graph 🍇️
+ jobspec: {"version":1,"resources":{"ior":{"type":"node","replicas":1,"with":[{"type":"core","count":2,"attributes":{}}],"requires":[{"field":"type","match":"shm","name":"io"}],"attributes":{}}}}
+  🎰️ Resources that that need to be satisfied with matcher match
+     node:  (slot)  1
+       requires
+         field: type
+         match: shm
+         name: io
+
   🔍️ Exploring cluster keebler deeper with depth first search
-
-    👀️ Looking for 'node' in cluster keebler
-      => Checking vertex 'cluster' (count=1) for 'node' (need=2)
-      => Checking vertex 'cluster' (count=1) for 'node' (need=2)
-      => Checking vertex 'rack' (count=1) for 'node' (need=2)
-      => Checking vertex 'node' (count=1) for 'node' (need=2)
-      => Checking vertex 'node' (count=1) for 'node' (need=2)
-     ⏳️ keebler still contender, 3/2 of needed node satisfied
-
-    👀️ Looking for 'slot' in cluster keebler
-      => Assessing needs for subsystem io
-      => Resource 'node' satisfies subsystem io shm
-    🎯️ dfs: we found 1 clusters to satisfy the request
-2024/03/09 13:49:09 SELECT * from clusters WHERE name LIKE "keebler" LIMIT 1: keebler
-2024/03/09 13:49:09 📝️ received job ior for 1 contender clusters
-2024/03/09 13:49:09 📝️ job ior is assigned to cluster keebler
+      => Searching for resource type core from parent contains->rack
+      => Searching for resource type core from parent contains->node
+           Found subsystem edge for io with type shm
+           Minimum slot needs are satisfied at node for io at shm, returning early.
+         slotNeeds are satisfied, returning 1 slots matched
+Slots found 1/1 for vertex cluster
+  match: ✅️ there are 1 matches with sufficient resources
+2024/05/07 19:40:56 📝️ received job app for 1 contender clusters
+2024/05/07 19:40:56 📝️ job app is assigned to cluster [keebler]
 ```
 
 And the work is still assigned to the cluster.

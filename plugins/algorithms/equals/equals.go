@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"
@@ -54,7 +53,6 @@ func NewMatchEqualRequest(value string) *MatchEqualRequest {
 // MatchEdge is an exposed function (for other matchers to use)
 // to allow for matching a subsystem edge
 func (m EqualsType) MatchEdge(k string, edge *types.Edge, subsys *types.SubsystemNeeds) {
-	rlog.Debugf("      => Found %s and inspecting edge metadata %v\n", k, edge.Vertex.Metadata.Elements)
 	req := NewMatchEqualRequest(k)
 	// Get the field requested by the jobspec
 	toMatch, err := edge.Vertex.Metadata.GetStringElement(req.Field)
@@ -73,100 +71,36 @@ func (m EqualsType) MatchEdge(k string, edge *types.Edge, subsys *types.Subsyste
 
 // UpdateResourceNeeds take a match interface and updates resource needs
 // This is provided to expose the match interface to other matches
-func (m EqualsType) UpdateResourceNeeds(
-	match interface{},
+func UpdateResourceNeeds(
+	needs map[string]string,
 	subsystem string,
 	sNeeds map[string]map[string]bool,
 ) map[string]map[string]bool {
 
-	// Now "match" goes from interface{} -> []map[string]string{}
-	matches, ok := match.([]interface{})
+	// Finally, we just parse the list - these should be key value pairs to match exactly
+	req := MatchEqualRequest{}
+
+	// Cut out early if not a match
+	match, ok := needs["match"]
 	if !ok {
 		return sNeeds
 	}
 
-	// Finally, we just parse the list - these should be key value pairs to match exactly
-	for _, entry := range matches {
-		entry, ok := entry.(map[string]interface{})
+	req.Value = match
+	field, ok := needs["field"]
+	if !ok {
+		return sNeeds
+	}
+	req.Field = field
+	if req.Field != "" && req.Value != "" {
+		_, ok := sNeeds[subsystem]
 		if !ok {
-			continue
+			sNeeds[subsystem] = map[string]bool{}
 		}
-
-		req := MatchEqualRequest{}
-		for key, value := range entry {
-			value, ok := value.(string)
-
-			// We only know how to parse these
-			if key == "field" && ok {
-				req.Field = value
-			} else if key == "value" && ok {
-				req.Value = value
-			}
-		}
-
-		// If we get here and we have a field and at LEAST
-		// one of min or max, we can add to to our needs
-		// This is a bit janky - compressing with || separators
-		if req.Field != "" && (req.Value != "") {
-			_, ok := sNeeds[subsystem]
-			if !ok {
-				sNeeds[subsystem] = map[string]bool{}
-			}
-			// This sets the starting state that the range is not satisfied
-			sNeeds[subsystem][req.Compress()] = false
-		}
+		// This sets the starting state that the range is not satisfied
+		sNeeds[subsystem][req.Compress()] = false
 	}
 	return sNeeds
-}
-
-// getSlotResource needs assumes a subsystem request as follows:
-/* task:
-command:
-- ior
-  slot: default
-  count:
-  per_slot: 1
-resources:
-  io:
-  match:
-  - type: shm
-*/
-// it is an explicit match, so we expect the slot to have that exact resource
-// available. This can eventually take a count, but right now is a boolean match
-// and this is done intentionally to satisfy the simplest scheduler experiment
-// prototype where we are more interested in features
-func (m EqualsType) GetSlotResourceNeeds(slot *v1.Task) *types.SlotResourceNeeds {
-	sNeeds := map[string]map[string]bool{}
-	for subsystem, needs := range slot.Resources {
-
-		// Needs should be interface{} --> map[string][]map[string]string{}
-		// Assume if we cannot parse, don't consider
-		needs, ok := needs.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		// We currently support "match" which is an exact match of a term to resource
-		match, ok := needs["match"]
-		if !ok {
-			continue
-		}
-		sNeeds = m.UpdateResourceNeeds(match, subsystem, sNeeds)
-	}
-	// Parse into the slot resource needs
-	needs := []types.SubsystemNeeds{}
-	for subsystem, sneeds := range sNeeds {
-		subsystemNeeds := types.SubsystemNeeds{Name: subsystem, Attributes: sneeds}
-		needs = append(needs, subsystemNeeds)
-	}
-
-	// If we don't have any needs, the slot is satisfied for that
-	slotNeeds := &types.SlotResourceNeeds{Subsystems: needs}
-	if len(needs) == 0 {
-		slotNeeds.Satisfied = true
-	}
-	rlog.Debugf("      => Assessing needs for slot: %v\n", slotNeeds)
-	return slotNeeds
 }
 
 // checkSubsystemEdge evaluates a node edge in the dominant subsystem for a
