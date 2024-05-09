@@ -11,7 +11,7 @@ ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
-ENV GO_VERSION=1.20.14
+ENV GO_VERSION=1.22.3
 
 # Install extra buildrequires for flux-sched:
     RUN apt-get update && \
@@ -25,7 +25,6 @@ ENV GO_VERSION=1.20.14
         unzip && \
     apt-get clean -y && apt -y autoremove
 
-# Install go 19.10
 RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz  && tar -xvf go${GO_VERSION}.linux-amd64.tar.gz && \
     mv go /usr/local && rm go${GO_VERSION}.linux-amd64.tar.gz
 

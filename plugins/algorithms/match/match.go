@@ -6,8 +6,6 @@ import (
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"
-	"github.com/converged-computing/rainbow/plugins/algorithms/equals"
-	rangematch "github.com/converged-computing/rainbow/plugins/algorithms/range"
 )
 
 type MatchType struct{}
@@ -25,62 +23,98 @@ func (s MatchType) Description() string {
 	return description
 }
 
+// checkSubsystemNeeds is a shared function to loop over needs for an edge to check
+// the needs should already be scoepd to a subsystem
+func CheckSubsystemNeeds(needs map[string]bool, edge *types.Edge) map[string]bool {
+
+	// Yuck, this would be better as a query! Oh well.
+	for k, _ := range needs {
+		rlog.Debugf("      => Looking at edge %s '%s' for %s that needs %s\n", edge.Subsystem, edge.Vertex.Type, edge.Subsystem, k)
+
+		// We care if the attribute is marked as a range or exact match
+		// Passing slotNeeds to the function (pointer) updates in place
+		if strings.HasPrefix(k, "match") {
+			if MatchEqualityEdge(k, edge) {
+				rlog.Debugf("      => Edge '%s' satisfies subsystem %s %s\n", edge.Vertex.Type, edge.Subsystem, k)
+				needs[k] = true
+			}
+
+		} else if strings.HasPrefix(k, "range") {
+			if MatchRangeEdge(k, edge) {
+				rlog.Debugf("      => Edge '%s' satisfies subsystem %s %s\n", edge.Vertex.Type, edge.Subsystem, k)
+				needs[k] = true
+			}
+		}
+	}
+	return needs
+}
+
 // checkSubsystemEdge evaluates a node edge in the dominant subsystem for a
 // subsystem attribute. E.g., if the io subsystem provides
 // Vertex (from dominant subsysetem) is only passed in for informational purposes
-func (m MatchType) CheckSubsystemEdge(slotNeeds *types.SlotResourceNeeds, edge *types.Edge, vtx *types.Vertex) {
+func (m MatchType) CheckSubsystemEdge(
+	slotNeeds *types.MatchAlgorithmNeeds,
+	edge *types.Edge,
+) {
 
-	// Return early if we are satisfied
-	if slotNeeds.Satisfied {
-		return
-	}
 	// Determine if our slot needs can be met
 	// Nested for loops are not great - this will be improved with a more robust graph
 	// that isn't artisinal avocado toast developed by me :)
 
 	rlog.Debugf("Looking at edge %s->%s\n", edge.Relation, edge.Vertex.Type)
 
+	updatedNeeds := types.MatchAlgorithmNeeds{}
+
 	// TODO Keep a record if all are satisfied so we stop searching
 	// earlier if this is the case on subsequent calls
-	for i, subsys := range slotNeeds.Subsystems {
-
-		rlog.Debugf("      => Looking in subsystem %s\n", edge.Subsystem)
+	for subsystem, needs := range *slotNeeds {
 
 		// The subsystem has an edge defined here!
-		if subsys.Name == edge.Subsystem {
-			rlog.Debugf("      => Found matching subsystem %s edge\n", edge.Subsystem)
-
-			// Yuck, this needs to be a query! Oh well.
-			for k := range subsys.Attributes {
-				rlog.Debugf("      => Looking at edge %s '%s' for %s that needs %s\n", edge.Subsystem, edge.Vertex.Type, subsys.Name, k)
-
-				// We care if the attribute is marked as a range or exact match
-				if strings.HasPrefix(k, "match") {
-					m := equals.EqualsType{}
-					m.MatchEdge(k, edge, &subsys)
-
-				} else if strings.HasPrefix(k, "range") {
-					m := rangematch.RangeType{}
-					m.MatchEdge(k, edge, &subsys)
-				}
-			}
+		if subsystem == edge.Subsystem {
+			rlog.Debugf("      => Found subsystem %s edge to search\n", edge.Subsystem)
+			needs = CheckSubsystemNeeds(needs, edge)
 		}
-		slotNeeds.Subsystems[i] = subsys
+		updatedNeeds[subsystem] = needs
 	}
+	// Update the slot needs that get passed back
+	slotNeeds = &updatedNeeds
+}
 
-	// Try to avoid future checking if subsystem needs are addressed
-	allSatisfied := true
-	for _, subsys := range slotNeeds.Subsystems {
-		for _, v := range subsys.Attributes {
-			if !v {
-				allSatisfied = false
-				break
-			}
-		}
+// GetResourceNeeds of a match request
+func (r *MatchEqualRequest) GetResourceNeeds(request map[string]string) map[string]bool {
+	needs := map[string]bool{}
+
+	// Cut out early if not a match
+	match, ok := request["match"]
+	if !ok {
+		return needs
 	}
-	// This is going to provide a quick check to determine if the subsystem
-	// is satisfied without needing to parse again
-	slotNeeds.Satisfied = allSatisfied
+	r.Value = match
+	field, ok := request["field"]
+	if !ok {
+		return needs
+	}
+	r.Field = field
+	if r.Field != "" && r.Value != "" {
+		// This sets the starting state that the range is not satisfied
+		needs[r.Compress()] = false
+	}
+	return needs
+}
+
+// UpdateResourceNeeds allows exposing parsing of the match interface
+// to other matchers
+func GetResourceNeeds(request map[string]string) map[string]bool {
+
+	// Go through each entry and parse into a request
+	// In practice, there should only be one of these set at a time
+	req := RangeRequest{}
+	needs := req.GetResourceNeeds(request)
+	eq := MatchEqualRequest{}
+	for key, value := range eq.GetResourceNeeds(request) {
+		needs[key] = value
+	}
+	return needs
 }
 
 // Init provides extra initialization functionality, if needed

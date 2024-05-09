@@ -43,29 +43,3 @@ type Edge struct {
 	Relation  string  `json:"relation"`
 	Subsystem string  `json:"subsystem"`
 }
-
-// Serialize slot resource needs into a struct that is easier to parse
-type SlotResourceNeeds struct {
-	Satisfied  bool
-	Type       string
-	Subsystems []SubsystemNeeds
-}
-
-// Determine if resource needs are satisfied for an entire subsystem
-func (s *SlotResourceNeeds) IsSatisfiedFor(subsystem string) bool {
-	for _, needs := range s.Subsystems {
-		if needs.Name == subsystem {
-			for _, isSatisfied := range needs.Attributes {
-				if !isSatisfied {
-					return false
-				}
-			}
-		}
-	}
-	return true
-}
-
-type SubsystemNeeds struct {
-	Name       string
-	Attributes map[string]bool
-}

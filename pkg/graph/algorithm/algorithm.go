@@ -22,7 +22,7 @@ type MatchAlgorithm interface {
 	Init(map[string]string) error
 
 	// A MatchAlgorithm needs to take a slot and determine if it matches
-	CheckSubsystemEdge(slotNeeds *types.SlotResourceNeeds, edge *types.Edge, vtx *types.Vertex)
+	CheckSubsystemEdge(slotNeeds *types.MatchAlgorithmNeeds, edge *types.Edge)
 }
 
 // List returns known algorithms

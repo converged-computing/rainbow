@@ -30,6 +30,9 @@ func JobspecFromCommand(command, jobName string, nodes, tasks int32) (*v1.Jobspe
 
 // ShowRequires prints the requirements for a resource, if they exist
 func ShowRequires(name string, resource *v1.Resource) {
+	if name != "" {
+		rlog.Verbosef("       => %s\n", name)
+	}
 	// Count will be defined for non slot, and replicas defined for slot
 	count := resource.Count
 	isSlot := ""
@@ -37,14 +40,18 @@ func ShowRequires(name string, resource *v1.Resource) {
 		count = resource.Replicas
 		isSlot = " (slot) "
 	}
-	rlog.Verbosef("     %s: %s %d\n", resource.Type, isSlot, count)
+	rlog.Verbosef("          %s: %-8s %d\n", resource.Type, isSlot, count)
 	if len(resource.Requires) > 0 {
-		rlog.Verbosef("       requires\n")
+		rlog.Verbosef("            requires\n")
 		for _, entry := range resource.Requires {
 			for key, value := range entry {
-				rlog.Verbosef("         %s: %s\n", key, value)
+				rlog.Verbosef("              %s: %s\n", key, value)
 			}
 		}
 	}
-
+	if resource.With != nil {
+		for _, subresource := range resource.With {
+			ShowRequires("", &subresource)
+		}
+	}
 }
