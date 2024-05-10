@@ -11,7 +11,7 @@ ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
-ENV GO_VERSION=1.22.3
+ENV GO_VERSION=1.20.14
 
 # Install extra buildrequires for flux-sched:
     RUN apt-get update && \
