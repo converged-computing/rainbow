@@ -1,20 +1,17 @@
+
 version: 1
 resources:
-- count: 2
-  type: node
-  with:
-  - count: 1
-    label: default
-    type: slot
+  spack:
+    replicas: 2
+    type: node
     with:
     - count: 2
       type: core
-task:
-  command:
-  - ior
-  slot: default
-  count:
-    per_slot: 1
+
+tasks:
+  - command: [ior]
+    resources: spack
+
 attributes:
   parameter:
-    seconds_per_gb: 0.4
+    seconds_per_gb: 0.4    

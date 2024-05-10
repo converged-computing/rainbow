@@ -1,22 +1,14 @@
 version: 1
 resources:
-- count: 2
-  type: node
-  with:
-  - count: 1
-    label: default
-    type: slot
+  ior:
+    type: node
+    replicas: 1
+    requires:
+    - name: io
+      match: shm
+      field: type
     with:
     - count: 2
       type: core
 task:
-  command:
-  - ior
-  slot: default
-  count:
-    per_slot: 1
-  resources:
-    io:
-      match:
-      - field: type
-        value: shm
+  command: [ior]

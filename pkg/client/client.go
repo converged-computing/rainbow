@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
+	js "github.com/compspec/jobspec-go/pkg/nextgen/v1"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
 	"github.com/converged-computing/rainbow/pkg/config"

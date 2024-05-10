@@ -43,14 +43,3 @@ type Edge struct {
 	Relation  string  `json:"relation"`
 	Subsystem string  `json:"subsystem"`
 }
-
-// Serialize slot resource needs into a struct that is easier to parse
-type SlotResourceNeeds struct {
-	Satisfied  bool
-	Subsystems []SubsystemNeeds
-}
-
-type SubsystemNeeds struct {
-	Name       string
-	Attributes map[string]bool
-}

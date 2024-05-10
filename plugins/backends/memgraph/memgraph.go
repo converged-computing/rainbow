@@ -18,7 +18,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"google.golang.org/grpc"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
+	js "github.com/compspec/jobspec-go/pkg/nextgen/v1"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 )
 

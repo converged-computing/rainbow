@@ -3,11 +3,13 @@ package memory
 import (
 	"fmt"
 
-	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
+	v1 "github.com/compspec/jobspec-go/pkg/nextgen/v1"
 	"github.com/converged-computing/rainbow/pkg/graph"
 	"github.com/converged-computing/rainbow/pkg/graph/algorithm"
+	rspec "github.com/converged-computing/rainbow/pkg/jobspec"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"
+	"github.com/converged-computing/rainbow/plugins/algorithms/shared"
 )
 
 // DFSForMatch WILL is a depth first search if the cluter matches
@@ -32,14 +34,9 @@ func (g *ClusterGraph) DFSForMatch(
 	// Do a quick top level count for resource types
 	isMatch := true
 	totals := graph.ExtractResourceSlots(jobspec)
+	fmt.Println(totals)
 
 	for resourceType, needed := range totals {
-
-		// Ignore the slot resource type
-		if resourceType == "slot" {
-			continue
-		}
-
 		actual, ok := ss.Metrics.ResourceCounts[resourceType]
 
 		// We don't know. Assume we can't schedule
@@ -65,163 +62,196 @@ func (g *ClusterGraph) depthFirstSearch(
 	matcher algorithm.MatchAlgorithm,
 ) (bool, error) {
 
-	// Note that in the experimental version we have one task and thus one slot
-	rlog.Debugf("  🎰️ Slots that need to be satisfied with matcher %s\n", matcher.Name())
-	slots := map[string]*v1.Task{}
+	// Get resources that need scheduling from the jobspec
+	// This is a map[string]Resource{} that may or may not have type slot
+	resources := jobspec.GetScheduledNamedSlots()
 
-	// If a slot isn't defined for the task, assume the slot is at the top level
-	topLevel := false
-	if jobspec.Task.Slot == "" {
-		topLevel = true
-		jobspec.Task.Slot = "root"
-	}
-	slots[jobspec.Task.Slot] = &jobspec.Task
-
-	// If we don't have jobspec.Task.Resources, no slot to search for.
+	// If we don't have jobspec.Resources, nothing to search for
 	// Return early based on top level counts
-	if len(jobspec.Task.Resources) == 0 {
+	if len(resources) == 0 {
 		rlog.Debugf("  🎰️ No resources defined, top level counts satisfied so cluster is match\n")
 		return true, nil
 	}
 
+	// Note that in the experimental version we have one task and thus one slot
+	rlog.Debugf("  🎰️ Resources that need to be satisfied with matcher %s\n", matcher.Name())
+
 	// From this point on we assume we MUST satisfy the slot
 	// Sanity check what we are trying to match
-	for rname, rslot := range jobspec.Task.Resources {
-		rlog.Verbosef("     %s: %s\n", rname, rslot)
+	for rname, rslot := range resources {
+		rspec.ShowRequires(rname, &rslot)
 	}
 
 	// Look through our potential matching clusters
 	rlog.Debugf("\n  🔍️ Exploring cluster %s deeper with depth first search\n", g.Name)
-	// This is the root vertex of the cluster "cluster" we start with it
-	// We can store this instead, but for now we can assume the index 0
-	// is the root, as it is the first one made / added
+
+	// This is the root vertex of the cluster where we start search
+	// It is the first Vertex that was added
 	rootName := fmt.Sprintf("%s-0", dom.Name)
 	root := dom.Lookup[rootName]
 	vertex := dom.Vertices[root]
 
-	// Recursive function to recurse into slot resource and find count
-	// of matches for the slot. This returns a count of the matching
-	// slots under a parent level, recursing into child vertices until
-	// we find the right type (and take a count) or keep exploring
-	var findSlots func(vtx *types.Vertex, slot *v1.Resource, slotNeeds *types.SlotResourceNeeds, slotsFound int32) int32
-	findSlots = func(vtx *types.Vertex, resource *v1.Resource, slotNeeds *types.SlotResourceNeeds, slotsFound int32) int32 {
+	// localResourceMatch checks for local edges to match
+	var localResourceMatch = func(vtx *types.Vertex, resourceNeeds *types.ResourceNeeds) bool {
 
-		// This is just for debugging
-		lookingFor := ""
-		for _, item := range slotNeeds.Subsystems {
-			lookingFor += fmt.Sprintf("%s:%v", item.Name, item.Attributes)
+		// Cut out early if the subsystem needs are satisfied
+		// This is above a slot, so we aren't counting containment types yet
+		if resourceNeeds.AreSubsystemsSatisfied() {
+			return true
 		}
 
-		// Subsystem edges are here, separate from dominant ones (so search is smaller)
-		for sName, edges := range vtx.Subsystems {
-			rlog.Debugf("      => Searching for %s and resource type %s in subsystem %v with %d subsystem edges\n", lookingFor, resource.Type, sName, len(edges))
+		// Now we want to check edges, looking for subsystem requirements
+		// Is the containment vertex the right type for the resource needs?
+		// For this parsing of resource needs, there is only one type
+		if vtx.Type == resourceNeeds.Type {
 
-			for eName, child := range edges {
-				rlog.Debugf("         Found subsystem edge %s with type %s\n", eName, child.Vertex.Type)
-				// Check if the subsystem edge satisfies the needs of the slot
-				// This will update the slotNeeds.Satisfied
-				matcher.CheckSubsystemEdge(slotNeeds, child, vtx)
+			// If yes, look for edges to subsystem graphs
+			for _, edges := range vtx.Subsystems {
 
-				// Return early if minimum needs are satsified
-				if slotNeeds.Satisfied {
-					rlog.Debugf("         Minimum slot needs are satisfied at %s for %s at %s, returning early.\n", vtx.Type, child.Subsystem, child.Vertex.Type)
-					return slotsFound + vtx.Size
+				// This does the check across subsystem edges
+				for _, child := range edges {
+
+					// This is a bad design, get back updated structure
+					// and explicitly put back and ensure checked for satisfy
+					matchNeeds := resourceNeeds.Subsystems[vtx.Type]
+					matcher.CheckSubsystemEdge(&matchNeeds, child)
+					resourceNeeds.Subsystems[vtx.Type] = matchNeeds
+
+					// As soon as all subsystems are satisfied, we can return true
+					if resourceNeeds.AreSubsystemsSatisfied() {
+						rlog.Debugf("           All subsystem requirements are satisfied for resource type %s\n", vtx.Type)
+						return true
+					}
 				}
 			}
 		}
-
-		// Otherwise, we haven't found the right level of the graph, keep going
-		for _, child := range vtx.Edges {
-			rlog.Debugf("      => Searching for %s and resource type %s %s->%s\n", lookingFor, resource.Type, child.Relation, child.Vertex.Type)
-
-			// Only keep going if we aren't stopping here
-			// This is also traversing the dominant subsystem
-			if child.Relation == types.ContainsRelation {
-				slotsFound += findSlots(child.Vertex, resource, slotNeeds, slotsFound)
-			}
-		}
-
-		// Stop here is true when we are at the slot -> one level below, and
-		// have done the subsystem assessment on this level.
-		if slotNeeds.Satisfied {
-			rlog.Debugf("         slotNeeds are satsified for %v, returning %d slots matched\n", slotNeeds.Subsystems, slotsFound)
-			return slotsFound
-		}
-		rlog.Debugf("         slotNeeds are not satsified for %v, returning 0 slots matched\n", slotNeeds.Subsystems)
-		return 0
+		// We only parse one level here, because the recursion for findSlot will check the next
+		// one against the same resources (at a different vertex)
+		return true
 	}
 
-	// Traverse resource is the main function to handle traversing a cluster vertex
-	var traverseResource func(resource *v1.Resource) (bool, error)
-	traverseResource = func(resource *v1.Resource) (bool, error) {
+	// traverseVertex looks over the top of a vertex where we can find slots
+	// and finds them, also checking for subsystem requirements
+	var traverseVertex func(vtx *types.Vertex, needs *types.ResourceNeeds) bool
+	traverseVertex = func(vtx *types.Vertex, needs *types.ResourceNeeds) bool {
 
-		// Since we know we are looking for matching slots, we only care to check if we find one!
-		if resource.Type == "slot" {
+		// Note that this summary function is likely slow (to print) but very useful
+		rlog.Debugf("           Checking needs at vertex %-6s %s\n", vtx.Type, needs.SummarizeRemaining())
 
-			slot, ok := slots[resource.Label]
-			if !ok {
-				return false, fmt.Errorf("cannot find slot %s in jobspec", resource.Label)
-			}
-			// Create a simple means to determine if a subsystem is matched
-			slotResourceNeeds := matcher.GetSlotResourceNeeds(slot)
+		// First check top level of vertex if there are subsystem needs
+		// This vertex checks for resources and subsystems at this level
+		// If subsystem needs aren't met, it returns false. If needs are
+		// met OR the vertex type isn't relevant we return true and continue
+		// If OK, we continue. If not, we stop.
+		if !shared.CheckVertex(needs, vtx) {
+			return false
+		}
 
-			// Suggestion - slot count might be more clear in jobspec v2.
-			// https://flux-framework.readthedocs.io/projects/flux-rfc/en/latest/spec_14.html
-			// These are logical groups of "stuff" that need to be scheduled together
-			slotsNeeded := resource.Count
-
-			// Keep going until we have all the slots, or we run out of places to look
-			slotsFound := int32(0)
-
-			// This assumes that the slot value is defined in the next resource block
-			// We assume the resources defined under the slot are needed for the slot
-			if resource.With != nil {
-				for _, subresource := range resource.With {
-					slotsFound += findSlots(vertex, &subresource, slotResourceNeeds, slotsFound)
-					rlog.Debugf("Slots found %d/%d for vertex %s\n", slotsFound, slotsNeeded, vertex.Type)
-				}
-			}
-			// The slot is satisfied and we can continue searching resources
-			return slotsFound >= slotsNeeded, nil
-
-		} else {
-
-			// Do the same for with children
-			if resource.With != nil {
-				for _, with := range resource.With {
-					return traverseResource(&with)
-				}
+		// Now check if the resources AND subsystem needs are all satisfied
+		if needs.AllSatisfied() {
+			needs.Found += 1
+			needs.Reset()
+			if needs.Satisfied() {
+				return true
 			}
 		}
+
+		// If we get here, the needs aren't all satisfied, so keep recursing into the children
+		for _, edge := range vtx.Edges {
+
+			// Only interested in containment subsystem node
+			if edge.Subsystem != types.DefaultDominantSubsystem {
+				continue
+			}
+			if traverseVertex(edge.Vertex, needs) {
+				return true
+			}
+
+		}
+		return false
+	}
+
+	// findSlot is the main function to handle finding the top level slot
+	// 1. Traverse the graph until we find the right level of the slot. As we
+	//    traverse, we check requires and exit early if our parent resources
+	//    don't meet requirements.
+	var findSlot func(resource v1.Resource, vtx *types.Vertex) (bool, error)
+	findSlot = func(resource v1.Resource, vtx *types.Vertex) (bool, error) {
+
+		// We assume at this point we haven't yet found the slot. This function
+		// summarizes resource needs by type, so we can check the type and then
+		// the edges it has (and cut out early if not a match)
+		resourceNeeds := shared.GetResourceNeeds(&resource)
+
+		// Check resource at this level if the types match
+		if !localResourceMatch(vtx, resourceNeeds) {
+			rlog.Debugf("         Resource needs for %s are not satisfied\n", resource.Type)
+			return false, nil
+		}
+
+		// If replicas are 0, we need to find the slot in a child
+		// We've already checked subsystem requirements for the "non slot" vertices
+		// above.
+		if resource.Replicas == 0 {
+			if resource.With != nil {
+				for _, with := range resource.With {
+					isMatch, err := findSlot(with, vtx)
+					if err != nil {
+						return false, err
+					}
+					if isMatch {
+						return true, nil
+					}
+				}
+			}
+			// If we don't find matches, or if there aren't resource "with"
+			// to find a slot, we don't have anything to match to
+			return false, nil
+		}
+
+		rlog.Debugf("         Scheduling slot found at level %s\n", resource.Type)
+		// If we get here, we found a slot. Prepare to search it.
+		// This will keep track of:
+		// 1. subsystem needs for resource types within a slot
+		// 2. counts for resource types
+		// 3. slots satisfied vs. needed
+		// Unlike "GetResourceNeeds" above, this recurses the entire resource
+		slotNeeds := shared.GetSlotNeeds(&resource)
+
+		// A slot is a logical groups of "stuff" that needs to be scheduled together
+		slotNeeds.Needed = resource.Replicas
+
+		// This assumes that the slot value is defined in the next resource block
+		// We assume the resources defined under the slot are needed for the slot
+		for _, edge := range vtx.Edges {
+			// If the slots and counts are satisfied on a traversal, return early.
+			if traverseVertex(edge.Vertex, slotNeeds) {
+				rlog.Debugf("         Slot needs fully satisfied on traversal of %s\n", edge.Vertex.Type)
+				return true, nil
+			}
+		}
+
+		// If we never get to state of all satisfied on last vertex, we are not satisfied
 		return false, nil
 	}
 
-	// If we need to place the slot on the top level, do it here
-	if topLevel {
-		newSlot := v1.Resource{
-			Type:  "slot",
-			Label: "root",
-			Count: 1,
-			With:  jobspec.Resources,
-		}
-		jobspec.Resources = []v1.Resource{newSlot}
-	}
+	// Go through jobspec resources and determine satisfiability,
+	// We do this by first looking for the slot defined by the resource,
+	// and along the way checking for requirements. Once we find a slot,
+	// we traverse it and dive in to count the number of satisfied units
+	// below it.
+	for _, resource := range resources {
 
-	// Go through jobspec resources and determine satisfiability
-	// This currently treats each item under resources separately
-	// as opposed to one unit of work, and I'm not sure if that is
-	// right. I haven't seen jobspecs in the wild with two entries
-	// under resources.
-	for _, resource := range jobspec.Resources {
-		isMatch, err := traverseResource(&resource)
+		// This always starts at the top level of the cluster (vertex is the root)
+		isMatch, err := findSlot(resource, vertex)
 		if err != nil {
 			return false, err
 		}
-		// Cut out early with yes if we found a match
-		if isMatch {
-			return true, nil
+		// Cut out early if one resource group cannot be matched
+		if !isMatch {
+			return false, nil
 		}
 	}
-	// If we get here, no match
-	return false, nil
+	// If we get here, all groups have matched
+	return true, nil
 }

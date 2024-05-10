@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 
-	v1 "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
 	"github.com/converged-computing/rainbow/pkg/types"
 )
 
@@ -23,8 +22,7 @@ type MatchAlgorithm interface {
 	Init(map[string]string) error
 
 	// A MatchAlgorithm needs to take a slot and determine if it matches
-	GetSlotResourceNeeds(slot *v1.Task) *types.SlotResourceNeeds
-	CheckSubsystemEdge(slotNeeds *types.SlotResourceNeeds, edge *types.Edge, vtx *types.Vertex)
+	CheckSubsystemEdge(slotNeeds *types.MatchAlgorithmNeeds, edge *types.Edge)
 }
 
 // List returns known algorithms
