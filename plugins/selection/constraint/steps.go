@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
+	js "github.com/compspec/jobspec-go/pkg/nextgen/v1"
 
 	"github.com/Knetic/govaluate"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
@@ -176,14 +176,22 @@ func sortAscending(
 // prepareParameters is a shared function that steps can use for equation parameters
 func prepareParameters(jobspec *js.Jobspec, state *types.ClusterState) map[string]interface{} {
 
+	totalParams := len(*state)
+	parameters := make(map[string]interface{}, totalParams)
+
 	// Parameters are populated from each cluster state and the jobpsec
 	// This is definitely not going to be efficient
-	totalParams := len(jobspec.Attributes.Parameter) + len(*state)
-	parameters := make(map[string]interface{}, totalParams)
-	if jobspec.Attributes.Parameter != nil {
+	parameter, ok := jobspec.Attributes["parameter"]
+	if ok {
+
+		// This is a bit dangerous - could panic if wrong type provided
+		params := parameter.(js.Attributes)
+
+		totalParams = len(params) + len(*state)
+		parameters = make(map[string]interface{}, totalParams)
 
 		// Add all parameters we have to be available
-		for key, value := range jobspec.Attributes.Parameter {
+		for key, value := range params {
 			rlog.Debugf("      adding parameter %s=%v\n", key, value)
 			parameters[key] = value
 		}

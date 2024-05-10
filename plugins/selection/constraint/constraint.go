@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	js "github.com/compspec/jobspec-go/pkg/jobspec/experimental"
+	js "github.com/compspec/jobspec-go/pkg/nextgen/v1"
 	"github.com/converged-computing/rainbow/pkg/graph/selection"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"

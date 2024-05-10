@@ -23,6 +23,6 @@ go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/scheduler/r
 ```
 
 The above demonstrates using a more advanced selection algorithm.
-Note that this cluster state requires further discussion and thinking about where and how to accomodate it - it currently uses the old design and (I think) is not being used in selection.
+Note that this cluster state requires further discussion and thinking about where and how to accommodate it - it currently uses the old design with attributes on the level of the Jobspec, and while this works, we likely want to be using the attributes on the level of schedule-able unit.
 
 [home](/README.md#rainbow-scheduler)
