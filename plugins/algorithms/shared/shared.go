@@ -2,6 +2,7 @@ package shared
 
 import (
 	v1 "github.com/compspec/jobspec-go/pkg/nextgen/v1"
+	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"
 	"github.com/converged-computing/rainbow/plugins/algorithms/match"
 )
@@ -87,30 +88,30 @@ func CheckVertex(
 
 	// Cut out early if the vertex type isn't in our needs
 	count, ok := slotNeeds.Resources[vtx.Type]
-	if !ok {
+	typeNeeds, ok2 := resourceNeeds.Subsystems[vtx.Type]
+
+	if !ok && !ok2 {
+		rlog.Debugf("             Cutting out early, vertex type %s not in needs\n", vtx.Type)
 		return true
 	}
 
 	// First step is to check the vertex edges for subsystem matches
-	for _, edge := range vtx.Edges {
-		typeNeeds, ok := resourceNeeds.Subsystems[edge.Vertex.Type]
+	for _, edges := range vtx.Subsystems {
 
-		// We don't have any needs, continue
-		if !ok {
-			continue
-		}
-		subsystemNeeds := typeNeeds[edge.Subsystem]
-		for attribute, isSatisfied := range match.CheckSubsystemNeeds(subsystemNeeds, edge) {
-			resourceNeeds.Subsystems[edge.Vertex.Type][edge.Subsystem][attribute] = isSatisfied
-			if !isSatisfied {
-				return false
+		for _, edge := range edges {
+			subsystemNeeds := typeNeeds[edge.Subsystem]
+			for attribute, isSatisfied := range match.CheckSubsystemNeeds(subsystemNeeds, edge) {
+				resourceNeeds.Subsystems[vtx.Type][edge.Subsystem][attribute] = isSatisfied
+				if !isSatisfied {
+					return false
+				} else {
+					rlog.Debugf("             Resource need for %s %s satisfied with edge %s\n", vtx.Type, attribute, edge.Vertex.Type)
+				}
 			}
-
 		}
 	}
 	// If we get here, the vertex has the subsystem features we want
 	// update the counts of resources
-
 	count -= vtx.Size
 	resourceNeeds.Resources[vtx.Type] = count
 	slotNeeds = &resourceNeeds

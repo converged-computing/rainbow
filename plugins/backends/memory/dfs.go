@@ -160,7 +160,7 @@ func (g *ClusterGraph) depthFirstSearch(
 		for _, edge := range vtx.Edges {
 
 			// Only interested in containment subsystem node
-			if edge.Relation != types.ContainsRelation {
+			if edge.Subsystem != types.DefaultDominantSubsystem {
 				continue
 			}
 			if traverseVertex(edge.Vertex, needs) {
@@ -224,10 +224,6 @@ func (g *ClusterGraph) depthFirstSearch(
 		// This assumes that the slot value is defined in the next resource block
 		// We assume the resources defined under the slot are needed for the slot
 		for _, edge := range vtx.Edges {
-			if edge.Relation != types.ContainsRelation {
-				continue
-			}
-
 			// If the slots and counts are satisfied on a traversal, return early.
 			if traverseVertex(edge.Vertex, slotNeeds) {
 				rlog.Debugf("         Slot needs fully satisfied on traversal of %s\n", edge.Vertex.Type)

@@ -42,10 +42,12 @@ func (s *ResourceNeeds) Reset() {
 }
 
 func (s *ResourceNeeds) SummarizeRemaining() string {
-	summary := ""
+	byType := map[string]string{}
+
+	// This first summarizes physical resources
 	for resourceType, count := range s.Resources {
 		if count > 0 {
-			summary += fmt.Sprintf(": %s=%d", resourceType, count)
+			byType[resourceType] = fmt.Sprintf(": %s=%d", resourceType, count)
 			// Also get number of subsystem needs
 			sNeeds, ok := s.Subsystems[resourceType]
 			if ok {
@@ -57,10 +59,28 @@ func (s *ResourceNeeds) SummarizeRemaining() string {
 						}
 					}
 					if count > 0 {
-						summary += fmt.Sprintf(" %s=%d", subsystem, count)
+						byType[resourceType] += fmt.Sprintf(" %s=%d", subsystem, count)
 					}
 				}
 			}
+		}
+	}
+
+	// Now add subsystem needs
+	for resourceType, typeNeeds := range s.Subsystems {
+		for subsystem, sNeeds := range typeNeeds {
+			for attribute, isSatisfied := range sNeeds {
+				if !isSatisfied {
+					byType[resourceType] += fmt.Sprintf(" %s:%s", subsystem, attribute)
+				}
+			}
+		}
+	}
+
+	summary := ""
+	if len(byType) > 0 {
+		for resourceType, text := range byType {
+			summary += fmt.Sprintf(" %s%s ", resourceType, text)
 		}
 	}
 	return summary

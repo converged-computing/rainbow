@@ -172,7 +172,7 @@ func (g *ClusterGraph) LoadSubsystemNodes(
 			// Case 2: the src is in the dominant subsystem
 			domIdx, ok := dom.Lookup[lookupName]
 
-			fmt.Printf("Adding dominant subsystem edge for %s to %s\n", lookupName, subsystem)
+			fmt.Printf("Adding dominant subsystem edge for %s to %s (%s)\n", lookupName, subsystem, edge.Target)
 
 			if !ok || !ok2 {
 				return fmt.Errorf("edge %s->%s is not internal, and not connected to the dominant subsystem", edge.Source, edge.Target)

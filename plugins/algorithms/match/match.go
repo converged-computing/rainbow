@@ -28,7 +28,7 @@ func (s MatchType) Description() string {
 func CheckSubsystemNeeds(needs map[string]bool, edge *types.Edge) map[string]bool {
 
 	// Yuck, this would be better as a query! Oh well.
-	for k, _ := range needs {
+	for k := range needs {
 		rlog.Debugf("      => Looking at edge %s '%s' for %s that needs %s\n", edge.Subsystem, edge.Vertex.Type, edge.Subsystem, k)
 
 		// We care if the attribute is marked as a range or exact match

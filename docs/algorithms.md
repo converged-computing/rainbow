@@ -141,11 +141,7 @@ task:
         max: "0.5.5"
 ```
 
-This is the most realisic use case I think.
-
-### Equals
-
-The "equals" type is going to look exactly at some exact value for a field in the metadata. It will return true (match) if it matches what the subsystem needs. For example, given this task:
+This is the most realisic use case I think. The above demonstrates the match "equals" and range types. Using just match (or equals) is shown below:
 
 ```yaml
 task:

@@ -13,6 +13,7 @@ For more information:
 
 ## TODO
 
+- match/equals can have repeated fields, so we need to honor that list.
 - cypher: when we have another cypher graph, move the memgraph cypher logic into the graph match algorithm, add an endpoint to return cypher. Currently the match algorithms (beyond basic containment) are not implemented
 - subsystems
   - make also a function to delete subsystems
