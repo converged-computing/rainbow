@@ -1,23 +1,18 @@
 version: 1
 resources:
-- count: 2
-  type: node
-  with:
-  - count: 1
-    label: default
-    type: slot
+  spack:
+    replicas: 2
+    type: node
+    requires:
+    - name: spack
+      field: version       
+      min: "0.7.1"
+      max: "0.7.5"
+
     with:
     - count: 2
       type: core
-task:
-  command:
-  - spack
-  slot: default
-  count:
-    per_slot: 1
-  resources:
-    spack:
-      range:
-      - field: version
-        min: "0.7.1"
-        max: "0.7.5"
+
+tasks:
+  - command: [ior]
+    resources: spack

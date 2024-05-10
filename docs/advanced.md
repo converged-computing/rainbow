@@ -23,5 +23,6 @@ go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/scheduler/r
 ```
 
 The above demonstrates using a more advanced selection algorithm.
+Note that this cluster state requires further discussion and thinking about where and how to accomodate it - it currently uses the old design and (I think) is not being used in selection.
 
 [home](/README.md#rainbow-scheduler)

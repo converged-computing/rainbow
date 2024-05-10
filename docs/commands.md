@@ -541,7 +541,7 @@ go run cmd/rainbow/rainbow.go register cluster --cluster-name spack-builder --no
 go run cmd/rainbow/rainbow.go register subsystem  --subsystem spack --nodes-json ./docs/examples/match-algorithms/range/spack-subsystem.json --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml
 
 # Submit a job that asked for a valid range
-go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --jobspec ./docs/examples/match-algorithms/range/jobspec-valid-range.yaml --match-algorithm range
+go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --jobspec ./docs/examples/match-algorithms/range/jobspec-valid-range.yaml
 ```
 For the above job, you'll see it's satisfied:
 
@@ -554,8 +554,8 @@ For the above job, you'll see it's satisfied:
 Try submitting a job that can't be satisfied for the range.
 
 ```bash
-# Submit a job that asked for a valid range
-go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --jobspec ./docs/examples/match-algorithms/range/jobspec-invalid-range.yaml --match-algorithm range
+# Submit a job that asked for an invalid range
+go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/match-algorithms/range/rainbow-config.yaml --jobspec ./docs/examples/match-algorithms/range/jobspec-invalid-range.yaml
 ```
 ```console
 Slots found 0/1 for vertex cluster
@@ -594,8 +594,6 @@ The above can be prettier printed, especially since the jobspec is sent back now
 Note that if you don't define the max jobs (so it is essentially 0) you will get all jobs.
 Awesome! Next we can put that logic in a flux instance (from the Python grpc to start) and then have Flux
 accept some number of them. The response back to the rainbow scheduler will be those to accept, which will then be removed from the database. For another day.
-
-
 
 
 [home](/README.md#rainbow-scheduler)
