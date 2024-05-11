@@ -5,7 +5,7 @@ import logging
 import json
 import argparse
 from rainbow.client import RainbowClient
-from jobspec.core import Jobspec
+from jobspec.core import Jobspec, converter
 
 # Your host should be in the rainbow-config.yaml
 def get_parser():
