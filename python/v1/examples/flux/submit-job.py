@@ -5,9 +5,9 @@ import logging
 import json
 import argparse
 from rainbow.client import RainbowClient
-import jobspec.core.converter as converter
 from jobspec.core import Jobspec
 
+# Your host should be in the rainbow-config.yaml
 def get_parser():
     parser = argparse.ArgumentParser(description="🌈️ Rainbow scheduler submit")
     parser.add_argument("--config-path", help="config path with cluster metadata")

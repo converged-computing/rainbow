@@ -52,6 +52,12 @@ class RainbowConfig:
             self.load()
         return self._cfg
 
+    def get(self, value, default=None):
+        """
+        Easy access to get to underlying data.
+        """
+        return self.cfg.get(value, default)
+
     @property
     def match_algorithm(self):
         """

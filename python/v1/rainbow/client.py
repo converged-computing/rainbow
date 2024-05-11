@@ -23,7 +23,7 @@ class RainbowClient:
         Create a new rainbow client to interact with a rainbow cluster.
         """
         self.cfg = config.RainbowConfig(config_file)
-        self.host = host or self.cfg.get("scheduler", {}).get("host")
+        self.host = self.cfg.get("graphdatabase", {}).get("options", {}).get("host") or host
 
         # load the graph database backend
         self.set_database(database)
@@ -184,12 +184,21 @@ class RainbowClient:
         self.database_options = options
 
     def submit_jobspec(
-        self, jobspec, match_algo=None, select_algo=None, select_options=None, satisfy_only=False
+        self,
+        jobspec,
+        name=None,
+        match_algo=None,
+        select_algo=None,
+        select_options=None,
+        satisfy_only=False,
     ):
         """
         Submit a jobspec directly. This is useful if you want to generate
         it custom with your own special logic.
         """
+        # Generate a random name if does not exist
+        name = name or jobspec.name
+
         # Ask the database backend if our jobspec can be satisfied
         match_algo = match_algo or self.cfg.match_algorithm
         select_algo = select_algo or self.cfg.selection_algorithm
@@ -214,8 +223,9 @@ class RainbowClient:
 
         # THEN contact rainbow with clusters
         # These are submit variables. A more substantial submit script would have argparse, etc.
+
         submitRequest = rainbow_pb2.SubmitJobRequest(
-            name=jobspec.name,
+            name=name,
             satisfy_only=satisfy_only,
             clusters=clusters,
             select_algorithm=select_algo,

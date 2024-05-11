@@ -7,6 +7,8 @@ import argparse
 from rainbow.client import RainbowClient
 from jobspec.core import Jobspec
 
+
+# Your host should be in the rainbow-config.yaml
 def get_parser():
     parser = argparse.ArgumentParser(description="🌈️ Rainbow scheduler submit")
     parser.add_argument("--config-path", help="config path with cluster metadata")
@@ -25,7 +27,7 @@ def main():
     # Generate the jobspec here so we can json dump it for the user
     # Note that this can be done with cli.submit_job(command, nodes, tasks)
     jobspec = Jobspec(args.jobspec)
-    print(json.dumps(jobspec.jobspec, indent=4))
+    print(jobspec.to_yaml())
     response = cli.submit_jobspec(jobspec)
     print(response)
 
