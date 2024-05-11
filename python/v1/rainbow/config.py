@@ -56,6 +56,8 @@ class RainbowConfig:
         """
         Easy access to get to underlying data.
         """
+        if not self._cfg:
+            return default
         return self.cfg.get(value, default)
 
     @property
