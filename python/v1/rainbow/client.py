@@ -23,7 +23,7 @@ class RainbowClient:
         Create a new rainbow client to interact with a rainbow cluster.
         """
         self.cfg = config.RainbowConfig(config_file)
-        self.host = self.cfg.get("scheduler", {}).get("host") or host
+        self.host = self.cfg.get("graphdatabase", {}).get("options", {}).get("host") or host
 
         # load the graph database backend
         self.set_database(database)
