@@ -27,7 +27,7 @@ def main():
     args = parser.parse_args()
 
     # The config path (with clusters) will be required for submit
-    cli = RainbowClient(config_file=args.config_path, host=args.host)
+    cli = RainbowClient(config_file=args.config_path)
 
     # Generate the jobspec here so we can json dump it for the user
     # Note that this can be done with cli.submit_job(command, nodes, tasks)
