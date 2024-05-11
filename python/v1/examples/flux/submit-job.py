@@ -7,10 +7,10 @@ import argparse
 from rainbow.client import RainbowClient
 from jobspec.core import Jobspec
 
+# Your host should be in the rainbow-config.yaml
 def get_parser():
     parser = argparse.ArgumentParser(description="🌈️ Rainbow scheduler submit")
     parser.add_argument("--config-path", help="config path with cluster metadata")
-    parser.add_argument("--host", help="host of rainbow cluster", default="localhost:50051")
     parser.add_argument(
         "--nodes", help="Nodes for job (defaults to 1)", default=1, type=int
     )
