@@ -10,6 +10,7 @@ from jobspec.core import Jobspec
 def get_parser():
     parser = argparse.ArgumentParser(description="🌈️ Rainbow scheduler submit")
     parser.add_argument("--config-path", help="config path with cluster metadata")
+    parser.add_argument("--host", help="host of rainbow cluster", default="localhost:50051")
     parser.add_argument("jobspec", help="Jobspec path to submit")
     return parser
 
@@ -20,7 +21,7 @@ def main():
     args = parser.parse_args()
 
     # The config path (with clusters) will be required for submit
-    cli = RainbowClient(config_file=args.config_path)
+    cli = RainbowClient(config_file=args.config_path, host=args.host)
 
     # Generate the jobspec here so we can json dump it for the user
     # Note that this can be done with cli.submit_job(command, nodes, tasks)
