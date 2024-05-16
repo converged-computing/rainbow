@@ -112,9 +112,9 @@ func (req *RangeRequest) Satisfies(value string) (bool, error) {
 }
 
 // MatchRangeEdge matches to a range
-func MatchRangeEdge(k string, edge *types.Edge) bool {
-	rlog.Debugf("      => Found %s and inspecting edge metadata %v\n", k, edge.Vertex.Metadata.Elements)
-	req := NewRangeRequest(k)
+func MatchRangeEdge(matchExpression string, edge *types.Edge) bool {
+	rlog.Debugf("      => Found %s and inspecting edge metadata %v\n", matchExpression, edge.Vertex.Metadata.Elements)
+	req := NewRangeRequest(matchExpression)
 
 	// Get the field requested by the jobspec
 	toMatch, err := edge.Vertex.Metadata.GetStringElement(req.Field)
@@ -128,4 +128,23 @@ func MatchRangeEdge(k string, edge *types.Edge) bool {
 		return false
 	}
 	return satisfied
+}
+
+// MatchEqualityCypher writes the lines of cypher for a match
+func MatchRangeCypher(subsystem, matchExpression string) string {
+	req := NewRangeRequest(matchExpression)
+
+	// req.Name => the subsystem
+	query := fmt.Sprintf("\n-[contains]-(%s:Node {subsystem: '%s'})", subsystem, subsystem)
+
+	// Need to assemble min/max, or both
+	queryPiece := "\nWHERE"
+	if req.Min != "" {
+		queryPiece += fmt.Sprintf("%s.%s >= %d", subsystem, req.Field, req.Min)
+	}
+	if req.Max != "" {
+		queryPiece += fmt.Sprintf("AND %s.%s <= %d", subsystem, req.Field, req.Max)
+	}
+	query += queryPiece
+	return query
 }

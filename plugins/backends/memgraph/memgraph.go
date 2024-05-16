@@ -5,6 +5,7 @@ package memgraph
 import (
 	"encoding/json"
 	"log"
+	"strings"
 
 	"context"
 	"fmt"
@@ -303,18 +304,8 @@ func (m Memgraph) RegisterService(s *grpc.Server) error {
 
 // Satisfies - determine what clusters satisfy a jobspec request
 // Since this is called from the client function, it's technically
-// running from the client (not from the server)
-//
-// This is an example that works
-//
-//		MATCH (cluster:Node {subsystem: 'cluster', type: 'cluster'})
-//		-[r1:contains]-(rack:Node {subsystem: 'cluster', type: 'rack'})
-//		-[r2:contains]-(node:Node {subsystem: 'cluster', type: 'node'})
-//		-[r3:contains]-(socket:Node {subsystem: 'cluster', type: 'socket'})
-//		-[r4:contains]-(core:Node {subsystem: 'cluster', type: 'core'})
-//	   WITH cluster,node,count(distinct r4) as core_count
-//	   WHERE core_count > 4
-//	   RETURN cluster,node,core_count;
+// running from the client (not from the server). See examples
+// in comments below.
 func (g Memgraph) Satisfies(
 	jobspec *js.Jobspec,
 	matcher algorithm.MatchAlgorithm,
@@ -328,6 +319,9 @@ func (g Memgraph) Satisfies(
 	// Get resources that need scheduling from the jobspec
 	// This is a map[string]Resource{} that may or may not have type slot
 	resources := jobspec.GetScheduledNamedSlots()
+
+	// Show the JobSpec for debugging
+	fmt.Println(jobspec.JobspecToYaml())
 
 	// Each schedulable unit will get a separate query
 	var query string
@@ -423,62 +417,78 @@ func (g Memgraph) Satisfies(
 		// requirements of counts
 		totals := graph.ExtractResourceSlots(jobspec)
 
-		for resourceType, count := range totals {
-			query += fmt.Sprintf("\nWITH *,count(distinct %sEdge) as %s_count", resourceType, resourceType)
-			query += fmt.Sprintf("\nWHERE %s_count >= %d", resourceType, count)
+		// This is the query I'm going for now - not sure if entirely correct
+		// Maybe someone can help me more on these some day when they have bandwidth
+		// MATCH (cluster:Node {subsystem: 'cluster', type: 'cluster'})
+		// -[rackEdge:contains]-(rack:Node {subsystem: 'cluster', type: 'rack'})
+		// -[nodeEdge:contains]-(node:Node {subsystem: 'cluster', type: 'node'})
+		// -[contains]-(io:Node {subsystem: 'io'})
+		// WHERE io.type = 'shm'
+		// MATCH (node) -[socketEdge:contains]-(socket:Node {subsystem: 'cluster', type: 'socket'})
+		// -[coreEdge:contains]-(core:Node {subsystem: 'cluster', type: 'core'})
+		// WITH node,count(coreEdge) as cores_count
+		// WHERE cores_count >= 3
+		// RETURN node, cores_count
+
+		for _, slotCount := range totals {
+			query += fmt.Sprintf("\nWITH cluster,%s,count(distinct %sEdge) as %s_count", slotCount.Parent, slotCount.Name, slotCount.Name)
+			query += fmt.Sprintf("\nWHERE %s_count >= %d", slotCount.Name, slotCount.Members)
 		}
 
-		// Add the result return
-		query += "\nRETURN *"
-		fmt.Println(query)
+		// This assumes the return statement is the highest level of the slot
+		topSlot := totals[0]
+		query += fmt.Sprintf("\nRETURN cluster,%s, %s_count", topSlot.Parent, topSlot.Name)
+		fmt.Printf("\n%s\n", query)
 	}
 
-	/*
-		// TODO deliver query to driver
-		// Connect to the driver
-			driver, err := neo4j.NewDriverWithContext(memoryHost, neo4j.BasicAuth(username, password, databaseName))
-			if err != nil {
-				return matches, err
-			}
-			ctx := context.Background()
-			defer driver.Close(ctx)
-			err = driver.VerifyConnectivity(ctx)
-			if err != nil {
-				return matches, err
-			}
+	// Connect to the driver
+	driver, err := neo4j.NewDriverWithContext(memoryHost, neo4j.BasicAuth(username, password, databaseName))
+	if err != nil {
+		return matches, err
+	}
+	ctx := context.Background()
+	defer driver.Close(ctx)
+	err = driver.VerifyConnectivity(ctx)
+	if err != nil {
+		return matches, err
+	}
 
-			// Do the query
-			result, err := neo4j.ExecuteQuery(ctx, driver, query, nil, neo4j.EagerResultTransformer, neo4j.ExecuteQueryWithDatabase(databaseName))
-			if err != nil {
-				return matches, err
-			}
+	// Do the query
+	result, err := neo4j.ExecuteQuery(ctx, driver, query, nil, neo4j.EagerResultTransformer, neo4j.ExecuteQueryWithDatabase(databaseName))
+	if err != nil {
+		return matches, err
+	}
 
-			// Keep a count of matches per cluster
-			lookup := map[string]int32{}
+	// Keep a count of matches per cluster
+	lookup := map[string]int32{}
 
-			// Print the node results
-			for _, node := range result.Records {
+	// Print the node results
+	for _, node := range result.Records {
+		// Here is how to inspect additional node metadata
+		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node))                 // Node type
+		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).GetProperties()) // Node properties
+		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).GetElementId())  // Node internal ID
+		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).Labels)          // Node labels
+		clusterName := node.AsMap()["cluster"].(neo4j.Node).Props["name"].(string)
 
-				// Here is how to inspect additional node metadata
-				// fmt.Println(node.AsMap()["cluster"].(neo4j.Node))                 // Node type
-				// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).GetProperties()) // Node properties
-				// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).GetElementId())  // Node internal ID
-				// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).Labels)          // Node labels
-				clusterName := node.AsMap()["cluster"].(neo4j.Node).Props["name"].(string)
-				originalName := strings.Replace(clusterName, "cluster-", "", 1)
-				_, ok := lookup[originalName]
-				if !ok {
-					lookup[originalName] = 0
-				}
-				lookup[originalName] += 1
-			}
+		// This gets rid of the prefix
+		originalName := strings.Replace(clusterName, "cluster-", "", 1)
 
-			// Keep matches that we have minimum slot count
-			for cluster, count := range lookup {
-				if count >= slotCount {
-					matches = append(matches, cluster)
-				}
-			}*/
+		// And the suffix
+		parts := strings.Split(originalName, "-")
+		originalName = strings.Join(parts[0:len(parts)-1], "-")
+		_, ok := lookup[originalName]
+		if !ok {
+			lookup[originalName] = 0
+		}
+		lookup[originalName] += 1
+	}
+
+	// Keep matches that we have minimum slot count
+	for cluster := range lookup {
+		matches = append(matches, cluster)
+	}
+	fmt.Printf("\nMatches: %s\n", matches)
 	return matches, nil
 }
 
