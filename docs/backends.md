@@ -80,12 +80,7 @@ docker compose stop
 docker compose rm
 ```
 
-Note that this backend currently supports very basic (imperfect) slot matching, but custom algorithms have not been implemented. In other words, whatever algorithm you select for match will be ignored. The select is done separately and will
-still be maintained. To account for match algorithms, we will have the interface generate a `GenerateCypher` function as follows:
-
-```go
-query, err := matcher.GenerateCypher(jobspec)
-```
+Note that this backend currently supports match algorithms for range and equality, and these are early in development and need further testing.
 
 
 [home](/README.md#rainbow-scheduler)

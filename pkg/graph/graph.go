@@ -39,31 +39,49 @@ func ReadNodeJsonGraphString(nodes string) (graph.JsonGraph, error) {
 	return g, nil
 }
 
-// ExtractResourceSlots flattens a jobspec into a lookup of slots
-func ExtractResourceSlots(jobspec *v1.Jobspec) map[string]int32 {
+type SlotCount struct {
 
-	totals := map[string]int32{}
+	// The number of slots required
+	Count int32
+	Name  string
+
+	// The number of resource submembers needed per slot
+	Members int32
+
+	// The parent of the slot
+	Parent string
+}
+
+// ExtractResourceSlots flattens a jobspec into a lookup of slots
+func ExtractResourceSlots(jobspec *v1.Jobspec) []SlotCount {
+
+	totals := []SlotCount{}
 
 	// Go sets loops to an initial value at start,
 	// so we need a function to recurse into nested resources
 	var checkResource func(resource *v1.Resource)
 	checkResource = func(resource *v1.Resource) {
-		count, ok := totals[resource.Type]
-		if !ok {
-			count = 0
-		}
 		// Assume a slot is a count for 1 resource type
+		// If we find the slot, we go just below it
+		// We just need the total for the slot level
 		if resource.Replicas != 0 {
-			count += resource.Replicas
-		} else {
-			count += resource.Count
-		}
-		totals[resource.Type] = count
 
-		// This is the recursive bit
-		if resource.With != nil {
-			for _, with := range resource.With {
-				checkResource(&with)
+			// This is the recursive bit
+			if resource.With != nil {
+				for _, with := range resource.With {
+					newSlot := SlotCount{
+						Count:   resource.Replicas,
+						Name:    with.Type,
+						Members: with.Count,
+						Parent:  resource.Type}
+					totals = append(totals, newSlot)
+				}
+			}
+		} else {
+			if resource.With != nil {
+				for _, with := range resource.With {
+					checkResource(&with)
+				}
 			}
 		}
 	}

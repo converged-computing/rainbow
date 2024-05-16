@@ -15,10 +15,13 @@ import (
 	"github.com/converged-computing/rainbow/pkg/graph/backend"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/types"
+	"github.com/converged-computing/rainbow/pkg/utils"
+	"github.com/converged-computing/rainbow/plugins/algorithms/shared"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"google.golang.org/grpc"
 
 	js "github.com/compspec/jobspec-go/pkg/nextgen/v1"
+	v1 "github.com/compspec/jobspec-go/pkg/nextgen/v1"
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 )
 
@@ -301,81 +304,142 @@ func (m Memgraph) RegisterService(s *grpc.Server) error {
 
 // Satisfies - determine what clusters satisfy a jobspec request
 // Since this is called from the client function, it's technically
-// running from the client (not from the server)
-//
-// This is an example that works
-//
-//		MATCH (cluster:Node {subsystem: 'cluster', type: 'cluster'})
-//		-[r1:contains]-(rack:Node {subsystem: 'cluster', type: 'rack'})
-//		-[r2:contains]-(node:Node {subsystem: 'cluster', type: 'node'})
-//		-[r3:contains]-(socket:Node {subsystem: 'cluster', type: 'socket'})
-//		-[r4:contains]-(core:Node {subsystem: 'cluster', type: 'core'})
-//	   WITH cluster,node,count(distinct r4) as core_count
-//	   WHERE core_count > 4
-//	   RETURN cluster,node,core_count;
+// running from the client (not from the server). See examples
+// in comments below.
 func (g Memgraph) Satisfies(
 	jobspec *js.Jobspec,
 	matcher algorithm.MatchAlgorithm,
 ) ([]string, error) {
 
+	// Note that this algorithm is different in that it skips
+	// hieuristics (checking totals) because we minimize queries
+	// to the graph.
 	matches := []string{}
-	// query, err := matcher.GenerateCypher(jobspec)
 
-	// Prepare query that looks for slots
-	// The slot STARTS at the first resource type and stops right after the slot
-	// This currently just handles one slot with this design
-	query := "MATCH (cluster:Node {subsystem: 'cluster', type: 'cluster'})"
-	totals := graph.ExtractResourceSlots(jobspec)
+	// Get resources that need scheduling from the jobspec
+	// This is a map[string]Resource{} that may or may not have type slot
+	resources := jobspec.GetScheduledNamedSlots()
 
-	out, _ := jobspec.JobspecToYaml()
-	fmt.Println(out + "\n")
+	// Show the JobSpec for debugging
+	fmt.Println(jobspec.JobspecToYaml())
 
-	// We will want to hit a slot count - the number of rows of result we need to get
-	slotCount := int32(0)
-	resourceCount := 0
+	// Each schedulable unit will get a separate query
+	var query string
 
-	// This isn't a great design - I am hard coding the order of resources
-	// E.g., cluster -> rack -> node -> socket -> core since that is what
-	// flux jobspec understands for the containment subystem. If we forget
-	// a level, the query will fail, because the graph knows this structure
-	resourceTypes := []string{"rack", "node", "socket", "core"}
-	slotResource := ""
-	slotResourceCount := 0
+	// Parse into resource structure and update the query appropriately
+	var updateQuery func(resource v1.Resource, resourceTypes []string, lastSeen string) error
+	updateQuery = func(resource v1.Resource, resourceTypes []string, lastSeen string) error {
 
-	for _, resourceType := range resourceTypes {
+		// Keep track of seen types. When we parse a slot, we need to start
+		// at where we left off
+		seenTypes := []string{}
 
-		// If we have the resource type in our spec, add to query
-		count, ok := totals[resourceType]
-		if resourceType == "slot" {
-			if count == 0 {
-				slotCount = 1
+		// Get local resource needs (subsystem edges), add to query
+		resourceNeeds := shared.GetResourceNeeds(&resource)
+
+		for _, resourceType := range resourceTypes {
+			subsystemNeeds, exists := resourceNeeds.Subsystems[resourceType]
+
+			// Recursive call needs to start where we left off
+			seenTypes = append(seenTypes, resourceType)
+
+			// We need to keep track of the containment edge name
+			// This is how we count slots at the end
+			resourceEdgeName := fmt.Sprintf("%sEdge", resourceType)
+
+			// Here is an example asking for a subsystem attribute
+			// MATCH (cluster:Node {subsystem: 'cluster', type: 'cluster'})
+			//	-[r0:contains]-(rack:Node {subsystem: 'cluster', type: 'rack'})
+			//	-[r1:contains]-(node:Node {subsystem: 'cluster', type: 'node'})
+			//	-[s1:contains]-(io:Node {subsystem: 'io'})
+			// WHERE io.type = 'shm'
+			// MATCH (node) -[r2:contains]-(socket:Node {subsystem: 'cluster', type: 'socket'})
+			//	-[r3:contains]-(core:Node {subsystem: 'cluster', type: 'core'})
+			// RETURN *
+			// If we have a last scene, it needs to be a new MATCH
+			newQuery := fmt.Sprintf("-[%s:contains]-(%s:Node {subsystem: 'cluster', type: '%s'})", resourceEdgeName, resourceType, resourceType)
+			if lastSeen != "" {
+				newQuery = fmt.Sprintf("\nMATCH (%s) %s", lastSeen, newQuery)
 			} else {
-				slotCount = count
+				newQuery = "\n" + newQuery
 			}
-			continue
+			query += newQuery
+
+			// If we hit a subsystem, we need to define last seen, because it will start a new
+			// MATCH expression for the next time.
+			if exists {
+				query += matcher.GenerateCypher(&subsystemNeeds)
+				lastSeen = resourceType
+			} else {
+				lastSeen = ""
+			}
 		}
 
-		// We have to add every leve of the graph
-		query += fmt.Sprintf("\n-[r%d:contains]-(%s:Node {subsystem: 'cluster', type: '%s'})", resourceCount, resourceType, resourceType)
-		resourceCount += 1
+		// Keep going until we find a slot. When replicas != 0
+		// we have found a slot.
+		if resource.Replicas != 0 {
+			if resource.With != nil {
+				for _, with := range resource.With {
 
-		// But don't consider the count unless it's given to use
-		if !ok {
-			continue
+					// Child functions should start at resources we haven't parsed yet
+					// We need the last seen type to add after a WHERE
+					lastSeen = ""
+					if len(seenTypes) > 0 {
+						lastSeen = seenTypes[len(seenTypes)-1]
+					}
+
+					// These are remaining resources we need to parse over
+					remainingResources := utils.Diff(resourceTypes, seenTypes)
+					err := updateQuery(with, remainingResources, lastSeen)
+					if err != nil {
+						return err
+					}
+				}
+			}
 		}
-		// The last resource we see is the slot resource, for now
-		// This is incorrect because it doesn't account for counts of parent resources
-		// I'm not sure what this query should look like with cypher
-		slotResource = resourceType
-		slotResourceCount = int(count)
+		return nil
 	}
 
-	// Assume the last resource indicated is our slot
-	query += fmt.Sprintf("\nWITH cluster,node,count(distinct r%d) as %s_count\n", resourceCount-1, slotResource)
-	query += fmt.Sprintf("WHERE %s_count > %d\n", slotResource, slotResourceCount)
-	query += fmt.Sprintf("RETURN cluster,node,%s_count;", slotResource)
+	// Then get results for that, and we need to pass in a scecond query
+	// Right now do a query for each schedulable slot
+	// Not sure if these can be combined into one
+	for _, resource := range resources {
 
-	fmt.Println(query)
+		// We need to go through the structure of the graph. If
+		// there are no subsystem needs, we match all. Otherwise
+		// we also look for an edge to the subsytem
+		resourceTypes := []string{"rack", "node", "socket", "core"}
+
+		query = "MATCH (cluster:Node {subsystem: 'cluster', type: 'cluster'})"
+		updateQuery(resource, resourceTypes, "")
+
+		// When we get here, we are at a slot, and can just add to the query the
+		// requirements of counts
+		totals := graph.ExtractResourceSlots(jobspec)
+
+		// This is the query I'm going for now - not sure if entirely correct
+		// Maybe someone can help me more on these some day when they have bandwidth
+		// MATCH (cluster:Node {subsystem: 'cluster', type: 'cluster'})
+		// -[rackEdge:contains]-(rack:Node {subsystem: 'cluster', type: 'rack'})
+		// -[nodeEdge:contains]-(node:Node {subsystem: 'cluster', type: 'node'})
+		// -[contains]-(io:Node {subsystem: 'io'})
+		// WHERE io.type = 'shm'
+		// MATCH (node) -[socketEdge:contains]-(socket:Node {subsystem: 'cluster', type: 'socket'})
+		// -[coreEdge:contains]-(core:Node {subsystem: 'cluster', type: 'core'})
+		// WITH node,count(coreEdge) as cores_count
+		// WHERE cores_count >= 3
+		// RETURN node, cores_count
+
+		for _, slotCount := range totals {
+			query += fmt.Sprintf("\nWITH cluster,%s,count(distinct %sEdge) as %s_count", slotCount.Parent, slotCount.Name, slotCount.Name)
+			query += fmt.Sprintf("\nWHERE %s_count >= %d", slotCount.Name, slotCount.Members)
+		}
+
+		// This assumes the return statement is the highest level of the slot
+		topSlot := totals[0]
+		query += fmt.Sprintf("\nRETURN cluster,%s, %s_count", topSlot.Parent, topSlot.Name)
+		fmt.Printf("\n%s\n", query)
+	}
 
 	// Connect to the driver
 	driver, err := neo4j.NewDriverWithContext(memoryHost, neo4j.BasicAuth(username, password, databaseName))
@@ -400,14 +464,19 @@ func (g Memgraph) Satisfies(
 
 	// Print the node results
 	for _, node := range result.Records {
-
 		// Here is how to inspect additional node metadata
 		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node))                 // Node type
 		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).GetProperties()) // Node properties
 		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).GetElementId())  // Node internal ID
 		// fmt.Println(node.AsMap()["cluster"].(neo4j.Node).Labels)          // Node labels
 		clusterName := node.AsMap()["cluster"].(neo4j.Node).Props["name"].(string)
+
+		// This gets rid of the prefix
 		originalName := strings.Replace(clusterName, "cluster-", "", 1)
+
+		// And the suffix
+		parts := strings.Split(originalName, "-")
+		originalName = strings.Join(parts[0:len(parts)-1], "-")
 		_, ok := lookup[originalName]
 		if !ok {
 			lookup[originalName] = 0
@@ -416,11 +485,10 @@ func (g Memgraph) Satisfies(
 	}
 
 	// Keep matches that we have minimum slot count
-	for cluster, count := range lookup {
-		if count >= slotCount {
-			matches = append(matches, cluster)
-		}
+	for cluster := range lookup {
+		matches = append(matches, cluster)
 	}
+	fmt.Printf("\nMatches: %s\n", matches)
 	return matches, nil
 }
 

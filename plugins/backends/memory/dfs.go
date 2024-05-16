@@ -36,8 +36,9 @@ func (g *ClusterGraph) DFSForMatch(
 	totals := graph.ExtractResourceSlots(jobspec)
 	fmt.Println(totals)
 
-	for resourceType, needed := range totals {
-		actual, ok := ss.Metrics.ResourceCounts[resourceType]
+	for _, slotCount := range totals {
+		actual, ok := ss.Metrics.ResourceCounts[slotCount.Name]
+		needed := slotCount.Count
 
 		// We don't know. Assume we can't schedule
 		if !ok {

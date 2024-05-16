@@ -124,6 +124,28 @@ func (s MatchType) Init(options map[string]string) error {
 	return nil
 }
 
+// Generate cypher for the match algorithm for a specific slot
+func (m MatchType) GenerateCypher(matchNeeds *types.MatchAlgorithmNeeds) string {
+
+	// This will be added as a piece in a query we are building
+	query := ""
+	for subsystemName, needs := range *matchNeeds {
+
+		// k is the string to parse, we can assume since we do one query
+		// that the boolean is always false
+		for matchExpression := range needs {
+			if strings.HasPrefix(matchExpression, "match") {
+				query += MatchEqualityCypher(subsystemName, matchExpression)
+
+			} else if strings.HasPrefix(matchExpression, "range") {
+				query += MatchRangeCypher(subsystemName, matchExpression)
+			}
+		}
+	}
+
+	return query
+}
+
 // Add the selection algorithm to be known to rainbow
 func init() {
 	algo := MatchType{}
