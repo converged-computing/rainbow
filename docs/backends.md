@@ -80,7 +80,7 @@ docker compose stop
 docker compose rm
 ```
 
-Note that this backend currently supports match algorithms for range and equality, and these are early in development and need further testing. 
+Note that this backend currently supports match algorithms for range and equality, and these are early in development and need further testing.
 
 
 [home](/README.md#rainbow-scheduler)
