@@ -103,6 +103,16 @@ func (c *RainbowConfig) ToJson() (string, error) {
 	return string(out), nil
 }
 
+// GetCluster returns a cluster, if it is known to the config
+func (c *RainbowConfig) GetClusterToken(clusterName string) string {
+	for _, c := range c.Clusters {
+		if c.Name == clusterName {
+			return c.Token
+		}
+	}
+	return ""
+}
+
 // AddCluster adds a cluster on the fly to a config, likely for a one-off submit
 func (c *RainbowConfig) AddCluster(clusterName, token string) error {
 

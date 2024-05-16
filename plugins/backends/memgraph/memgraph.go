@@ -319,6 +319,7 @@ func (g Memgraph) Satisfies(
 ) ([]string, error) {
 
 	matches := []string{}
+	// query, err := matcher.GenerateCypher(jobspec)
 
 	// Prepare query that looks for slots
 	// The slot STARTS at the first resource type and stops right after the slot

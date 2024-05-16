@@ -77,8 +77,14 @@ func (c *RainbowClient) SubmitJob(
 
 	// Prepare clusters for submit jobs request
 	clusters := make([]*pb.SubmitJobRequest_Cluster, len(cfg.Clusters))
-	for i, cluster := range cfg.Clusters {
-		clusters[i] = &pb.SubmitJobRequest_Cluster{Token: cluster.Token, Name: cluster.Name}
+
+	// Take an intersection of clusters and matches
+	// A token will not be returned if we do not know about the cluster
+	for i, match := range matches {
+		creds := cfg.GetClusterToken(match)
+		if creds != "" {
+			clusters[i] = &pb.SubmitJobRequest_Cluster{Token: creds, Name: match}
+		}
 	}
 
 	// Jobspec gets converted back to string for easier serialization
