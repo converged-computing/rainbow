@@ -37,8 +37,8 @@ func NewMatchEqualRequest(value string) *MatchEqualRequest {
 }
 
 // MatchEqualityEdge looks for an exact match
-func MatchEqualityEdge(k string, edge *types.Edge) bool {
-	req := NewMatchEqualRequest(k)
+func MatchEqualityEdge(matchExpression string, edge *types.Edge) bool {
+	req := NewMatchEqualRequest(matchExpression)
 
 	// Get the field requested by the jobspec
 	toMatch, err := edge.Vertex.Metadata.GetStringElement(req.Field)
@@ -50,4 +50,14 @@ func MatchEqualityEdge(k string, edge *types.Edge) bool {
 	// These are the conditions of being satisifed, the value we got from the vertex
 	// matches the value provided in the slot request
 	return toMatch == req.Value
+}
+
+// MatchEqualityCypher writes the lines of cypher for a match
+func MatchEqualityCypher(subsystem, matchExpression string) string {
+	req := NewMatchEqualRequest(matchExpression)
+
+	// req.Name => the subsystem
+	query := fmt.Sprintf("\n-[contains]-(%s:Node {subsystem: '%s'})", subsystem, subsystem)
+	query += fmt.Sprintf("\nWHERE %s.%s = '%s'", subsystem, req.Field, req.Value)
+	return query
 }

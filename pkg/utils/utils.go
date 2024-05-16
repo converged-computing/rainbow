@@ -36,3 +36,18 @@ func Copy(list []string) []string {
 	copy(copied, list)
 	return copied
 }
+
+// Diff returns the difference between two sets of strings
+func Diff(one, two []string) []string {
+	var difference []string
+	lookup := make(map[string]struct{}, len(two))
+	for _, item := range two {
+		lookup[item] = struct{}{}
+	}
+	for _, item := range one {
+		if _, found := lookup[item]; !found {
+			difference = append(difference, item)
+		}
+	}
+	return difference
+}

@@ -23,6 +23,9 @@ type MatchAlgorithm interface {
 
 	// A MatchAlgorithm needs to take a slot and determine if it matches
 	CheckSubsystemEdge(slotNeeds *types.MatchAlgorithmNeeds, edge *types.Edge)
+
+	// Graph backends that support cypher need a cypher query for the algorithm
+	GenerateCypher(matchNeeds *types.MatchAlgorithmNeeds) string
 }
 
 // List returns known algorithms

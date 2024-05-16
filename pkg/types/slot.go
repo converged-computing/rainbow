@@ -10,6 +10,8 @@ import (
 //     many types.
 //  2. A single resource type, in which case we define Type and
 //     ignore Found/Needed
+//
+// subsystem -> attribute -> isSatisfied
 type MatchAlgorithmNeeds map[string]map[string]bool
 
 // Serialize slot resource needs into a struct that is easier to parse

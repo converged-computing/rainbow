@@ -124,6 +124,45 @@ func (s MatchType) Init(options map[string]string) error {
 	return nil
 }
 
+// Generate cypher for the match algorithm for a specific slot
+func (m MatchType) GenerateCypher(matchNeeds *types.MatchAlgorithmNeeds) string {
+
+	// This will be added as a piece in a query we are building
+	query := ""
+	for subsystemName, needs := range *matchNeeds {
+
+		// Here is an example asking for a subsystem attribute
+		// MATCH (cluster:Node {subsystem: 'cluster', type: 'cluster'})
+		//	-[r0:contains]-(rack:Node {subsystem: 'cluster', type: 'rack'})
+		//	-[r1:contains]-(node:Node {subsystem: 'cluster', type: 'node'})
+		//	-[s1:contains]-(io:Node {subsystem: 'io'})
+		// WHERE io.type = 'shm'
+		// MATCH (node) -[r2:contains]-(socket:Node {subsystem: 'cluster', type: 'socket'})
+		//	-[r3:contains]-(core:Node {subsystem: 'cluster', type: 'core'})
+		// RETURN *
+
+		// k is the string to parse, we can assume since we do one query
+		// that the boolean is always false
+		for matchExpression := range needs {
+			if strings.HasPrefix(matchExpression, "match") {
+				query += MatchEqualityCypher(subsystemName, matchExpression)
+
+			} //else if strings.HasPrefix(k, "range") {
+			//query += MatchRangeCypher(k, subsystemCount)
+			//subsystemCount += 1
+			//		}
+
+		}
+
+		//				query += fmt.Sprintf("\n-[s%d:contains]-(%s:Node {subsystem: '%s'})", subsystemCount, resourceType, resourceType)
+		//			query += fmt.Sprintf("\nWHERE %s", resourceCount, resourceType, resourceType)
+		//				query += fmt.Sprintf("\nWHERE-[r%d:contains]-(%s:Node {subsystem: 'cluster', type: '%s'})", resourceCount, resourceType, resourceType)
+		//				fmt.Println(needs)
+	}
+
+	return query
+}
+
 // Add the selection algorithm to be known to rainbow
 func init() {
 	algo := MatchType{}
