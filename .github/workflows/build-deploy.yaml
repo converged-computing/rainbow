@@ -15,7 +15,7 @@ on:
 jobs:
   # Only build arm image on merge, takes too long otherwise
   build-arm:
-    #if: (github.event_name != 'pull_request')
+    if: (github.event_name != 'pull_request')
     permissions:
       packages: write
     env:
