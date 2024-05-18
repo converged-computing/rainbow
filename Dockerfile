@@ -2,18 +2,20 @@ ARG base="ubuntu:jammy"
 FROM $base
 USER root
 LABEL MAINTAINER Author <vsoch>
+ARG arch=amd64
+ENV arch=$arch
 
 # install go 20.10
 RUN apt-get update && apt-get install -y wget python3-pip
-RUN wget https://go.dev/dl/go1.20.10.linux-amd64.tar.gz  && tar -xvf go1.20.10.linux-amd64.tar.gz && \
-         mv go /usr/local && rm go1.20.10.linux-amd64.tar.gz
+RUN wget https://go.dev/dl/go1.20.10.linux-${arch}.tar.gz  && tar -xvf go1.20.10.linux-${arch}.tar.gz && \
+         mv go /usr/local && rm go1.20.10.linux-${arch}.tar.gz
 
 ENV PATH=/usr/local/go/bin:$PATH
 WORKDIR /code
 COPY . /code
 RUN make build && \
     cp ./bin/rainbow /usr/bin && \
-    cp ./bin/rainbow-scheduler /usr/local/bin
+    cp ./bin/rainbow-scheduler /usr/local/bin/
 
 # ensure we install the python bindings
 RUN cd /code/python/v1 && \
