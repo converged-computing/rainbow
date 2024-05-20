@@ -85,7 +85,10 @@ func NewServer(
 	}
 
 	// Run init with any options from the config, and the match algorithm
-	graphDB.Init(cfg.GraphDatabase.Options)
+	err = graphDB.Init(cfg.GraphDatabase.Options)
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Printf("🧩️ graph database: %v", graphDB.Name())
 
 	// init the database, creating jobs and clusters tables
