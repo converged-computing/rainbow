@@ -38,6 +38,10 @@ docker-flux:
 docker-ubuntu:
 	docker build -t $(REGISTRY)/rainbow-scheduler:latest .
 
+.PHONY: docker-arm
+docker-arm:
+	docker buildx build --build-arg arch=arm64 --platform linux/arm64 --tag $(REGISTRY)/rainbow-scheduler:arm .
+
 .PHONY: proto
 proto: protoc ## Generates the API code and documentation
 	mkdir -p pkg/api/v1
