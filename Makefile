@@ -40,7 +40,7 @@ docker-ubuntu:
 
 .PHONY: docker-arm
 docker-arm:
-	docker buildx build --build-arg arch=arm64 --platform linux/arm64 --tag $(REGISTRY)/rainbow-scheduler:arm .
+	docker buildx build --build-arg arch=arm64 --platform linux/arm64 --tag $(REGISTRY)/rainbow-scheduler:arm --load .
 
 .PHONY: proto
 proto: protoc ## Generates the API code and documentation
