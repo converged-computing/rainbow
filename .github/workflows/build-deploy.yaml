@@ -51,7 +51,7 @@ jobs:
 
     - name: Deploy Container
       if: (github.event_name != 'pull_request')
-      run: docker push ${{ env.container }} --all-tags
+      run: docker push ${{ env.container }}
 
   build-rainbow:
     permissions:
