@@ -14,6 +14,7 @@ import (
 	_ "github.com/converged-computing/rainbow/plugins/algorithms/match"
 	_ "github.com/converged-computing/rainbow/plugins/backends/memgraph"
 	_ "github.com/converged-computing/rainbow/plugins/backends/memory"
+	_ "github.com/converged-computing/rainbow/plugins/backends/neo4j"
 	_ "github.com/converged-computing/rainbow/plugins/selection/constraint"
 	_ "github.com/converged-computing/rainbow/plugins/selection/random"
 )

@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"log"
+	"time"
 
 	js "github.com/compspec/jobspec-go/pkg/nextgen/v1"
 
@@ -22,6 +23,7 @@ type RainbowClient struct {
 }
 
 var _ Client = (*RainbowClient)(nil)
+var defaultTimeout = 200 * time.Second
 
 // Client interface defines functions required for a valid client
 type Client interface {
@@ -48,9 +50,13 @@ func NewClient(host string) (Client, error) {
 	log.Printf("🌈️ starting client (%s)...", host)
 	c := &RainbowClient{host: host}
 
+	// The context allows us to control the timeout
+	ctx, cancel := context.WithTimeout(context.TODO(), defaultTimeout)
+	defer cancel()
+
 	// Set up a connection to the server.
 	creds := grpc.WithTransportCredentials(insecure.NewCredentials())
-	conn, err := grpc.Dial(c.GetHost(), creds, grpc.WithBlock())
+	conn, err := grpc.DialContext(ctx, c.GetHost(), creds, grpc.WithBlock())
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to connect to %s", host)
 	}
