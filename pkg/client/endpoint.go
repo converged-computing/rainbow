@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	js "github.com/compspec/jobspec-go/pkg/nextgen/v1"
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
@@ -72,7 +71,7 @@ func (c *RainbowClient) SubmitJob(
 		return response, fmt.Errorf("😥️ There were no matches for this job")
 	}
 	// Now contact the rainbow server with clusters...
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
 	// Prepare clusters for submit jobs request
@@ -123,7 +122,7 @@ func (c *RainbowClient) ReceiveJobs(
 		return response, errors.New("cluster secret is required")
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 	response, err := c.service.ReceiveJobs(ctx, &pb.ReceiveJobsRequest{
 		Cluster: cluster,
@@ -159,7 +158,7 @@ func (c *RainbowClient) AcceptJobs(
 	}
 
 	// Contact the server...
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 	response, err := c.service.AcceptJobs(ctx, &pb.AcceptJobsRequest{
 		Cluster: cluster,
@@ -209,7 +208,7 @@ func (c *RainbowClient) Register(
 	}
 
 	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
 	// Hit the register endpoint
@@ -263,7 +262,7 @@ func (c *RainbowClient) UpdateState(
 	}
 
 	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
 	// Hit the register subsystem endpoint
@@ -314,7 +313,7 @@ func (c *RainbowClient) RegisterSubsystem(
 	}
 
 	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
 	// Hit the register subsystem endpoint

@@ -1,4 +1,4 @@
-package memgraph
+package neo4j
 
 // The rainbow memory backend - vanilla / prototype
 
@@ -24,28 +24,28 @@ import (
 	jgf "github.com/converged-computing/jsongraph-go/jsongraph/v2/graph"
 )
 
-type Memgraph struct{}
+type Neo4j struct{}
 
 var (
-	description  = "memgraph backend"
-	memoryName   = "memgraph"
-	memoryHost   = "bolt://localhost:7687"
+	description  = "Neo4j backend"
+	memoryName   = "neo4j"
+	memoryHost   = "neo4j://localhost"
 	databaseName = ""
-	username     = "rainbow"
+	username     = "neo4j"
 	password     = "chocolate-cookies"
 )
 
-func (m Memgraph) Name() string {
+func (m Neo4j) Name() string {
 	return memoryName
 }
 
-func (m Memgraph) Description() string {
+func (m Neo4j) Description() string {
 	return description
 }
 
 // AddCluster adds a new cluster to the graph
 // Name is the name of the cluster
-func (m Memgraph) AddCluster(
+func (m Neo4j) AddCluster(
 	name string,
 	nodes *jgf.JsonGraph,
 	subsystem string,
@@ -57,8 +57,8 @@ func (m Memgraph) AddCluster(
 	return m.AddSubsystem(name, nodes, subsystem)
 }
 
-// UpdateState updates the state of a cluster in memgraph
-func (m Memgraph) UpdateState(
+// UpdateState updates the state of a cluster in Neo4j
+func (m Neo4j) UpdateState(
 	name string,
 	payload string,
 ) error {
@@ -72,13 +72,13 @@ func (m Memgraph) UpdateState(
 }
 
 // GetStates for a list of clusters
-func (m Memgraph) GetStates(names []string) (map[string]types.ClusterState, error) {
+func (m Neo4j) GetStates(names []string) (map[string]types.ClusterState, error) {
 	return map[string]types.ClusterState{}, nil
 }
 
 // AddSusbsystem to the graph
 // Name is the name of the cluster that the subsystem belongs to
-func (m Memgraph) AddSubsystem(
+func (m Neo4j) AddSubsystem(
 	name string,
 	nodes *jgf.JsonGraph,
 	subsystem string,
@@ -255,18 +255,18 @@ func (m Memgraph) AddSubsystem(
 	}
 
 	if count > 0 {
-		log.Printf("We have made a memgraph (subsystem %s) with %d vertices, with %d connections to the dominant!", subsystem, len(subsystem_nodes), count)
+		log.Printf("We have made a Neo4j (subsystem %s) with %d vertices, with %d connections to the dominant!", subsystem, len(subsystem_nodes), count)
 	} else {
-		log.Printf("We have made a memgraph (subsystem %s) with %d vertices", subsystem, len(subsystem_nodes))
+		log.Printf("We have made a Neo4j (subsystem %s) with %d vertices", subsystem, len(subsystem_nodes))
 	}
 	return nil
 }
 
 // RegisterService does a test connection
-func (m Memgraph) RegisterService(s *grpc.Server) error {
+func (m Neo4j) RegisterService(s *grpc.Server) error {
 
 	// This is akin to calling init
-	log.Printf("🧠️ Registering memgraph graph database...\n")
+	log.Printf("🧠️ Registering Neo4j graph database...\n")
 
 	// Do a test connection
 	driver, err := neo4j.NewDriverWithContext(memoryHost, neo4j.BasicAuth(username, password, databaseName))
@@ -305,7 +305,7 @@ func (m Memgraph) RegisterService(s *grpc.Server) error {
 // Since this is called from the client function, it's technically
 // running from the client (not from the server). See examples
 // in comments below.
-func (g Memgraph) Satisfies(
+func (g Neo4j) Satisfies(
 	jobspec *v1.Jobspec,
 	matcher algorithm.MatchAlgorithm,
 ) ([]string, error) {
@@ -493,7 +493,7 @@ func (g Memgraph) Satisfies(
 
 // Init provides extra initialization functionality
 // We check credentials here
-func (g Memgraph) Init(
+func (g Neo4j) Init(
 	options map[string]string,
 ) error {
 
@@ -516,6 +516,6 @@ func (g Memgraph) Init(
 // Add the backend to be known to rainbow
 func init() {
 
-	graph := Memgraph{}
+	graph := Neo4j{}
 	backend.Register(graph)
 }

@@ -1,0 +1,17 @@
+scheduler:
+    secret: chocolate-cookies
+    name: keebler
+    algorithms:
+        selection:
+            name: random
+        match:
+            name: match
+cluster:
+    name: keebler
+    secret: 9703829c-f819-4f1d-a190-654675399a26
+graphdatabase:
+    name: neo4j
+    host: localhost
+clusters:
+    - name: keebler
+      token: rainbow

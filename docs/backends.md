@@ -8,6 +8,48 @@ The memory backend is provided natively by Rainbow, meaning that rainbow runs th
 have grpc that are interacted with by a backend but does not live within rainbow itself.  The memory backend implements a custom depth first search algorithm that is described in [algorithms](algorithms.md).
 It is the default backend if you don't specify a custom one.
 
+## Neo4J
+
+This backend uses [Neo4j](https://neo4j.com/docs/operations-manual/current/docker/introduction/), which is also well-known as a graph database.
+This backend can be run with one docker image (no compose needed):
+
+```bash
+docker run --restart always --publish=7474:7474 --publish=7687:7687 --env NEO4J_AUTH=neo4j/chocolate-cookies neo4j:5.20.0
+```
+
+Then open to `localhost:7474` to login with the credentials above.
+
+### Register
+
+Let's try a register. Start rainbow, targeting the memgraph config:
+
+```bash
+go run cmd/server/server.go  --global-token rainbow --config ./docs/examples/neo4j/rainbow-config.yaml
+```
+
+Then register.
+
+```bash
+go run cmd/rainbow/rainbow.go register cluster --cluster-name keebler --nodes-json ./docs/examples/scheduler/cluster-nodes.json --config-path ./docs/examples/neo4j/rainbow-config.yaml --save
+```
+
+Then register a subsystem:
+
+```bash
+go run cmd/rainbow/rainbow.go register subsystem --subsystem io --nodes-json ./docs/examples/scheduler/cluster-io-subsystem.json --config-path ./docs/examples/neo4j/rainbow-config.yaml
+```
+
+Now let's try submitting a jobspec to match.
+
+```bash
+go run ./cmd/rainbow/rainbow.go submit --config-path ./docs/examples/neo4j/rainbow-config.yaml --nodes 2 --tasks 2 --command "echo hello world"
+```
+
+When you are done, press control+C to kill the docker container. If you ran with detached `-d` just target the name and stop and remove it.
+Note that this backend currently supports match algorithms for range and equality, and these are early in development and need further testing.
+
+
+
 ## Memgraph
 
 This backend uses [Memgraph](https://github.com/memgraph/memgraph) and we are going to deploy with [docker](https://memgraph.com/docs/getting-started/install-memgraph/docker) and then use the [Go SDK](https://memgraph.com/docs/client-libraries/go) in Rainbow. We are testing this because:
