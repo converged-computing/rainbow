@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
 	"github.com/converged-computing/rainbow/pkg/database"
@@ -12,6 +13,31 @@ import (
 
 	"github.com/pkg/errors"
 )
+
+// SaveMetric saves a metric and associated metadata to the database
+func (s *Server) SaveMetric(_ context.Context, in *pb.SaveMetricRequest) (*pb.SaveMetricResponse, error) {
+	if in == nil {
+		return nil, errors.New("request is required")
+	}
+
+	// Assume we start with an error!
+	response := pb.SaveMetricResponse{Status: pb.SaveMetricResponse_SAVE_METRIC_ERROR}
+	if in.Name == "" || in.Value == "" {
+		return &response, errors.New("'Name' and 'Value' are required")
+	}
+	metadata := map[string]string{}
+	if in.Metadata != nil {
+		for k, v := range in.Metadata {
+			metadata[k] = v
+		}
+	}
+	err := s.db.SaveMetric(in.Name, in.Value, metadata)
+	if err != nil {
+		return &response, err
+	}
+	response.Status = pb.SaveMetricResponse_SAVE_METRIC_SUCCESS
+	return &response, nil
+}
 
 // Register a new cluster with the server
 func (s *Server) Register(_ context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
@@ -142,8 +168,6 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 	}
 	log.Printf("📝️ received job %s for %d contender clusters", in.Name, len(clusters))
 
-	// Get state for clusters. Note that we allow clusters that are missing
-	// state data - given that the algorithm needs it, they are not included
 	states, err := s.graph.GetStates(clusters)
 	if err != nil {
 		return nil, err
@@ -168,8 +192,12 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 		}
 		algo = selectAlgo
 	}
+
 	// Use the algorithm to select a final cluster, providing states and the jobspec
+	start := time.Now()
 	selected, err := algo.Select(clusters, states, in.Jobspec, in.SatisfyOnly)
+	duration := time.Since(start)
+	s.db.SaveMetric("select", duration.String(), map[string]string{"name": algo.Name()})
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +217,11 @@ func (s *Server) SubmitJob(_ context.Context, in *pb.SubmitJobRequest) (*pb.Subm
 		}
 		return response, fmt.Errorf("no clusters passed selection")
 	}
+
+	start = time.Now()
 	response, err := s.db.SubmitJob(in, lookup[selected[0]])
+	duration = time.Since(start)
+	s.db.SaveMetric("database-submit-job", duration.String(), map[string]string{})
 	if err == nil {
 		log.Printf("📝️ job %s is assigned to cluster %s", in.Name, selected)
 	}

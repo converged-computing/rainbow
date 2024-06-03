@@ -21,6 +21,35 @@ class RegisterRequest(_message.Message):
     sent: _timestamp_pb2.Timestamp
     def __init__(self, name: _Optional[str] = ..., secret: _Optional[str] = ..., nodes: _Optional[str] = ..., subsystem: _Optional[str] = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
+class SaveMetricRequest(_message.Message):
+    __slots__ = ("name", "value", "metadata")
+    class MetadataEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: str
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    VALUE_FIELD_NUMBER: _ClassVar[int]
+    METADATA_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    value: str
+    metadata: _containers.ScalarMap[str, str]
+    def __init__(self, name: _Optional[str] = ..., value: _Optional[str] = ..., metadata: _Optional[_Mapping[str, str]] = ...) -> None: ...
+
+class SaveMetricResponse(_message.Message):
+    __slots__ = ("status",)
+    class ResultType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        SAVE_METRIC_SUCCESS: _ClassVar[SaveMetricResponse.ResultType]
+        SAVE_METRIC_ERROR: _ClassVar[SaveMetricResponse.ResultType]
+    SAVE_METRIC_SUCCESS: SaveMetricResponse.ResultType
+    SAVE_METRIC_ERROR: SaveMetricResponse.ResultType
+    STATUS_FIELD_NUMBER: _ClassVar[int]
+    status: SaveMetricResponse.ResultType
+    def __init__(self, status: _Optional[_Union[SaveMetricResponse.ResultType, str]] = ...) -> None: ...
+
 class UpdateStateRequest(_message.Message):
     __slots__ = ("cluster", "secret", "payload")
     CLUSTER_FIELD_NUMBER: _ClassVar[int]
@@ -48,7 +77,7 @@ class UpdateStateResponse(_message.Message):
     def __init__(self, status: _Optional[_Union[UpdateStateResponse.ResultType, str]] = ...) -> None: ...
 
 class SubmitJobRequest(_message.Message):
-    __slots__ = ("name", "clusters", "jobspec", "select_algorithm", "select_options", "satisfy_only", "sent")
+    __slots__ = ("name", "clusters", "jobspec", "select_algorithm", "select_options", "satisfy_only", "sent", "jobid")
     class SelectOptionsEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -70,6 +99,7 @@ class SubmitJobRequest(_message.Message):
     SELECT_OPTIONS_FIELD_NUMBER: _ClassVar[int]
     SATISFY_ONLY_FIELD_NUMBER: _ClassVar[int]
     SENT_FIELD_NUMBER: _ClassVar[int]
+    JOBID_FIELD_NUMBER: _ClassVar[int]
     name: str
     clusters: _containers.RepeatedCompositeFieldContainer[SubmitJobRequest.Cluster]
     jobspec: str
@@ -77,7 +107,8 @@ class SubmitJobRequest(_message.Message):
     select_options: _containers.ScalarMap[str, str]
     satisfy_only: bool
     sent: _timestamp_pb2.Timestamp
-    def __init__(self, name: _Optional[str] = ..., clusters: _Optional[_Iterable[_Union[SubmitJobRequest.Cluster, _Mapping]]] = ..., jobspec: _Optional[str] = ..., select_algorithm: _Optional[str] = ..., select_options: _Optional[_Mapping[str, str]] = ..., satisfy_only: bool = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+    jobid: int
+    def __init__(self, name: _Optional[str] = ..., clusters: _Optional[_Iterable[_Union[SubmitJobRequest.Cluster, _Mapping]]] = ..., jobspec: _Optional[str] = ..., select_algorithm: _Optional[str] = ..., select_options: _Optional[_Mapping[str, str]] = ..., satisfy_only: bool = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., jobid: _Optional[int] = ...) -> None: ...
 
 class ReceiveJobsRequest(_message.Message):
     __slots__ = ("cluster", "secret", "maxJobs", "sent")

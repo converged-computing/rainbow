@@ -40,7 +40,7 @@ The command below will register and save the secret to a new configuration file.
 Note that if you provide an existing one, it will use or update it.
 
 ```bash
-python ./examples/flux/register.py keebler --config-path ./rainbow-config.yaml
+python ./examples/flux/register.py --cluster blueberry --config-path ./rainbow-config.yaml
 ```
 ```console
 Saving rainbow config to ./rainbow-config.yaml
@@ -72,7 +72,7 @@ and the name `--subsystem` set to "io." This assumes you've registered your clus
 in your ./rainbow-config.yaml
 
 ```bash
-python ./examples/flux/register-subsystem.py keebler --config-path ./rainbow-config.yaml
+python ./examples/flux/register-subsystem.py --cluster blueberry --config-path ./rainbow-config.yaml
 ```
 ```console
 status: REGISTER_SUCCESS
@@ -105,7 +105,7 @@ In the server window you'll see the subsystem added:
 While we likely will have clusters sending back state when they accept jobs, for now we have a separate endpoint to do a one-off request to update the state. You can test that here.
 
 ```bash
-python ./examples/flux/update-state.py keebler --config-path ./rainbow-config.yaml
+python ./examples/flux/update-state.py --cluster blueberry --config-path ./rainbow-config.yaml
 ```
 ```console
 status: UPDATE_STATE_SUCCESS
@@ -260,6 +260,37 @@ Received 1 jobs to accept...
 ```
 
 If this were running in Flux, we would be able to run it, and the response above has told rainbow that you've accepted it (and rainbow deletes the record of it).
+
+### View Metrics
+
+You can view the tables of the database (and parse them as you please) with the following example:
+
+```bash
+$ python examples/db/read.py
+```
+```console
+Connecting to database /home/vanessa/Desktop/Code/rainbow/rainbow.db...
+<sqlite3.Cursor object at 0x7ca4dc8c8fc0>
+
+🥣️ Inspecting clusters table:
+  name: blueberry, token: rainbow, secret: 362dd73f-7f16-4590-8820-dfa425a29f27
+
+📐️ Inspecting metrics table:
+  id: 1, name: python-client-register, value: 0.013767242431640625, metadata: {"cluster":"blueberry"}
+  id: 2, name: python-client-register-subsystem, value: 0.0019719600677490234, metadata: {"cluster":"blueberry","subsystem":"io"}
+  id: 3, name: python-submit-satisfies, value: 0.003846406936645508, metadata: {"jobname":"tart-dog-0410"}
+  id: 4, name: select, value: 4.122µs, metadata: {"name":"random"}
+  id: 5, name: database-submit-job, value: 10.645443ms
+  id: 6, name: python-client-submit-job, value: 0.03459811210632324, metadata: {"jobname":"tart-dog-0410"}
+  id: 7, name: python-submit-satisfies, value: 0.004126548767089844, metadata: {"jobname":"sticky-dog-7514"}
+  id: 8, name: select, value: 1.337µs, metadata: {"name":"random"}
+  id: 9, name: database-submit-job, value: 12.870171ms
+  id: 10, name: python-client-submit-job, value: 0.03689241409301758, metadata: {"jobname":"sticky-dog-7514"}
+
+💼️ Inspecting jobs table:
+  id: 1, cluster: blueberry, name: tart-dog-0410, jobspec: "resources:\n  echo:\n    replicas: 1\n    type: rack\n    with:\n    - count: 1\n      type: node\n      with:\n      - count: 1\n        type: core\ntasks:\n- command:\n  - echo\n  - hello\n  - world\n  resources: echo\nversion: 1\n"
+  id: 2, cluster: blueberry, name: sticky-dog-7514, jobspec: "resources:\n  ior:\n    replicas: 1\n    requires:\n    - field: type\n      match: shm\n      name: io\n    type: node\n    with:\n    - count: 2\n      type: core\ntask:\n  command:\n  - ior\nversion: 1\n"
+```
 
 
 ## License

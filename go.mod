@@ -9,6 +9,7 @@ require (
 	github.com/compspec/jobspec-go v0.0.0-20240510054255-ee02cdc7d3d4
 	github.com/converged-computing/jsongraph-go v0.0.0-20240229082022-c6887a5a00fe
 	github.com/fatih/color v1.16.0
+	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.6.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/neo4j/neo4j-go-driver/v5 v5.20.0
@@ -19,7 +20,6 @@ require (
 )
 
 require (
-	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect

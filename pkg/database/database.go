@@ -159,6 +159,17 @@ func (db *Database) createTables() error {
 	  );
 	`
 
+	// A metric can be any value (time, memory, etc) important to record
+	// Some metrics have associated metadata (e.g., jobid)
+	createMetricTableSQL := `
+	CREATE TABLE metrics (
+	  id integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+	  name TEXT NOT NULL,
+	  value TEXT NOT NULL,
+	  metadata TEXT
+	);
+	`
+
 	// A job has a unique id and is assigned a cluster
 	createJobsTableSQL := `
 	  CREATE TABLE jobs (
@@ -170,7 +181,7 @@ func (db *Database) createTables() error {
 		);`
 
 	// Create single query for tables
-	createSQL := createClusterTableSQL + "\n" + createJobsTableSQL
+	createSQL := createClusterTableSQL + "\n" + createJobsTableSQL + "\n" + createMetricTableSQL
 	log.Println("   🏓️ creating tables...")
 
 	// Execute SQL query
