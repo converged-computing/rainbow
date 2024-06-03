@@ -9,6 +9,9 @@ option go_package = "github.com/converged-computing/rainbow/pkg/api/v1";
 // RainbowSchedulerService provides API endpoints for interacting with the central scheduler service
 service RainbowScheduler {
 
+  // SaveMetric saves a metric to the database
+  rpc SaveMetric(SaveMetricRequest) returns (SaveMetricResponse);
+
   // Register cluster - request to register a new cluster
   rpc Register(RegisterRequest) returns (RegisterResponse);
 
@@ -39,6 +42,20 @@ message RegisterRequest {
   string nodes = 3;
   string subsystem = 4;
   google.protobuf.Timestamp sent = 5;
+}
+
+message SaveMetricRequest {
+  string name = 1;
+  string value = 2;
+  map<string, string> metadata = 3;
+}
+
+message SaveMetricResponse {
+  enum ResultType {
+    SAVE_METRIC_SUCCESS = 0;
+    SAVE_METRIC_ERROR = 1;
+  }
+  ResultType status = 1;
 }
 
 // UpdateStateRequests allows a cluster to set arbitrary metadata
@@ -75,6 +92,7 @@ message SubmitJobRequest {
   map<string,string> select_options = 5;
   bool satisfy_only = 6;
   google.protobuf.Timestamp sent = 7;
+  int64 jobid = 8;
 
   message Cluster {
     string name = 1;

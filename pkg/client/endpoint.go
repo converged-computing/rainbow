@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	js "github.com/compspec/jobspec-go/pkg/nextgen/v1"
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
@@ -59,7 +60,28 @@ func (c *RainbowClient) SubmitJob(
 	// (but we limit our search). Likely the first is preferable.
 	// Ask the graphDB if the jobspec can be satisfied
 	// TODO what does a match look like?
+
+	start := time.Now()
 	matches, err := graphDB.Satisfies(job, matchAlgo)
+	duration := time.Since(start)
+
+	// Here we are checking for the error from Satisfies. We do the save
+	// call first so we can at least time it
+	if err != nil {
+		return response, err
+	}
+
+	// TIMING: of match algorithm via satisfies
+	// Prepare the Match time (called via Satisfies)
+	// Note this is NOT a job id, it is the name from the jobspec to the cluster
+	in := pb.SaveMetricRequest{
+		Name:     "satisfies",
+		Value:    duration.String(),
+		Metadata: map[string]string{"job-name": job.Name},
+	}
+	_, err = c.service.SaveMetric(ctx, &in)
+
+	// Now check for the saving metric error
 	if err != nil {
 		return response, err
 	}
@@ -95,6 +117,7 @@ func (c *RainbowClient) SubmitJob(
 	// Validate that the cluster exists, and we have the right token.
 	// The response is the same either way - not found does not reveal
 	// additional information to the client trying to find it
+	// This function on the server does timing on its own
 	response, err = c.service.SubmitJob(ctx, &pb.SubmitJobRequest{
 		Name:     job.GetJobName(),
 		Clusters: clusters,
@@ -212,6 +235,7 @@ func (c *RainbowClient) Register(
 	defer cancel()
 
 	// Hit the register endpoint
+	start := time.Now()
 	response, err = c.service.Register(ctx, &pb.RegisterRequest{
 		Name:      cluster,
 		Secret:    secret,
@@ -219,10 +243,20 @@ func (c *RainbowClient) Register(
 		Subsystem: subsystem,
 		Sent:      ts.Now(),
 	})
-
-	// For now we blindly accept all register, it's a fake endpoint
+	duration := time.Since(start)
 	if err != nil {
 		return response, errors.Wrap(err, "could not register cluster")
+	}
+
+	// TIMING: of register
+	in := pb.SaveMetricRequest{
+		Name:     "register",
+		Value:    duration.String(),
+		Metadata: map[string]string{"cluster": cluster},
+	}
+	_, err = c.service.SaveMetric(ctx, &in)
+	if err != nil {
+		return response, errors.Wrap(err, "could not time 'register' function for cluster")
 	}
 	return response, nil
 }
@@ -317,6 +351,7 @@ func (c *RainbowClient) RegisterSubsystem(
 	defer cancel()
 
 	// Hit the register subsystem endpoint
+	start := time.Now()
 	response, err = c.service.RegisterSubsystem(ctx, &pb.RegisterRequest{
 		Name:      cluster,
 		Secret:    secret,
@@ -324,12 +359,21 @@ func (c *RainbowClient) RegisterSubsystem(
 		Subsystem: subsystem,
 		Sent:      ts.Now(),
 	})
-
-	// For now we blindly accept all register, it's a fake endpoint
-
+	duration := time.Since(start)
 	if err != nil {
 		return response, errors.Wrap(err, "could not register cluster")
 	}
 
+	// TIMING: of register
+	// Only save if we don't have an error
+	in := pb.SaveMetricRequest{
+		Name:     "register-subsystem",
+		Value:    duration.String(),
+		Metadata: map[string]string{"cluster": cluster, "subsystem": subsystem},
+	}
+	_, err = c.service.SaveMetric(ctx, &in)
+	if err != nil {
+		return response, errors.Wrap(err, "could not time 'register-subsystem' function for cluster")
+	}
 	return response, nil
 }

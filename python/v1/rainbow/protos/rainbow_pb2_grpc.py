@@ -14,6 +14,11 @@ class RainbowSchedulerStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.SaveMetric = channel.unary_unary(
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/SaveMetric",
+            request_serializer=rainbow__pb2.SaveMetricRequest.SerializeToString,
+            response_deserializer=rainbow__pb2.SaveMetricResponse.FromString,
+        )
         self.Register = channel.unary_unary(
             "/convergedcomputing.org.grpc.v1.RainbowScheduler/Register",
             request_serializer=rainbow__pb2.RegisterRequest.SerializeToString,
@@ -48,6 +53,12 @@ class RainbowSchedulerStub(object):
 
 class RainbowSchedulerServicer(object):
     """RainbowSchedulerService provides API endpoints for interacting with the central scheduler service"""
+
+    def SaveMetric(self, request, context):
+        """SaveMetric saves a metric to the database"""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def Register(self, request, context):
         """Register cluster - request to register a new cluster"""
@@ -90,6 +101,11 @@ class RainbowSchedulerServicer(object):
 
 def add_RainbowSchedulerServicer_to_server(servicer, server):
     rpc_method_handlers = {
+        "SaveMetric": grpc.unary_unary_rpc_method_handler(
+            servicer.SaveMetric,
+            request_deserializer=rainbow__pb2.SaveMetricRequest.FromString,
+            response_serializer=rainbow__pb2.SaveMetricResponse.SerializeToString,
+        ),
         "Register": grpc.unary_unary_rpc_method_handler(
             servicer.Register,
             request_deserializer=rainbow__pb2.RegisterRequest.FromString,
@@ -130,6 +146,35 @@ def add_RainbowSchedulerServicer_to_server(servicer, server):
 # This class is part of an EXPERIMENTAL API.
 class RainbowScheduler(object):
     """RainbowSchedulerService provides API endpoints for interacting with the central scheduler service"""
+
+    @staticmethod
+    def SaveMetric(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/SaveMetric",
+            rainbow__pb2.SaveMetricRequest.SerializeToString,
+            rainbow__pb2.SaveMetricResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
     def Register(

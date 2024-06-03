@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 import grpc
 import jobspec.core as js
@@ -8,6 +9,7 @@ import jobspec.core.converter as converter
 import rainbow.backends as backends
 import rainbow.config as config
 import rainbow.defaults as defaults
+import rainbow.metrics as metrics
 import rainbow.types as types
 import rainbow.utils as utils
 from rainbow.protos import rainbow_pb2, rainbow_pb2_grpc
@@ -96,10 +98,20 @@ class RainbowClient:
             secret=secret,
             nodes=nodes,
         )
+        return self.with_time(
+            "Register", "python-client-register", registerRequest, {"cluster": cluster}
+        )
 
-        with grpc.insecure_channel(self.host) as channel:
-            stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
-            response = stub.Register(registerRequest)
+    def with_time(self, name, funcName, request, metadata):
+        """
+        Make an API call and time it.
+
+        A function (or metric name) is required, along with the
+        name of the function. Kwargs are optional, and should be metadata.
+        """
+        response, timeResponse = metrics.with_time(name, self.host, funcName, request, metadata)
+        if timeResponse != 0:
+            print(f"Warning: issue with saving time: {timeResponse}")
         return response
 
     def update_state(self, cluster, state_data, secret):
@@ -126,10 +138,9 @@ class RainbowClient:
             secret=secret,
             payload=json.dumps(payload),
         )
-        with grpc.insecure_channel(self.host) as channel:
-            stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
-            response = stub.UpdateState(request)
-        return response
+        return self.with_time(
+            "UpdateState", "python-client-update-state", request, {"cluster": cluster}
+        )
 
     def register_subsystem(self, cluster, subsystem, secret, nodes):
         """
@@ -152,11 +163,12 @@ class RainbowClient:
             nodes=nodes,
             subsystem=subsystem,
         )
-
-        with grpc.insecure_channel(self.host) as channel:
-            stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
-            response = stub.RegisterSubsystem(registerRequest)
-        return response
+        return self.with_time(
+            "RegisterSubsystem",
+            "python-client-register-subsystem",
+            registerRequest,
+            {"subsystem": subsystem, "cluster": cluster},
+        )
 
     def load_backend(self):
         """
@@ -203,7 +215,19 @@ class RainbowClient:
         match_algo = match_algo or self.cfg.match_algorithm
         select_algo = select_algo or self.cfg.selection_algorithm
         select_options = select_options or self.cfg.selection_algorithm_options
+
+        # Satisfy to the graph endpoint can use a different host than rainbow proper
+        # This means we time it separately (from here) with the primary rainbow host
+        start = time.time()
         satisfy_response = self.backend.satisfies(jobspec, match_algo)
+        end = time.time()
+        response = metrics.save_metric(
+            self.host, "python-submit-satisfies", str(end - start), {"jobname": name}
+        )
+        if response.status != 0:
+            print("Issue saving metric 'satifies'")
+            return response
+
         matches = satisfy_response.clusters
 
         # No matches?
@@ -232,10 +256,9 @@ class RainbowClient:
             select_options=select_options,
             jobspec=jobspec.to_yaml(),
         )
-
-        with grpc.insecure_channel(self.host) as channel:
-            stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
-            response = stub.SubmitJob(submitRequest)
+        response = self.with_time(
+            "SubmitJob", "python-client-submit-job", submitRequest, {"jobname": name}
+        )
 
         res = types.SatisfyResponse(
             cluster=response.cluster,

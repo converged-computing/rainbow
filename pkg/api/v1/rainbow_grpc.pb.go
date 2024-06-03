@@ -22,6 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RainbowSchedulerClient interface {
+	// SaveMetric saves a metric to the database
+	SaveMetric(ctx context.Context, in *SaveMetricRequest, opts ...grpc.CallOption) (*SaveMetricResponse, error)
 	// Register cluster - request to register a new cluster
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	// Register cluster - request to register a new cluster
@@ -43,6 +45,15 @@ type rainbowSchedulerClient struct {
 
 func NewRainbowSchedulerClient(cc grpc.ClientConnInterface) RainbowSchedulerClient {
 	return &rainbowSchedulerClient{cc}
+}
+
+func (c *rainbowSchedulerClient) SaveMetric(ctx context.Context, in *SaveMetricRequest, opts ...grpc.CallOption) (*SaveMetricResponse, error) {
+	out := new(SaveMetricResponse)
+	err := c.cc.Invoke(ctx, "/convergedcomputing.org.grpc.v1.RainbowScheduler/SaveMetric", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *rainbowSchedulerClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
@@ -103,6 +114,8 @@ func (c *rainbowSchedulerClient) AcceptJobs(ctx context.Context, in *AcceptJobsR
 // All implementations must embed UnimplementedRainbowSchedulerServer
 // for forward compatibility
 type RainbowSchedulerServer interface {
+	// SaveMetric saves a metric to the database
+	SaveMetric(context.Context, *SaveMetricRequest) (*SaveMetricResponse, error)
 	// Register cluster - request to register a new cluster
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	// Register cluster - request to register a new cluster
@@ -123,6 +136,9 @@ type RainbowSchedulerServer interface {
 type UnimplementedRainbowSchedulerServer struct {
 }
 
+func (UnimplementedRainbowSchedulerServer) SaveMetric(context.Context, *SaveMetricRequest) (*SaveMetricResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SaveMetric not implemented")
+}
 func (UnimplementedRainbowSchedulerServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
@@ -152,6 +168,24 @@ type UnsafeRainbowSchedulerServer interface {
 
 func RegisterRainbowSchedulerServer(s grpc.ServiceRegistrar, srv RainbowSchedulerServer) {
 	s.RegisterService(&RainbowScheduler_ServiceDesc, srv)
+}
+
+func _RainbowScheduler_SaveMetric_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SaveMetricRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RainbowSchedulerServer).SaveMetric(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/convergedcomputing.org.grpc.v1.RainbowScheduler/SaveMetric",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RainbowSchedulerServer).SaveMetric(ctx, req.(*SaveMetricRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _RainbowScheduler_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -269,6 +303,10 @@ var RainbowScheduler_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "convergedcomputing.org.grpc.v1.RainbowScheduler",
 	HandlerType: (*RainbowSchedulerServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "SaveMetric",
+			Handler:    _RainbowScheduler_SaveMetric_Handler,
+		},
 		{
 			MethodName: "Register",
 			Handler:    _RainbowScheduler_Register_Handler,
