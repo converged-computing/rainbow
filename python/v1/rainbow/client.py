@@ -74,9 +74,9 @@ class RainbowClient:
             jobids=jobids,
         )
 
-        stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
-        response = stub.AcceptJobs(request)
-
+        with auth.grpc_channel(self.host, self.use_ssl) as channel:
+            stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
+            response = stub.AcceptJobs(request)
         return jobs
 
     def register(self, cluster, secret, cluster_nodes):

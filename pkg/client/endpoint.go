@@ -185,8 +185,6 @@ func (c *RainbowClient) Register(
 	if secret == "" {
 		return response, errors.New("secret is required")
 	}
-
-	//	return c.service != nil && c.connection != nil && c.connection.GetState() == connectivity.Ready
 	if !c.Connected() {
 		return response, errors.New("client is not connected")
 	}

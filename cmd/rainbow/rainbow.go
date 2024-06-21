@@ -100,9 +100,6 @@ func main() {
 		return
 	}
 
-	// TODO: refactor so configuration is generated at this level
-	// and we don't need to pass all the custom parameters to each client function
-
 	// Generate certificate manager
 	cert, err := certs.NewClientCertificate(*caCertFile, *certFile, *keyFile)
 	if err != nil {
@@ -111,7 +108,7 @@ func main() {
 
 	// Config is the only command that doesn't require the client
 	if configCmd.Happened() && configInitCmd.Happened() {
-		err := config.RunInit(*cfg, *clusterName, *selectAlgo, *matchAlgo, cert)
+		err := config.RunInit(*cfg, *clusterName, *selectAlgo, *matchAlgo)
 		if err != nil {
 			log.Fatalf("Issue with config: %s\n", err)
 		}

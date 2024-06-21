@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/converged-computing/rainbow/pkg/certs"
 	"github.com/converged-computing/rainbow/pkg/config"
 	"gopkg.in/yaml.v3"
 )
@@ -17,7 +16,6 @@ var (
 func RunInit(
 	path string,
 	clusterName, selectAlgo, matchAlgo string,
-	cert *certs.Certificate,
 ) error {
 
 	if path == "" {

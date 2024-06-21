@@ -22,7 +22,6 @@ type RainbowClient struct {
 	host       string
 	connection *grpc.ClientConn
 	service    pb.RainbowSchedulerClient
-	creds      grpc.DialOption
 }
 
 var _ Client = (*RainbowClient)(nil)
@@ -54,12 +53,9 @@ func NewClient(host string, cert *certs.Certificate) (Client, error) {
 	c := &RainbowClient{host: host}
 
 	// The context allows us to control the timeout
-	// ctx, cancel := context.WithTimeout(context.TODO(), defaultTimeout)
-	// defer cancel()
+	ctx, cancel := context.WithTimeout(context.TODO(), defaultTimeout)
+	defer cancel()
 
-	// Set up a connection to the server.
-	// creds := grpc.WithTransportCredentials(insecure.NewCredentials())
-	// conn, err := grpc.DialContext(ctx, c.GetHost(), creds, grpc.WithBlock())
 	// Are we using tls?
 	var transportCreds credentials.TransportCredentials
 	var err error
@@ -72,7 +68,7 @@ func NewClient(host string, cert *certs.Certificate) (Client, error) {
 
 	// Set up a connection to the server.
 	creds := grpc.WithTransportCredentials(transportCreds)
-	conn, err := grpc.Dial(c.GetHost(), creds, grpc.WithBlock())
+	conn, err := grpc.DialContext(ctx, c.GetHost(), creds, grpc.WithBlock())
 
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to connect to %s", host)
