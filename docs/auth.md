@@ -6,7 +6,7 @@ Rainbow currently supports two modes of running:
 - With certificates (with `--ssl` flag)
 
 
-Without authentication, just use rainbow as is. 
+Without authentication, just use rainbow as is.
 
 ## With Authentication
 
@@ -67,14 +67,23 @@ With the server running, try doing a register without credentials.
 make register
 ```
 
-WIP not working: https://medium.com/@mertkimyonsen/securing-grpc-connection-with-ssl-tls-certificate-using-go-db3852fe89dd
-
-It will hang. Likely we can add a timeout to prevent that, but it's not needed for now. Let's add the client credentials and see if we get a different response.
+You'll note that it hangs, and doesn't work! Now we can add the client credentials to get a different response:
 
 ```bash
 go run cmd/rainbow/rainbow.go register cluster --cluster-name keebler --nodes-json ./docs/examples/scheduler/cluster-nodes.json \
     --config-path ./docs/examples/scheduler/rainbow-config.yaml --save \
     --cert /home/vanessa/Desktop/Code/rainbow/bin/certs/client-cert.pem --ca-cert /home/vanessa/Desktop/Code/rainbow/bin/certs/ca-cert.pem --key /home/vanessa/Desktop/Code/rainbow/bin/certs/client-key.pem
 ```
+```console
+2024/06/21 06:51:02 🌈️ starting client (localhost:50051)...
+2024/06/21 06:51:02 🔐️ adding tls credentials
+2024/06/21 06:51:02 registering cluster: keebler
+2024/06/21 06:51:02 status: REGISTER_SUCCESS
+2024/06/21 06:51:02 secret: 618c0e98-f4a8-401c-920e-702f6a917c76
+2024/06/21 06:51:02  token: rainbow
+2024/06/21 06:51:02 Saving cluster secret to ./docs/examples/scheduler/rainbow-config.yaml
+```
+
+Note that I followed the tutorial instructions [here](https://medium.com/@mertkimyonsen/securing-grpc-connection-with-ssl-tls-certificate-using-go-db3852fe89dd), although there were a few hairy bits.
 
 [home](/README.md#rainbow-scheduler)

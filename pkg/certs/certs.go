@@ -30,7 +30,7 @@ func (c *Certificate) IsEmpty() bool {
 // Validate all fields are defined
 func (c *Certificate) Validate() error {
 	if c.IsEmpty() {
-		return nil
+		return fmt.Errorf("the certificate is missing all fields")
 	}
 	if c.caCertFile == "" {
 		return fmt.Errorf("the caCertFile is missing")

@@ -5,6 +5,7 @@ import grpc
 import jobspec.core as js
 import jobspec.core.converter as converter
 
+import rainbow.auth as auth
 import rainbow.backends as backends
 import rainbow.config as config
 import rainbow.defaults as defaults
@@ -18,7 +19,7 @@ class RainbowClient:
     A RainbowClient is able to interact with a Rainbow cluster from Python.
     """
 
-    def __init__(self, host="localhost:50051", config_file=None, database=None):
+    def __init__(self, host="localhost:50051", config_file=None, database=None, use_ssl=False):
         """
         Create a new rainbow client to interact with a rainbow cluster.
         """
@@ -28,6 +29,7 @@ class RainbowClient:
         # load the graph database backend
         self.set_database(database)
         self.load_backend()
+        self.use_ssl = use_ssl
 
     def receive_jobs(self, max_jobs=None):
         """
@@ -47,7 +49,7 @@ class RainbowClient:
         if max_jobs:
             request.maxJobs = max_jobs
 
-        with grpc.insecure_channel(self.host) as channel:
+        with auth.grpc_channel(self.host, self.use_ssl) as channel:
             stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
             response = stub.ReceiveJobs(request)
 
@@ -71,9 +73,10 @@ class RainbowClient:
             secret=cluster["secret"],
             jobids=jobids,
         )
-        with grpc.insecure_channel(self.host) as channel:
-            stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
-            response = stub.AcceptJobs(request)
+
+        stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
+        response = stub.AcceptJobs(request)
+
         return jobs
 
     def register(self, cluster, secret, cluster_nodes):
@@ -97,7 +100,7 @@ class RainbowClient:
             nodes=nodes,
         )
 
-        with grpc.insecure_channel(self.host) as channel:
+        with auth.grpc_channel(self.host, self.use_ssl) as channel:
             stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
             response = stub.Register(registerRequest)
         return response
@@ -126,7 +129,7 @@ class RainbowClient:
             secret=secret,
             payload=json.dumps(payload),
         )
-        with grpc.insecure_channel(self.host) as channel:
+        with auth.grpc_channel(self.host, self.use_ssl) as channel:
             stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
             response = stub.UpdateState(request)
         return response
@@ -153,7 +156,7 @@ class RainbowClient:
             subsystem=subsystem,
         )
 
-        with grpc.insecure_channel(self.host) as channel:
+        with auth.grpc_channel(self.host, self.use_ssl) as channel:
             stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
             response = stub.RegisterSubsystem(registerRequest)
         return response
@@ -233,7 +236,7 @@ class RainbowClient:
             jobspec=jobspec.to_yaml(),
         )
 
-        with grpc.insecure_channel(self.host) as channel:
+        with auth.grpc_channel(self.host, self.use_ssl) as channel:
             stub = rainbow_pb2_grpc.RainbowSchedulerStub(channel)
             response = stub.SubmitJob(submitRequest)
 

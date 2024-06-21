@@ -5,6 +5,7 @@
 ![https://github.com/converged-computing/rainbow/raw/main/docs/img/rainbow.png](https://github.com/converged-computing/rainbow/raw/main/docs/img/rainbow.png)
 
 This is the rainbow scheduler prototype, specifically Python bindings for a gRPC client. To learn more about rainbow, visit [https://github.com/converged-computing/rainbow](https://github.com/converged-computing/rainbow).
+Note that SSL is implemented, but needs to be tested with a production certificate for the Python setup.
 
 ## Example
 

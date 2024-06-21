@@ -9,18 +9,18 @@ fi
 
 cd ${root}
 echo "Building in ${root}"
-ls 
+ls
 sleep 3
 
 # delete pem file
-rm *.pem 
+rm *.pem
 
 # Create CA private key and self-signed certificate
 # adding -nodes to not encrypt the private key
 openssl req -x509 -newkey rsa:4096 -nodes -days 365 -keyout ca-key.pem -out ca-cert.pem -subj "/C=US/ST=California/CN=localhost"
 
 echo "CA's self-signed certificate"
-openssl x509 -in ca-cert.pem -noout -text 
+openssl x509 -in ca-cert.pem -noout -text
 
 # Create Web Server private key and CSR
 # adding -nodes to not encrypt the private key

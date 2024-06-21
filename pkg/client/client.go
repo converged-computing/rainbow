@@ -22,6 +22,7 @@ type RainbowClient struct {
 	host       string
 	connection *grpc.ClientConn
 	service    pb.RainbowSchedulerClient
+	creds      grpc.DialOption
 }
 
 var _ Client = (*RainbowClient)(nil)
@@ -71,14 +72,8 @@ func NewClient(host string, cert *certs.Certificate) (Client, error) {
 
 	// Set up a connection to the server.
 	creds := grpc.WithTransportCredentials(transportCreds)
-	conn, err := grpc.Dial(c.GetHost(), creds, grpc.WithBlock())	
+	conn, err := grpc.Dial(c.GetHost(), creds, grpc.WithBlock())
 
-	// Something else I was trying
-	// conn, err := grpc.Dial(c.GetHost(),
-	//	creds,
-		//		grpc.WithBlock(),
-	//	grpc.FailOnNonTempDialError(true),
-	// )
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to connect to %s", host)
 	}
