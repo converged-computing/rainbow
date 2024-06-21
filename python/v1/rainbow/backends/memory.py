@@ -1,5 +1,4 @@
-import grpc
-
+import rainbow.auth as auth
 import rainbow.protos.memory_pb2 as memory_pb2
 import rainbow.protos.memory_pb2_grpc as memory_pb2_grpc
 
@@ -24,7 +23,7 @@ class MemoryBackend(GraphBackend):
         request = memory_pb2.SatisfyRequest(payload=jobspec.to_str(), matcher=matcher)
 
         # Host should be set from the database_options from the client
-        with grpc.insecure_channel(self.host) as channel:
+        with auth.grpc_channel(self.host, self.use_ssl) as channel:
             stub = memory_pb2_grpc.MemoryGraphStub(channel)
             response = stub.Satisfy(request)
         return response

@@ -11,6 +11,8 @@ import (
 	"github.com/converged-computing/rainbow/cmd/rainbow/register"
 	"github.com/converged-computing/rainbow/cmd/rainbow/submit"
 	"github.com/converged-computing/rainbow/cmd/rainbow/update"
+	"github.com/converged-computing/rainbow/pkg/certs"
+	"github.com/converged-computing/rainbow/pkg/client"
 	"github.com/converged-computing/rainbow/pkg/types"
 
 	// Register database backends and selection algorithms
@@ -50,6 +52,11 @@ func main() {
 	configCmd := parser.NewCommand("config", "Interact with rainbow configs")
 	configInitCmd := configCmd.NewCommand("init", "Create a new configuration file")
 	cfg := parser.String("", "config-path", &argparse.Options{Help: "Configuration file for cluster credentials"})
+
+	// Credentials for client tls
+	caCertFile := parser.String("", "ca-cert", &argparse.Options{Help: "Client CA cert file"})
+	certFile := parser.String("", "cert", &argparse.Options{Help: "Client cert file"})
+	keyFile := parser.String("", "key", &argparse.Options{Help: "Client key file"})
 
 	// Shared values
 	host := parser.String("", "host", &argparse.Options{Default: "localhost:50051", Help: "Scheduler server address (host:port)"})
@@ -93,15 +100,30 @@ func main() {
 		return
 	}
 
+	// Generate certificate manager
+	cert, err := certs.NewClientCertificate(*caCertFile, *certFile, *keyFile)
+	if err != nil {
+		log.Fatalf("error creating certificate manager: %v", err)
+	}
+
+	// Config is the only command that doesn't require the client
 	if configCmd.Happened() && configInitCmd.Happened() {
 		err := config.RunInit(*cfg, *clusterName, *selectAlgo, *matchAlgo)
 		if err != nil {
 			log.Fatalf("Issue with config: %s\n", err)
 		}
+		return
+	}
 
-	} else if stateCmd.Happened() {
+	// Create the client to be used across calls
+	client, err := client.NewClient(*host, cert)
+	if err != nil {
+		log.Fatalf("Issue creating client: %s\n", err)
+	}
+
+	if stateCmd.Happened() {
 		err := update.UpdateState(
-			*host,
+			client,
 			*clusterName,
 			*stateFile,
 			*cfg,
@@ -114,7 +136,7 @@ func main() {
 
 		if subsysCmd.Happened() {
 			err := register.RegisterSubsystem(
-				*host,
+				client,
 				*clusterName,
 				*clusterNodes,
 				*subsystem,
@@ -125,7 +147,7 @@ func main() {
 			}
 		} else if registerClusterCmd.Happened() {
 			err := register.Run(
-				*host,
+				client,
 				*clusterName,
 				*clusterNodes,
 				*secret,
@@ -145,7 +167,7 @@ func main() {
 
 	} else if receiveCmd.Happened() {
 		err := receive.Run(
-			*host,
+			client,
 			*clusterName,
 			*clusterSecret,
 			*maxJobs,
@@ -156,7 +178,7 @@ func main() {
 		}
 	} else if submitCmd.Happened() {
 		err := submit.Run(
-			*host,
+			client,
 			*jobName,
 			*command,
 			*nodes,

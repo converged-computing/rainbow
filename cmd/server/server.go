@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/converged-computing/rainbow/pkg/certs"
 	"github.com/converged-computing/rainbow/pkg/config"
 	rlog "github.com/converged-computing/rainbow/pkg/logger"
 	"github.com/converged-computing/rainbow/pkg/server"
@@ -26,6 +27,9 @@ var (
 	loggingLevel = 3
 	name         = "rainbow"
 	sqliteFile   = "rainbow.db"
+	caCertFile   = ""
+	certFile     = ""
+	keyFile      = ""
 	configFile   = ""
 	matchAlgo    = "match"
 	selectAlgo   = "random"
@@ -44,9 +48,13 @@ func main() {
 	flag.StringVar(&database, "graph-database", database, "graph database backend (defaults to memory)")
 	flag.StringVar(&selectAlgo, "select-algorithm", selectAlgo, "selection algorithm for final cluster selection (defaults to random)")
 	flag.StringVar(&matchAlgo, "match-algorithm", matchAlgo, "match algorithm for graph (defaults to random)")
+	flag.StringVar(&caCertFile, "ca-cert", caCertFile, "Server certificate file for TLS (e.g., ca-cert.pem)")
+	flag.StringVar(&certFile, "cert", certFile, "Server certificate file for TLS (e.g., server-cert.pem)")
+	flag.StringVar(&keyFile, "key", keyFile, "Server key file for TLS (e.g., server-key.pem)")
 	flag.StringVar(&configFile, "config", configFile, "rainbow config file")
 	flag.IntVar(&loggingLevel, "loglevel", loggingLevel, "rainbow logging level (0 to 5)")
 	flag.BoolVar(&cleanup, "cleanup", cleanup, "cleanup previous sqlite database (default: false)")
+
 	flag.Parse()
 
 	// If the logging level isn't the default, set it
@@ -55,14 +63,35 @@ func main() {
 	}
 
 	// Load (or generate a default)  config file here, if provided
-	cfg, err := config.NewRainbowClientConfig(configFile, name, secret, database, selectAlgo, matchAlgo)
+	cfg, err := config.NewRainbowClientConfig(
+		configFile,
+		name,
+		secret,
+		database,
+		selectAlgo,
+		matchAlgo,
+	)
 	if err != nil {
 		log.Fatalf("error while creating server: %v", err)
 	}
 
+	// Generate certificate manager
+	cert, err := certs.NewServerCertificate(caCertFile, certFile, keyFile)
+	if err != nil {
+		log.Fatalf("error creating certificate manager: %v", err)
+	}
+
 	// create server
 	log.Print("creating 🌈️ server...")
-	s, err := server.NewServer(cfg, types.Version, sqliteFile, cleanup, globalToken, host)
+	s, err := server.NewServer(
+		cfg,
+		types.Version,
+		sqliteFile,
+		cleanup,
+		globalToken,
+		host,
+		cert,
+	)
 	if err != nil {
 		log.Fatalf("error while creating server: %v", err)
 	}

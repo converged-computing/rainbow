@@ -188,6 +188,7 @@ func (c *RainbowClient) Register(
 	if !c.Connected() {
 		return response, errors.New("client is not connected")
 	}
+
 	// The cluster nodes file must be defined
 	if clusterNodes == "" {
 		return response, fmt.Errorf("cluster nodes file must be provided with --nodes-json")

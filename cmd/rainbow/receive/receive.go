@@ -11,15 +11,12 @@ import (
 // Run will check a manifest list of artifacts against a host machine
 // For now, the host machine parameters will be provided as flags
 func Run(
-	host, cluster, secret string,
+	c client.Client,
+	cluster, secret string,
 	maxJobs int,
 	cfgFile string,
-) error {
 
-	c, err := client.NewClient(host)
-	if err != nil {
-		return nil
-	}
+) error {
 
 	// Note that 0 or below indicates "show all jobs"
 	if maxJobs >= 1 {

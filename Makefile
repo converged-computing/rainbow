@@ -1,5 +1,6 @@
 HERE ?= $(shell pwd)
 LOCALBIN ?= $(shell pwd)/bin
+CERTBIN ?= $(LOCALBIN)/certs
 VERSION    :=$(shell cat .version)
 YAML_FILES :=$(shell find . ! -path "./vendor/*" -type f -regex ".*y*ml" -print)
 REGISTRY  ?= ghcr.io/converged-computing
@@ -11,39 +12,47 @@ all: help
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
+.PHONY: $(CERTBIN)
+$(CERTBIN):
+	mkdir -p $(CERTBIN)
+
 .PHONY: protoc
 protoc: $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 	GOBIN=$(LOCALBIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
-.PHONY: build
+.PHONY: build ## Build client and server
 build: build-cli build-rainbow
 
 .PHONY: build-cli
-build-cli: $(LOCALBIN)
+build-cli: $(LOCALBIN) ## Build rainbow Go client
 	GO111MODULE="on" go build -o $(LOCALBIN)/rainbow cmd/rainbow/rainbow.go
 
 .PHONY: build-rainbow
-build-rainbow: $(LOCALBIN)
+build-rainbow: $(LOCALBIN) ## Build rainbow scheduler (server)
 	GO111MODULE="on" go build -o $(LOCALBIN)/rainbow-scheduler cmd/server/server.go
 
-.PHONY: docker
+.PHONY: docker ## Make all docker images
 docker: docker-flux docker-ubuntu
 
 .PHONY: docker-flux
-docker-flux:
+docker-flux: ## Make docker ubuntu + flux image
 	docker build --build-arg base=fluxrm/flux-sched:jammy -t $(REGISTRY)/rainbow-flux:latest .
 
 .PHONY: docker-ubuntu
-docker-ubuntu:
+docker-ubuntu: ## Make docker ubuntu images
 	docker build -t $(REGISTRY)/rainbow-scheduler:latest .
 
 .PHONY: docker-arm
 docker-arm:
 	docker buildx build --build-arg arch=arm64 --platform linux/arm64 --tag $(REGISTRY)/rainbow-scheduler:arm --load .
 
+.PHONY: certs
+certs: $(CERTBIN) ## Make self-signed certificates
+	$(HERE)/hack/generate-certs.sh $(CERTBIN)
+
 .PHONY: proto
-proto: protoc ## Generates the API code and documentation
+proto: protoc ## Make protobuf files
 	mkdir -p pkg/api/v1
 	PATH=$(LOCALBIN):${PATH} protoc --proto_path=api/v1 --go_out=pkg/api/v1 --go_opt=paths=source_relative --go-grpc_out=pkg/api/v1 --go-grpc_opt=paths=source_relative rainbow.proto
 	PATH=$(LOCALBIN):${PATH} protoc --proto_path=plugins/backends/memory/service --go_out=plugins/backends/memory/service --go_opt=paths=source_relative --go-grpc_out=plugins/backends/memory/service --go-grpc_opt=paths=source_relative memory.proto
@@ -82,6 +91,10 @@ test: tidy ## Runs unit tests
 .PHONY: server
 server: ## Runs uncompiled version of the server
 	go run cmd/server/server.go --global-token rainbow
+
+.PHONY: server-tls
+server-tls: ## Runs uncompiled version of the server with self-signed certs
+	go run cmd/server/server.go --global-token rainbow -cert $(CERTBIN)/server-cert.pem -ca-cert $(CERTBIN)/ca-cert.pem --key $(CERTBIN)/server-key.pem
 
 .PHONY: server-verbose
 server-verbose: ## Runs uncompiled version of the server

@@ -11,16 +11,11 @@ import (
 
 // UpdateState updates state for a cluster
 func UpdateState(
-	host,
+	c client.Client,
 	clusterName,
 	stateFile,
 	cfgFile string,
 ) error {
-
-	c, err := client.NewClient(host)
-	if err != nil {
-		return err
-	}
 
 	// A config file is required here
 	if cfgFile == "" {

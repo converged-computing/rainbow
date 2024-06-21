@@ -8,10 +8,12 @@ import (
 	js "github.com/compspec/jobspec-go/pkg/nextgen/v1"
 
 	pb "github.com/converged-computing/rainbow/pkg/api/v1"
+	"github.com/converged-computing/rainbow/pkg/certs"
 	"github.com/converged-computing/rainbow/pkg/config"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -42,7 +44,7 @@ type Client interface {
 }
 
 // NewClient creates a new RainbowClient
-func NewClient(host string) (Client, error) {
+func NewClient(host string, cert *certs.Certificate) (Client, error) {
 	if host == "" {
 		return nil, errors.New("host is required")
 	}
@@ -54,9 +56,20 @@ func NewClient(host string) (Client, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), defaultTimeout)
 	defer cancel()
 
+	// Are we using tls?
+	var transportCreds credentials.TransportCredentials
+	var err error
+	if !cert.IsEmpty() {
+		log.Printf("🔐️ adding tls credentials")
+		transportCreds = cert.GetClientCredentials()
+	} else {
+		transportCreds = insecure.NewCredentials()
+	}
+
 	// Set up a connection to the server.
-	creds := grpc.WithTransportCredentials(insecure.NewCredentials())
+	creds := grpc.WithTransportCredentials(transportCreds)
 	conn, err := grpc.DialContext(ctx, c.GetHost(), creds, grpc.WithBlock())
+
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to connect to %s", host)
 	}
