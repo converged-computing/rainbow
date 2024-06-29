@@ -107,7 +107,7 @@ func (db *Database) DeleteCluster(name string) (*pb.DeleteResponse, error) {
 	}
 
 	// TODO need delete
-	query = fmt.Sprintf("DELETE * from clusters WHERE name = '%s'", name)
+	query = fmt.Sprintf("DELETE from clusters WHERE name = '%s'", name)
 	result, err := conn.Exec(query)
 
 	// Error with request

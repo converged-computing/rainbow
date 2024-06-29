@@ -72,10 +72,7 @@ func (s *Server) UpdateState(_ context.Context, in *pb.UpdateStateRequest) (*pb.
 	return &response, err
 }
 
-// UpdateState sends state metadata to the graph for the selection step
-// This could eventually be used in other parts of the graph search but
-// right now makes sense to be used with algorithms
-func (s *Server) DeleteCluster(_ context.Context, in *pb.DeleteRequest) (*pb.DeleteResponse, error) {
+func (s *Server) Delete(_ context.Context, in *pb.DeleteRequest) (*pb.DeleteResponse, error) {
 	if in == nil {
 		return nil, errors.New("request is required")
 	}
@@ -98,6 +95,29 @@ func (s *Server) DeleteCluster(_ context.Context, in *pb.DeleteRequest) (*pb.Del
 	}
 	res, err := s.db.DeleteCluster(in.Name)
 	return res, err
+}
+
+func (s *Server) DeleteSubsystem(_ context.Context, in *pb.DeleteRequest) (*pb.DeleteResponse, error) {
+	if in == nil {
+		return nil, errors.New("request is required")
+	}
+	if in.Name == "" || in.Secret == "" {
+		return nil, errors.New("cluster name and secret are required")
+	}
+	_, err := s.db.ValidateClusterSecret(in.Name, in.Secret)
+	if err != nil {
+		return nil, errors.New("request denied")
+	}
+	// A subsystem just needs to be added to the graph
+	log.Printf("🔥️ received delete request for %s subsystem %s", in.Name, in.Subsytem)
+	response := pb.DeleteResponse{Status: pb.DeleteResponse_DELETE_SUCCESS}
+
+	// TODO write delete function,a nd for each type
+	err = s.graph.DeleteSubsystem(in.Name, in.Subsytem)
+	if err != nil {
+		response.Status = pb.DeleteResponse_DELETE_ERROR
+	}
+	return &response, err
 }
 
 // Register a subsystem with the server

@@ -14,17 +14,17 @@ func Run(
 
 	// Submission is always with a configuration
 	if subsystem == "cluster" || subsystem == "" {
-		response, err := c.Delete(context.Background(), clusterName, secret, subsystem)
+		_, err := c.Delete(context.Background(), clusterName, secret, subsystem)
 		if err != nil {
 			return err
 		}
-		log.Println(response)
+		log.Printf("🔥️ Cluster %s has been deleted.\n", clusterName)
 		return nil
 	}
-	response, err := c.DeleteSubsystem(context.Background(), clusterName, secret, subsystem)
+	_, err := c.DeleteSubsystem(context.Background(), clusterName, secret, subsystem)
 	if err != nil {
 		return err
 	}
-	log.Println(response)
+	log.Printf("🔥️ Cluster %s subsystem %s has been deleted.\n", clusterName, subsystem)
 	return nil
 }

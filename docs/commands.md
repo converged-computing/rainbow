@@ -602,9 +602,28 @@ To delete a cluster or subsystem, you can do:
 ```bash
 go run ./cmd/rainbow/rainbow.go delete --help
 ```
-I haven't finished or tested this yet, not feeling motivated about rainbow really.
+
+### Delete Subsystem
+
+You can get the token from your config file.
+
+```bash
+go run ./cmd/rainbow/rainbow.go delete --cluster-name keebler --delete-subsystem io --delete-secret a1e0d411-5102-4185-af50-5b2eedb03ec3
+```
+```console
+2024/06/28 19:59:08 🌈️ starting client (localhost:50051)...
+2024/06/28 19:59:08 🔥️ Cluster keebler subsystem io has been deleted.
+```
 
 ### Delete Cluster
+
+```bash
+go run ./cmd/rainbow/rainbow.go delete --cluster-name keebler --delete-secret a1e0d411-5102-4185-af50-5b2eedb03ec3
+```
+```console
+2024/06/28 19:59:16 🌈️ starting client (localhost:50051)...
+2024/06/28 19:59:16 🔥️ Cluster keebler has been deleted.
+```
 
 Note that when you use a more formal graph database (where the subsystems are not linked) you can delete a dominant subsystem without deleting the associated subsystems. I'm not decided yet if it is a feature or a bug, but I've left it because the idea is interesting, and likely nobody will be using this anyway.
 
