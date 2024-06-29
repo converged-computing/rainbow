@@ -21,6 +21,32 @@ class RegisterRequest(_message.Message):
     sent: _timestamp_pb2.Timestamp
     def __init__(self, name: _Optional[str] = ..., secret: _Optional[str] = ..., nodes: _Optional[str] = ..., subsystem: _Optional[str] = ..., sent: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
+class DeleteRequest(_message.Message):
+    __slots__ = ("name", "secret", "subsytem")
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    SECRET_FIELD_NUMBER: _ClassVar[int]
+    SUBSYTEM_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    secret: str
+    subsytem: str
+    def __init__(self, name: _Optional[str] = ..., secret: _Optional[str] = ..., subsytem: _Optional[str] = ...) -> None: ...
+
+class DeleteResponse(_message.Message):
+    __slots__ = ("status",)
+    class ResultType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        DELETE_SUCCESS: _ClassVar[DeleteResponse.ResultType]
+        DELETE_ERROR: _ClassVar[DeleteResponse.ResultType]
+        DELETE_DENIED: _ClassVar[DeleteResponse.ResultType]
+        DELETE_NO_EXISTS: _ClassVar[DeleteResponse.ResultType]
+    DELETE_SUCCESS: DeleteResponse.ResultType
+    DELETE_ERROR: DeleteResponse.ResultType
+    DELETE_DENIED: DeleteResponse.ResultType
+    DELETE_NO_EXISTS: DeleteResponse.ResultType
+    STATUS_FIELD_NUMBER: _ClassVar[int]
+    status: DeleteResponse.ResultType
+    def __init__(self, status: _Optional[_Union[DeleteResponse.ResultType, str]] = ...) -> None: ...
+
 class UpdateStateRequest(_message.Message):
     __slots__ = ("cluster", "secret", "payload")
     CLUSTER_FIELD_NUMBER: _ClassVar[int]

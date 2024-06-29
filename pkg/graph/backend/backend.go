@@ -40,8 +40,14 @@ type GraphBackend interface {
 	// Add nodes for a newly registered cluster
 	AddCluster(name string, nodes *graph.JsonGraph, subsystem string) error
 
+	// Delete nodes for a cluster
+	DeleteCluster(name string) error
+
 	// Add a subsystem to the graph
 	AddSubsystem(name string, nodes *graph.JsonGraph, subsystem string) error
+
+	// Delete a subsystem from the graph
+	DeleteSubsystem(name string, subsystem string) error
 
 	// Update state of a cluster in the graph
 	UpdateState(name, payload string) error

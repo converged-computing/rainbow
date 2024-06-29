@@ -80,3 +80,45 @@ func (db *Database) RegisterCluster(
 	response.Status = pb.RegisterResponse_REGISTER_ERROR
 	return response, err
 }
+
+// RegisterCluster registers a cluster or returns another status
+func (db *Database) DeleteCluster(name string) (*pb.DeleteResponse, error) {
+
+	response := &pb.DeleteResponse{}
+
+	// Connect!
+	conn, err := db.connect()
+	if err != nil {
+		return response, err
+	}
+	defer conn.Close()
+
+	// First determine if it exists - this needs to get the results
+	query := fmt.Sprintf("SELECT count(*) from clusters WHERE name = '%s'", name)
+	count, err := countResults(conn, query)
+	if err != nil {
+		return response, err
+	}
+
+	// Case 1: does not exist
+	if count == 0 {
+		response.Status = pb.DeleteResponse_DELETE_NO_EXISTS
+		return response, nil
+	}
+
+	// TODO need delete
+	query = fmt.Sprintf("DELETE * from clusters WHERE name = '%s'", name)
+	result, err := conn.Exec(query)
+
+	// Error with request
+	if err != nil {
+		response.Status = pb.DeleteResponse_DELETE_ERROR
+		return response, err
+	}
+	count, err = result.RowsAffected()
+	log.Printf("%s: (%d)\n", query, count)
+
+	// REGISTER_ERROR
+	response.Status = pb.DeleteResponse_DELETE_SUCCESS
+	return response, err
+}
