@@ -7,6 +7,7 @@ import (
 
 	"github.com/akamensky/argparse"
 	"github.com/converged-computing/rainbow/cmd/rainbow/config"
+	deleteCli "github.com/converged-computing/rainbow/cmd/rainbow/delete"
 	"github.com/converged-computing/rainbow/cmd/rainbow/receive"
 	"github.com/converged-computing/rainbow/cmd/rainbow/register"
 	"github.com/converged-computing/rainbow/cmd/rainbow/submit"
@@ -44,6 +45,7 @@ func main() {
 	versionCmd := parser.NewCommand("version", "See the version of rainbow")
 	registerCmd := parser.NewCommand("register", "Register a new cluster")
 	submitCmd := parser.NewCommand("submit", "Submit a job to a rainbow scheduler")
+	deleteCmd := parser.NewCommand("delete", "Delete a subsystem (including the cluster)")
 	receiveCmd := parser.NewCommand("receive", "Receive and accept jobs")
 	registerClusterCmd := registerCmd.NewCommand("cluster", "Register a new cluster")
 	updateCmd := parser.NewCommand("update", "Update a cluster")
@@ -71,6 +73,10 @@ func main() {
 
 	// Register Shared arguments
 	clusterNodes := registerCmd.String("", "nodes-json", &argparse.Options{Help: "Cluster nodes json (JGF v2)"})
+
+	// Delete arguments
+	deleteTarget := deleteCmd.String("", "delete-subsystem", &argparse.Options{Default: "", Help: "Subsystem to delete, not provided defaults to cluster."})
+	deleteSecret := deleteCmd.String("", "delete-secret", &argparse.Options{Default: "", Help: "Secret to authenticate delete"})
 
 	// Cluster register arguments
 	secret := registerClusterCmd.String("s", "secret", &argparse.Options{Default: defaultSecret, Help: "Registration 'secret'"})
@@ -121,7 +127,18 @@ func main() {
 		log.Fatalf("Issue creating client: %s\n", err)
 	}
 
-	if stateCmd.Happened() {
+	if deleteCmd.Happened() {
+		err := deleteCli.Run(
+			client,
+			*clusterName,
+			*deleteTarget,
+			*deleteSecret,
+		)
+		if err != nil {
+			log.Fatalf("Issue with delete: %s\n", err)
+		}
+
+	} else if stateCmd.Happened() {
 		err := update.UpdateState(
 			client,
 			*clusterName,

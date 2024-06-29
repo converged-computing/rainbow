@@ -228,6 +228,75 @@ func (c *RainbowClient) Register(
 	return response, nil
 }
 
+// Register makes a request to register a new cluster
+func (c *RainbowClient) Delete(
+	ctx context.Context,
+	cluster string,
+	secret string,
+	subsystem string,
+) (*pb.DeleteResponse, error) {
+
+	response := &pb.DeleteResponse{}
+	if cluster == "" {
+		return response, errors.New("cluster is required")
+	}
+	if secret == "" {
+		return response, errors.New("secret is required")
+	}
+	if !c.Connected() {
+		return response, errors.New("client is not connected")
+	}
+
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	// are we deleting the cluster?
+	response, err := c.service.Delete(ctx, &pb.DeleteRequest{
+		Name:   cluster,
+		Secret: secret,
+	})
+	if err != nil {
+		return response, errors.Wrap(err, "could not delete cluster")
+	}
+	return response, err
+}
+
+// Register makes a request to register a new cluster
+func (c *RainbowClient) DeleteSubsystem(
+	ctx context.Context,
+	cluster string,
+	secret string,
+	subsystem string,
+) (*pb.DeleteResponse, error) {
+
+	response := &pb.DeleteResponse{}
+	if cluster == "" {
+		return response, errors.New("cluster is required")
+	}
+	if secret == "" {
+		return response, errors.New("secret is required")
+	}
+	if !c.Connected() {
+		return response, errors.New("client is not connected")
+	}
+
+	// Contact the server and print out its response.
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	response, err := c.service.DeleteSubsystem(ctx, &pb.DeleteRequest{
+		Name:     cluster,
+		Subsytem: subsystem,
+		Secret:   secret,
+	})
+	// For now we blindly accept all register, it's a fake endpoint
+	if err != nil {
+		return response, errors.Wrap(err, "could not delete subsystem")
+	}
+	return response, nil
+}
+
 // UpdateState of an existing cluster
 func (c *RainbowClient) UpdateState(
 	ctx context.Context,

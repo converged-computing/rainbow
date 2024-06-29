@@ -19,9 +19,19 @@ class RainbowSchedulerStub(object):
             request_serializer=rainbow__pb2.RegisterRequest.SerializeToString,
             response_deserializer=rainbow__pb2.RegisterResponse.FromString,
         )
+        self.Delete = channel.unary_unary(
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/Delete",
+            request_serializer=rainbow__pb2.RegisterRequest.SerializeToString,
+            response_deserializer=rainbow__pb2.RegisterResponse.FromString,
+        )
         self.RegisterSubsystem = channel.unary_unary(
             "/convergedcomputing.org.grpc.v1.RainbowScheduler/RegisterSubsystem",
             request_serializer=rainbow__pb2.RegisterRequest.SerializeToString,
+            response_deserializer=rainbow__pb2.RegisterResponse.FromString,
+        )
+        self.DeleteSubsystem = channel.unary_unary(
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/DeleteSubsystem",
+            request_serializer=rainbow__pb2.DeleteRequest.SerializeToString,
             response_deserializer=rainbow__pb2.RegisterResponse.FromString,
         )
         self.SubmitJob = channel.unary_unary(
@@ -55,8 +65,20 @@ class RainbowSchedulerServicer(object):
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
 
+    def Delete(self, request, context):
+        """Delete cluster - request to delete a cluster"""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
+
     def RegisterSubsystem(self, request, context):
-        """Register cluster - request to register a new cluster"""
+        """Register subsystem - request to register a new cluster"""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
+
+    def DeleteSubsystem(self, request, context):
+        """Delete Subsystems - request to delete subsystems"""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
@@ -95,9 +117,19 @@ def add_RainbowSchedulerServicer_to_server(servicer, server):
             request_deserializer=rainbow__pb2.RegisterRequest.FromString,
             response_serializer=rainbow__pb2.RegisterResponse.SerializeToString,
         ),
+        "Delete": grpc.unary_unary_rpc_method_handler(
+            servicer.Delete,
+            request_deserializer=rainbow__pb2.RegisterRequest.FromString,
+            response_serializer=rainbow__pb2.RegisterResponse.SerializeToString,
+        ),
         "RegisterSubsystem": grpc.unary_unary_rpc_method_handler(
             servicer.RegisterSubsystem,
             request_deserializer=rainbow__pb2.RegisterRequest.FromString,
+            response_serializer=rainbow__pb2.RegisterResponse.SerializeToString,
+        ),
+        "DeleteSubsystem": grpc.unary_unary_rpc_method_handler(
+            servicer.DeleteSubsystem,
+            request_deserializer=rainbow__pb2.DeleteRequest.FromString,
             response_serializer=rainbow__pb2.RegisterResponse.SerializeToString,
         ),
         "SubmitJob": grpc.unary_unary_rpc_method_handler(
@@ -161,6 +193,35 @@ class RainbowScheduler(object):
         )
 
     @staticmethod
+    def Delete(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/Delete",
+            rainbow__pb2.RegisterRequest.SerializeToString,
+            rainbow__pb2.RegisterResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
+
+    @staticmethod
     def RegisterSubsystem(
         request,
         target,
@@ -178,6 +239,35 @@ class RainbowScheduler(object):
             target,
             "/convergedcomputing.org.grpc.v1.RainbowScheduler/RegisterSubsystem",
             rainbow__pb2.RegisterRequest.SerializeToString,
+            rainbow__pb2.RegisterResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
+
+    @staticmethod
+    def DeleteSubsystem(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            "/convergedcomputing.org.grpc.v1.RainbowScheduler/DeleteSubsystem",
+            rainbow__pb2.DeleteRequest.SerializeToString,
             rainbow__pb2.RegisterResponse.FromString,
             options,
             channel_credentials,

@@ -57,6 +57,10 @@ func (m Memgraph) AddCluster(
 	return m.AddSubsystem(name, nodes, subsystem)
 }
 
+func (m Memgraph) DeleteCluster(name string) error {
+	return m.DeleteSubsystem(name, types.DefaultDominantSubsystem)
+}
+
 // UpdateState updates the state of a cluster in memgraph
 func (m Memgraph) UpdateState(
 	name string,
@@ -259,6 +263,68 @@ func (m Memgraph) AddSubsystem(
 	} else {
 		log.Printf("We have made a memgraph (subsystem %s) with %d vertices", subsystem, len(subsystem_nodes))
 	}
+	return nil
+}
+
+// DeleteSubsystem removes it from the graph
+func (m Memgraph) DeleteSubsystem(name, subsystem string) error {
+
+	// Connect to the driver
+	driver, err := neo4j.NewDriverWithContext(memoryHost, neo4j.BasicAuth(username, password, databaseName))
+	if err != nil {
+		return err
+	}
+	ctx := context.Background()
+	defer driver.Close(ctx)
+	err = driver.VerifyConnectivity(ctx)
+
+	if err != nil {
+		return nil
+	}
+
+	// We will need the dominant (containment) subsystem name for external edges
+	// e.g., cluster-keebler-<some-id>
+	name = fmt.Sprintf("%s-%s", subsystem, name)
+
+	// Check that we don't have it already - a subsystem (or cluster) can only be added once
+	// type likely isn't needed, but it would allow us to filter down quickly to an entire kind
+	// of subsystem if needed
+	query := fmt.Sprintf("MATCH (n:Subsystem{name: '%s'}) RETURN n;", name)
+	rlog.Debug(query)
+	result, err := neo4j.ExecuteQuery(
+		ctx, driver, query, nil, neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase(databaseName),
+	)
+	if err != nil {
+		return err
+	}
+	// Subsystem does not exist!
+	if len(result.Records) == 0 {
+		return fmt.Errorf("subsystem '%s' with type '%s' does not exist", name, subsystem)
+	}
+
+	// Delete noeds with matching name
+	query = fmt.Sprintf("MATCH (n:Node{subsystem: '%s'}) DETACH DELETE n;", name)
+	rlog.Debug(query)
+	result, err = neo4j.ExecuteQuery(
+		ctx, driver, query, nil, neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase(databaseName),
+	)
+	if err != nil {
+		return err
+	}
+
+	// Delete subsystem with matching name
+	query = fmt.Sprintf("MATCH (n:Subsystem{name: '%s'}) DETACH DELETE n;", name)
+	rlog.Debug(query)
+	result, err = neo4j.ExecuteQuery(
+		ctx, driver, query, nil, neo4j.EagerResultTransformer,
+		neo4j.ExecuteQueryWithDatabase(databaseName),
+	)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

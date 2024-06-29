@@ -33,6 +33,8 @@ type Client interface {
 	// Cluster interactions
 	Register(ctx context.Context, clusterName, secret, clusterNodes, subsystem string) (*pb.RegisterResponse, error)
 	RegisterSubsystem(ctx context.Context, clusterName, secret, subsystemNodes, subsystem string) (*pb.RegisterResponse, error)
+	Delete(ctx context.Context, clusterName, secret, subsystem string) (*pb.DeleteResponse, error)
+	DeleteSubsystem(ctx context.Context, clusterName, secret, subsystem string) (*pb.DeleteResponse, error)
 
 	// Update
 	UpdateState(ctx context.Context, clusterName, secret, stateFile string) (*pb.UpdateStateResponse, error)

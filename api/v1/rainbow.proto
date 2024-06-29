@@ -12,8 +12,14 @@ service RainbowScheduler {
   // Register cluster - request to register a new cluster
   rpc Register(RegisterRequest) returns (RegisterResponse);
 
-  // Register cluster - request to register a new cluster
+  // Delete cluster - request to delete a cluster
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+
+  // Register subsystem - request to register a new cluster
   rpc RegisterSubsystem(RegisterRequest) returns (RegisterResponse);
+
+  // Delete Subsystems - request to delete subsystems
+  rpc DeleteSubsystem(DeleteRequest) returns (DeleteResponse);
 
   // Job Submission - request for submitting a job to a named cluster
   rpc SubmitJob(SubmitJobRequest) returns (SubmitJobResponse);
@@ -40,6 +46,25 @@ message RegisterRequest {
   string subsystem = 4;
   google.protobuf.Timestamp sent = 5;
 }
+
+// DeleteRequest handles deleting a cluster or subsystem
+message DeleteRequest {
+  string name = 1;
+  string secret = 2;
+  string subsytem = 3;
+}
+
+// Delete Response
+message DeleteResponse {
+  enum ResultType {
+    DELETE_SUCCESS = 0;
+    DELETE_ERROR = 1;
+    DELETE_DENIED = 2;
+    DELETE_NO_EXISTS = 3;
+  }
+  ResultType status = 1;
+}
+
 
 // UpdateStateRequests allows a cluster to set arbitrary metadata
 // for its state. State metadata is used for selection algorithms

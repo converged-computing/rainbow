@@ -134,6 +134,34 @@ func (g *Graph) LoadClusterNodes(
 	return nil
 }
 
+// DeleteCluster removes a cluster and subsystems entirely
+func (g *Graph) DeleteCluster(clusterName string) error {
+
+	// Do we already have the graph?
+	_, ok := g.Clusters[clusterName]
+	if !ok {
+		return fmt.Errorf("cluster graph %s does not exist", clusterName)
+	}
+	delete(g.Clusters, clusterName)
+	return nil
+}
+
+// DeleteCluster removes a cluster and subsystems entirely
+func (g *Graph) DeleteSubsystem(clusterName, subsystem string) error {
+	cluster, ok := g.Clusters[clusterName]
+	if !ok {
+		return fmt.Errorf("cluster graph %s does not exist", clusterName)
+	}
+	// Now get the subsystem
+	_, ok = cluster.subsystem[subsystem]
+	if !ok {
+		return fmt.Errorf("cluster graph %s does not have subsystem %s", clusterName, subsystem)
+	}
+	delete(cluster.subsystem, subsystem)
+	g.Clusters[clusterName] = cluster
+	return nil
+}
+
 // Satisfy should:
 // 1. Read in and populate the payload into a jobspec
 // 2. Determine by way of a depth first search if we can satisfy

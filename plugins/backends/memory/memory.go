@@ -53,6 +53,14 @@ func (m MemoryGraph) AddCluster(
 	return graphClient.LoadClusterNodes(name, nodes, subsystem)
 }
 
+func (m MemoryGraph) DeleteCluster(name string) error {
+	return graphClient.DeleteCluster(name)
+}
+
+func (m MemoryGraph) DeleteSubsystem(name, subsystem string) error {
+	return graphClient.DeleteSubsystem(name, subsystem)
+}
+
 // Add subsystem adds a new subsystem to the graph!
 func (m MemoryGraph) UpdateState(
 	name string,

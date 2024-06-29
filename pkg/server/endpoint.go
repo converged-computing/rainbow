@@ -72,6 +72,54 @@ func (s *Server) UpdateState(_ context.Context, in *pb.UpdateStateRequest) (*pb.
 	return &response, err
 }
 
+func (s *Server) Delete(_ context.Context, in *pb.DeleteRequest) (*pb.DeleteResponse, error) {
+	if in == nil {
+		return nil, errors.New("request is required")
+	}
+	if in.Name == "" || in.Secret == "" {
+		return nil, errors.New("cluster name and secret are required")
+	}
+	_, err := s.db.ValidateClusterSecret(in.Name, in.Secret)
+	if err != nil {
+		return nil, errors.New("request denied")
+	}
+	// A subsystem just needs to be added to the graph
+	log.Printf("🔥️ received delete request for %s", in.Name)
+	response := pb.DeleteResponse{Status: pb.DeleteResponse_DELETE_SUCCESS}
+
+	// TODO write delete function,a nd for each type
+	err = s.graph.DeleteCluster(in.Name)
+	if err != nil {
+		response.Status = pb.DeleteResponse_DELETE_ERROR
+		return &response, err
+	}
+	res, err := s.db.DeleteCluster(in.Name)
+	return res, err
+}
+
+func (s *Server) DeleteSubsystem(_ context.Context, in *pb.DeleteRequest) (*pb.DeleteResponse, error) {
+	if in == nil {
+		return nil, errors.New("request is required")
+	}
+	if in.Name == "" || in.Secret == "" {
+		return nil, errors.New("cluster name and secret are required")
+	}
+	_, err := s.db.ValidateClusterSecret(in.Name, in.Secret)
+	if err != nil {
+		return nil, errors.New("request denied")
+	}
+	// A subsystem just needs to be added to the graph
+	log.Printf("🔥️ received delete request for %s subsystem %s", in.Name, in.Subsytem)
+	response := pb.DeleteResponse{Status: pb.DeleteResponse_DELETE_SUCCESS}
+
+	// TODO write delete function,a nd for each type
+	err = s.graph.DeleteSubsystem(in.Name, in.Subsytem)
+	if err != nil {
+		response.Status = pb.DeleteResponse_DELETE_ERROR
+	}
+	return &response, err
+}
+
 // Register a subsystem with the server
 func (s *Server) RegisterSubsystem(_ context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	if in == nil {

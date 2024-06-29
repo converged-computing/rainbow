@@ -595,5 +595,36 @@ Note that if you don't define the max jobs (so it is essentially 0) you will get
 Awesome! Next we can put that logic in a flux instance (from the Python grpc to start) and then have Flux
 accept some number of them. The response back to the rainbow scheduler will be those to accept, which will then be removed from the database. For another day.
 
+## Deletion
+
+To delete a cluster or subsystem, you can do:
+
+```bash
+go run ./cmd/rainbow/rainbow.go delete --help
+```
+
+### Delete Subsystem
+
+You can get the token from your config file.
+
+```bash
+go run ./cmd/rainbow/rainbow.go delete --cluster-name keebler --delete-subsystem io --delete-secret a1e0d411-5102-4185-af50-5b2eedb03ec3
+```
+```console
+2024/06/28 19:59:08 🌈️ starting client (localhost:50051)...
+2024/06/28 19:59:08 🔥️ Cluster keebler subsystem io has been deleted.
+```
+
+### Delete Cluster
+
+```bash
+go run ./cmd/rainbow/rainbow.go delete --cluster-name keebler --delete-secret a1e0d411-5102-4185-af50-5b2eedb03ec3
+```
+```console
+2024/06/28 19:59:16 🌈️ starting client (localhost:50051)...
+2024/06/28 19:59:16 🔥️ Cluster keebler has been deleted.
+```
+
+Note that when you use a more formal graph database (where the subsystems are not linked) you can delete a dominant subsystem without deleting the associated subsystems. I'm not decided yet if it is a feature or a bug, but I've left it because the idea is interesting, and likely nobody will be using this anyway.
 
 [home](/README.md#rainbow-scheduler)
