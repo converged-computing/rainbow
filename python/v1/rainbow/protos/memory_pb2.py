@@ -7,33 +7,36 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
+
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-
-
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cmemory.proto\x12\x07service\"C\n\x0fRegisterRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07payload\x18\x02 \x01(\t\x12\x11\n\tsubsystem\x18\x03 \x01(\t\"2\n\x0eSatisfyRequest\x12\x0f\n\x07payload\x18\x01 \x01(\t\x12\x0f\n\x07matcher\x18\x02 \x01(\t\"\xfc\x01\n\x0fSatisfyResponse\x12\x10\n\x08\x63lusters\x18\x01 \x03(\t\x12\x33\n\x06status\x18\x02 \x01(\x0e\x32#.service.SatisfyResponse.ResultType\x12\x16\n\x0etotal_clusters\x18\x03 \x01(\x05\x12\x15\n\rtotal_matches\x18\x04 \x01(\x05\x12\x18\n\x10total_mismatches\x18\x05 \x01(\x05\"Y\n\nResultType\x12\x1b\n\x17RESULT_TYPE_UNSPECIFIED\x10\x00\x12\x17\n\x13RESULT_TYPE_SUCCESS\x10\x01\x12\x15\n\x11RESULT_TYPE_ERROR\x10\x02\"\x93\x01\n\x08Response\x12,\n\x06status\x18\x01 \x01(\x0e\x32\x1c.service.Response.ResultType\"Y\n\nResultType\x12\x1b\n\x17RESULT_TYPE_UNSPECIFIED\x10\x00\x12\x17\n\x13RESULT_TYPE_SUCCESS\x10\x01\x12\x15\n\x11RESULT_TYPE_ERROR\x10\x02\x32\x88\x01\n\x0bMemoryGraph\x12>\n\x07Satisfy\x12\x17.service.SatisfyRequest\x1a\x18.service.SatisfyResponse\"\x00\x12\x39\n\x08Register\x12\x18.service.RegisterRequest\x1a\x11.service.Response\"\x00\x42@Z>github.com/converged-computing/rainbow/backends/memory/serviceb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
+    b'\n\x0cmemory.proto\x12\x07service"C\n\x0fRegisterRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07payload\x18\x02 \x01(\t\x12\x11\n\tsubsystem\x18\x03 \x01(\t"2\n\x0eSatisfyRequest\x12\x0f\n\x07payload\x18\x01 \x01(\t\x12\x0f\n\x07matcher\x18\x02 \x01(\t"\xfc\x01\n\x0fSatisfyResponse\x12\x10\n\x08\x63lusters\x18\x01 \x03(\t\x12\x33\n\x06status\x18\x02 \x01(\x0e\x32#.service.SatisfyResponse.ResultType\x12\x16\n\x0etotal_clusters\x18\x03 \x01(\x05\x12\x15\n\rtotal_matches\x18\x04 \x01(\x05\x12\x18\n\x10total_mismatches\x18\x05 \x01(\x05"Y\n\nResultType\x12\x1b\n\x17RESULT_TYPE_UNSPECIFIED\x10\x00\x12\x17\n\x13RESULT_TYPE_SUCCESS\x10\x01\x12\x15\n\x11RESULT_TYPE_ERROR\x10\x02"\x93\x01\n\x08Response\x12,\n\x06status\x18\x01 \x01(\x0e\x32\x1c.service.Response.ResultType"Y\n\nResultType\x12\x1b\n\x17RESULT_TYPE_UNSPECIFIED\x10\x00\x12\x17\n\x13RESULT_TYPE_SUCCESS\x10\x01\x12\x15\n\x11RESULT_TYPE_ERROR\x10\x02\x32\x88\x01\n\x0bMemoryGraph\x12>\n\x07Satisfy\x12\x17.service.SatisfyRequest\x1a\x18.service.SatisfyResponse"\x00\x12\x39\n\x08Register\x12\x18.service.RegisterRequest\x1a\x11.service.Response"\x00\x42@Z>github.com/converged-computing/rainbow/backends/memory/serviceb\x06proto3'
+)
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'memory_pb2', _globals)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "memory_pb2", _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
-  _globals['DESCRIPTOR']._options = None
-  _globals['DESCRIPTOR']._serialized_options = b'Z>github.com/converged-computing/rainbow/backends/memory/service'
-  _globals['_REGISTERREQUEST']._serialized_start=25
-  _globals['_REGISTERREQUEST']._serialized_end=92
-  _globals['_SATISFYREQUEST']._serialized_start=94
-  _globals['_SATISFYREQUEST']._serialized_end=144
-  _globals['_SATISFYRESPONSE']._serialized_start=147
-  _globals['_SATISFYRESPONSE']._serialized_end=399
-  _globals['_SATISFYRESPONSE_RESULTTYPE']._serialized_start=310
-  _globals['_SATISFYRESPONSE_RESULTTYPE']._serialized_end=399
-  _globals['_RESPONSE']._serialized_start=402
-  _globals['_RESPONSE']._serialized_end=549
-  _globals['_RESPONSE_RESULTTYPE']._serialized_start=310
-  _globals['_RESPONSE_RESULTTYPE']._serialized_end=399
-  _globals['_MEMORYGRAPH']._serialized_start=552
-  _globals['_MEMORYGRAPH']._serialized_end=688
+    _globals["DESCRIPTOR"]._options = None
+    _globals[
+        "DESCRIPTOR"
+    ]._serialized_options = b"Z>github.com/converged-computing/rainbow/backends/memory/service"
+    _globals["_REGISTERREQUEST"]._serialized_start = 25
+    _globals["_REGISTERREQUEST"]._serialized_end = 92
+    _globals["_SATISFYREQUEST"]._serialized_start = 94
+    _globals["_SATISFYREQUEST"]._serialized_end = 144
+    _globals["_SATISFYRESPONSE"]._serialized_start = 147
+    _globals["_SATISFYRESPONSE"]._serialized_end = 399
+    _globals["_SATISFYRESPONSE_RESULTTYPE"]._serialized_start = 310
+    _globals["_SATISFYRESPONSE_RESULTTYPE"]._serialized_end = 399
+    _globals["_RESPONSE"]._serialized_start = 402
+    _globals["_RESPONSE"]._serialized_end = 549
+    _globals["_RESPONSE_RESULTTYPE"]._serialized_start = 310
+    _globals["_RESPONSE_RESULTTYPE"]._serialized_end = 399
+    _globals["_MEMORYGRAPH"]._serialized_start = 552
+    _globals["_MEMORYGRAPH"]._serialized_end = 688
 # @@protoc_insertion_point(module_scope)
